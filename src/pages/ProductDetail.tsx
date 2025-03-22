@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
@@ -19,7 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Product } from '@/pages/Shop';
-import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 // Sample product data - in a real app, fetch from API
 const allProducts: Product[] = [
@@ -78,7 +78,9 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const { toast } = useToast();
+  
+  const { addItem } = useCart();
+  const { toggleItem, isInWishlist } = useWishlist();
   
   useEffect(() => {
     // Simulate API fetch
@@ -115,21 +117,13 @@ const ProductDetail = () => {
   
   const handleAddToCart = () => {
     if (product) {
-      toast({
-        title: "Added to cart",
-        description: `${quantity} x ${product.name} added to your cart`,
-        duration: 3000,
-      });
+      addItem(product, quantity);
     }
   };
   
-  const handleAddToWishlist = () => {
+  const handleToggleWishlist = () => {
     if (product) {
-      toast({
-        title: "Added to wishlist",
-        description: `${product.name} has been added to your wishlist`,
-        duration: 3000,
-      });
+      toggleItem(product);
     }
   };
 
@@ -297,7 +291,7 @@ const ProductDetail = () => {
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <Button 
                 size="lg" 
-                className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white button-hover flex-1"
+                className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white flex-1"
                 onClick={handleAddToCart}
               >
                 Add to Cart
@@ -305,10 +299,15 @@ const ProductDetail = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="border-wolly-pink text-wolly-magenta button-hover"
-                onClick={handleAddToWishlist}
+                className={`border-wolly-pink button-hover ${
+                  isInWishlist(product.id) 
+                    ? 'bg-wolly-pink/20 text-wolly-magenta' 
+                    : 'text-wolly-magenta'
+                }`}
+                onClick={handleToggleWishlist}
               >
-                <Heart size={18} className="mr-2" /> Wishlist
+                <Heart size={18} className={`mr-2 ${isInWishlist(product.id) ? 'fill-wolly-magenta' : ''}`} />
+                {isInWishlist(product.id) ? 'In Wishlist' : 'Add to Wishlist'}
               </Button>
             </div>
             
