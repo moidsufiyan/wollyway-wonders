@@ -8,12 +8,15 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
+// Define the order status type for type safety
+type OrderStatus = 'processing' | 'shipped' | 'delivered';
+
 const OrderTracking = () => {
   const [searchParams] = useSearchParams();
   const orderNumber = searchParams.get('orderNumber') || '1234567';
   
   // Mock data - in a real app, you would fetch this based on the order number
-  const orderStatus = 'shipped'; // 'processing', 'shipped', 'delivered'
+  const orderStatus: OrderStatus = 'shipped'; // 'processing', 'shipped', 'delivered'
   const orderDate = 'May 10, 2023';
   const estimatedDelivery = 'May 15, 2023';
   
