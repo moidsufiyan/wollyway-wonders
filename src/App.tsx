@@ -15,6 +15,12 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
+import OrderTracking from "./pages/OrderTracking";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserAccount from "./pages/UserAccount";
+import Login from "./pages/Login";
+import Customize from "./pages/Customize";
+import Support from "./pages/Support";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
@@ -42,6 +48,15 @@ const App = () => {
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/wishlist" element={<Wishlist />} />
+                  
+                  {/* New routes */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/account" element={<UserAccount />} />
+                  <Route path="/track-order" element={<OrderTracking />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/customize" element={<Customize />} />
+                  <Route path="/support" element={<Support />} />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
