@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -23,9 +24,9 @@ import Bundles from "./pages/Bundles";
 
 function App() {
   return (
-    <div className="app">
-      <BrowserRouter>
-        <ScrollToTop />
+    <BrowserRouter>
+      <ScrollToTop />
+      <div className="app">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
@@ -43,15 +44,15 @@ function App() {
           <Route path="/customize" element={<Customize />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           
-          {/* New Bundle Routes */}
+          {/* Bundle Routes */}
           <Route path="/bundles" element={<Bundles />} />
           <Route path="/bundle/:id" element={<BundleDetail />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-      <Toaster />
-    </div>
+        <Toaster />
+      </div>
+    </BrowserRouter>
   );
 }
 
