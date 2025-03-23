@@ -5,6 +5,7 @@ import { Package, ShoppingCart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import type { Product } from '@/pages/Shop';
 
 export type BundleProduct = {
   id: number;
@@ -13,6 +14,12 @@ export type BundleProduct = {
   image: string;
   category: string;
   description?: string;
+  tags: string[];
+  rating: number;
+  isNew?: boolean;
+  isFeatured?: boolean;
+  colors?: string[];
+  stockCount?: number;
 };
 
 export type Bundle = {

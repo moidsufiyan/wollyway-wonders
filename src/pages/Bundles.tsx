@@ -19,6 +19,11 @@ const sampleBundles: Bundle[] = [
         price: 19.99,
         image: "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
         category: "Keychains",
+        tags: ["superhero", "black", "red", "white"],
+        rating: 4.5,
+        isNew: true,
+        colors: ["black", "red", "white"],
+        description: "Handcrafted superhero themed keychain made with premium materials. Comes with metal clasp.",
       },
       {
         id: 3,
@@ -26,6 +31,10 @@ const sampleBundles: Bundle[] = [
         price: 22.99,
         image: "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
         category: "Bands",
+        tags: ["superhero", "batman", "black", "yellow"],
+        rating: 4.7,
+        colors: ["black", "yellow"],
+        description: "Superhero-inspired handwoven band with iconic pattern. Durable and stylish.",
       }
     ],
     discountPercentage: 15,
@@ -42,6 +51,10 @@ const sampleBundles: Bundle[] = [
         price: 24.99,
         image: "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
         category: "Bracelets",
+        tags: ["friendship", "wristband", "colorful"],
+        rating: 4.8,
+        colors: ["multicolor"],
+        description: "Set of handwoven friendship bands with custom designs. Perfect gift for friends.",
       },
       {
         id: 1,
@@ -49,6 +62,10 @@ const sampleBundles: Bundle[] = [
         price: 19.99,
         image: "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
         category: "Keychains",
+        tags: ["superhero", "black", "red", "white"],
+        rating: 4.5,
+        colors: ["black", "red", "white"],
+        description: "Handcrafted superhero themed keychain made with premium materials. Comes with metal clasp.",
       }
     ],
     discountPercentage: 10
