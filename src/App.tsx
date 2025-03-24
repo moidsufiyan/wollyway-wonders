@@ -21,6 +21,7 @@ import NotFound from './pages/NotFound';
 import ScrollToTop from './components/ScrollToTop';
 import BundleDetail from "./pages/BundleDetail";
 import Bundles from "./pages/Bundles";
+import FAQ from "./pages/FAQ";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           <Route path="/support" element={<Support />} />
           <Route path="/customize" element={<Customize />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/faq" element={<FAQ />} />
           
           {/* Bundle Routes */}
           <Route path="/bundles" element={<Bundles />} />
