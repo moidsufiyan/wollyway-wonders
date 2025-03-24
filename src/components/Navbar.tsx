@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import SearchBar from './SearchBar';
 
 const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => {
   const location = useLocation();
@@ -56,6 +58,11 @@ const Navbar = () => {
           <Link to="/" className="flex items-center">
             <span className="font-bold text-xl">WollyWay</span>
           </Link>
+          
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:block mx-4 flex-1 max-w-md">
+            <SearchBar />
+          </div>
           
           {/* Navigation Links - Desktop */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -124,6 +131,11 @@ const Navbar = () => {
                   <button onClick={closeMenu}>
                     <X className="h-6 w-6 text-foreground" />
                   </button>
+                </div>
+                
+                {/* Search Bar - Mobile */}
+                <div className="px-8 mb-4">
+                  <SearchBar />
                 </div>
                 
                 <nav className="flex flex-col space-y-4 text-lg p-8">

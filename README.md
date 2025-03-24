@@ -1,69 +1,124 @@
-# Welcome to your Lovable project
 
-## Project info
+# WollyWay E-commerce Platform
 
-**URL**: https://lovable.dev/projects/767f5e78-9ace-42c5-903f-7529fa5f2f76
+A full-stack e-commerce website built with React, Node.js, Express, and MongoDB.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Product browsing and searching
+- Product categories and filtering
+- Product bundles and discounts
+- Shopping cart functionality
+- User authentication and profiles
+- Order processing and management
+- Admin dashboard
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/767f5e78-9ace-42c5-903f-7529fa5f2f76) and start prompting.
+### Frontend
+- React
+- TypeScript
+- React Router
+- TanStack Query (React Query)
+- Tailwind CSS
+- Shadcn UI Components
+- Framer Motion
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
+- Node.js
+- Express
+- MongoDB
+- JWT Authentication
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB (local or Atlas connection)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/wollyway-ecommerce.git
+cd wollyway-ecommerce
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install frontend dependencies
+```bash
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Install backend dependencies
+```bash
+cd server
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. Set up environment variables
+   - Create a `.env` file in the server directory with the following variables:
+```
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/wollyway
+JWT_SECRET=your_super_secret_key_change_in_production
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+5. Run the development servers
+
+Frontend:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Backend:
+```bash
+cd server
+npm run dev
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The frontend will be available at http://localhost:5173 and the backend at http://localhost:5000.
 
-**Use GitHub Codespaces**
+## Project Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+├── public/             # Static assets
+├── server/             # Backend code
+│   ├── controllers/    # Route controllers
+│   ├── middleware/     # Custom middleware
+│   ├── models/         # Database models
+│   ├── routes/         # API routes
+│   ├── utils/          # Utility functions
+│   └── server.js       # Server entry point
+├── src/                # Frontend code
+│   ├── components/     # Reusable components
+│   ├── contexts/       # Context providers
+│   ├── hooks/          # Custom hooks
+│   ├── pages/          # Page components
+│   ├── services/       # API services
+│   └── main.tsx        # Entry point
+└── README.md           # Project documentation
+```
 
-## What technologies are used for this project?
+## Deployment
 
-This project is built with .
+1. Build the frontend
+```bash
+npm run build
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. Set up your production environment variables for the backend
 
-## How can I deploy this project?
+3. Start the server in production mode
+```bash
+cd server
+npm start
+```
 
-Simply open [Lovable](https://lovable.dev/projects/767f5e78-9ace-42c5-903f-7529fa5f2f76) and click on Share -> Publish.
+## Next Steps for Development
 
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+1. Implement image upload functionality
+2. Add product reviews and ratings
+3. Create advanced search and filtering
+4. Add payment gateway integration (Stripe/PayPal)
+5. Implement email notifications
+6. Set up automated testing
