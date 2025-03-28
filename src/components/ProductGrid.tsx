@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -35,8 +34,8 @@ const item = {
 };
 
 const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps) => {
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const { addItem } = useCart();
+  const { addItem, removeItem, isInWishlist } = useWishlist();
+  const { addItem: addToCart } = useCart();
   const { addProduct } = useRecentlyViewed();
   const { toast } = useToast();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
@@ -48,14 +47,14 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
     e.preventDefault();
     
     if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+      removeItem(product.id);
       toast({
         title: "Removed from wishlist",
         description: `${product.name} has been removed from your wishlist`,
         duration: 3000,
       });
     } else {
-      addToWishlist(product);
+      addItem(product);
       toast({
         title: "Added to wishlist",
         description: `${product.name} has been added to your wishlist`,
@@ -85,7 +84,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
   };
 
   const oneClickCheckout = (product: Product) => {
-    addItem(product, 1);
+    addToCart(product, 1);
     toast({
       title: "Express checkout initiated",
       description: "Proceeding to checkout with saved information",
