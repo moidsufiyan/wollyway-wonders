@@ -9,6 +9,12 @@ import Testimonials from '@/components/Testimonials';
 import Newsletter from '@/components/Newsletter';
 import Footer from '@/components/Footer';
 import { motion, useScroll, useSpring } from 'framer-motion';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import RecentlyViewed from '@/components/RecentlyViewed';
+import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const { scrollYProgress } = useScroll();
@@ -17,6 +23,16 @@ const Index = () => {
     damping: 30,
     restDelta: 0.001
   });
+  const navigate = useNavigate();
+  const { recentlyViewed } = useRecentlyViewed();
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     // Scroll to top when page loads
@@ -33,10 +49,41 @@ const Index = () => {
 
       <Navbar />
       <Hero />
+      
+      {/* Search Section */}
+      <section className="py-12 bg-gradient-to-b from-purple-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">Find Your Perfect Accessory</h2>
+            <p className="text-muted-foreground mb-8">
+              Explore our collection of handcrafted accessories designed to express your unique style
+            </p>
+            
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Search by name, category, or style..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" className="bg-wolly-magenta hover:bg-wolly-magenta/90">
+                <Search size={18} className="mr-2" />
+                Search
+              </Button>
+            </form>
+          </div>
+        </div>
+      </section>
+      
       <FeaturedProducts />
       <Collections />
       <Features />
       <Testimonials />
+      
+      {/* Recently Viewed Section - Only show if there are items */}
+      {recentlyViewed.length > 0 && <RecentlyViewed products={recentlyViewed} />}
+      
       <Newsletter />
       <Footer />
     </div>

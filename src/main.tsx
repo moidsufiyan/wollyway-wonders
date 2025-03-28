@@ -6,6 +6,7 @@ import { WishlistProvider } from './contexts/WishlistContext';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProductProvider } from './contexts/ProductContext';
+import { Toaster } from '@/components/ui/toaster';
 import App from './App.tsx';
 import './index.css';
 
@@ -29,6 +30,7 @@ if (root) {
             <CartProvider>
               <WishlistProvider>
                 <App />
+                <Toaster />
               </WishlistProvider>
             </CartProvider>
           </ProductProvider>
