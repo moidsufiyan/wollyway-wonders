@@ -1,18 +1,22 @@
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Star, Heart, ShoppingCart, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Heart, ShoppingCart, Star, Eye, BookmarkPlus, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { type Product } from '@/pages/Shop';
 import { useWishlist } from '@/contexts/WishlistContext';
-import ProductQuickView from './ProductQuickView';
+import { type Product } from '@/pages/Shop';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import SizeGuide from '@/components/SizeGuide';
+import { useCart } from '@/contexts/CartContext';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
-type ProductGridProps = {
+export type ProductGridProps = {
   products: Product[];
   onAddToCart: (product: Product) => void;
+  onSaveForLater?: (product: Product) => void;
 };
 
 const container = {
@@ -20,23 +24,89 @@ const container = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.1
     }
   }
 };
 
 const item = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  show: { opacity: 1, y: 0 }
 };
 
-const ProductGrid = ({ products, onAddToCart }: ProductGridProps) => {
+const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps) => {
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addItem } = useCart();
+  const { addProduct } = useRecentlyViewed();
+  const { toast } = useToast();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [quickViewOpen, setQuickViewOpen] = useState(false);
-  
-  const handleQuickView = (product: Product) => {
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+
+  const handleToggleWishlist = (product: Product, e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      toast({
+        title: "Removed from wishlist",
+        description: `${product.name} has been removed from your wishlist`,
+        duration: 3000,
+      });
+    } else {
+      addToWishlist(product);
+      toast({
+        title: "Added to wishlist",
+        description: `${product.name} has been added to your wishlist`,
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleQuickView = (product: Product, e: React.MouseEvent) => {
+    e.preventDefault();
     setQuickViewProduct(product);
-    setQuickViewOpen(true);
+    setSelectedColor(product.colors && product.colors.length > 0 ? product.colors[0] : '');
+    setSelectedSize(product.sizes && product.sizes.length > 0 ? product.sizes[0] : '');
+    addProduct(product); // Add to recently viewed
+  };
+
+  const handleQuickAddToCart = (product: Product, e: React.MouseEvent) => {
+    e.preventDefault();
+    onAddToCart(product);
+  };
+
+  const handleSaveForLater = (product: Product, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onSaveForLater) {
+      onSaveForLater(product);
+    }
+  };
+
+  const oneClickCheckout = (product: Product) => {
+    addItem(product, 1);
+    toast({
+      title: "Express checkout initiated",
+      description: "Proceeding to checkout with saved information",
+      duration: 3000,
+    });
+    // Navigate to checkout page with a small delay to allow toast to be seen
+    setTimeout(() => {
+      window.location.href = '/checkout';
+    }, 1500);
+  };
+
+  const getStockLabel = (product: Product) => {
+    if (!product.stockCount && product.stockCount !== 0) return null;
+    
+    if (product.stockCount === 0) {
+      return <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge>;
+    } else if (product.stockCount < 5) {
+      return <Badge variant="outline" className="absolute top-2 right-2 bg-amber-50 text-amber-600 border-amber-200">Low Stock</Badge>;
+    } else {
+      return <Badge variant="outline" className="absolute top-2 right-2 bg-green-50 text-green-600 border-green-200">In Stock</Badge>;
+    }
   };
 
   return (
@@ -45,159 +115,286 @@ const ProductGrid = ({ products, onAddToCart }: ProductGridProps) => {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
       >
         {products.map(product => (
-          <ProductCard 
-            key={product.id} 
-            product={product} 
-            onAddToCart={onAddToCart} 
-            onQuickView={handleQuickView}
-          />
+          <motion.div 
+            key={product.id}
+            variants={item}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-border dark:border-gray-700 relative group"
+          >
+            {/* Stock label */}
+            {getStockLabel(product)}
+            
+            {/* New & Featured tags */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {product.isNew && (
+                <Badge className="bg-wolly-magenta">New</Badge>
+              )}
+              {product.isFeatured && (
+                <Badge className="bg-purple-600">Featured</Badge>
+              )}
+            </div>
+            
+            <Link to={`/product/${product.id}`} className="block relative">
+              <div className="aspect-square overflow-hidden">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+              
+              {/* Action buttons */}
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center">
+                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-2">
+                  <button
+                    onClick={(e) => handleToggleWishlist(product, e)}
+                    className={`bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:bg-wolly-magenta hover:text-white transition-colors ${
+                      isInWishlist(product.id) ? 'text-wolly-magenta' : ''
+                    }`}
+                    aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                  >
+                    <Heart 
+                      size={16} 
+                      className={isInWishlist(product.id) ? "fill-wolly-magenta" : ""}
+                    />
+                  </button>
+                  
+                  <button
+                    onClick={(e) => handleQuickView(product, e)}
+                    className="bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:bg-wolly-magenta hover:text-white transition-colors"
+                    aria-label="Quick view"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  
+                  {onSaveForLater && (
+                    <button
+                      onClick={(e) => handleSaveForLater(product, e)}
+                      className="bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:bg-wolly-magenta hover:text-white transition-colors"
+                      aria-label="Save for later"
+                    >
+                      <BookmarkPlus size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Link>
+            
+            <div className="p-4">
+              <div className="flex items-center mb-1">
+                <div className="flex items-center text-yellow-400 mr-1">
+                  <Star size={14} className="fill-yellow-400" />
+                </div>
+                <span className="text-xs text-muted-foreground dark:text-gray-400">
+                  {product.rating.toFixed(1)} {product.reviews && `(${product.reviews})`}
+                </span>
+              </div>
+              
+              <Link 
+                to={`/product/${product.id}`}
+                className="block font-medium text-sm line-clamp-1 hover:text-wolly-magenta transition-colors mb-1"
+              >
+                {product.name}
+              </Link>
+              
+              <div className="flex items-center justify-between">
+                <p className="text-wolly-magenta font-bold">
+                  ${product.price.toFixed(2)}
+                </p>
+                
+                <button
+                  onClick={(e) => handleQuickAddToCart(product, e)}
+                  className="text-gray-600 dark:text-gray-300 hover:text-wolly-magenta transition-colors"
+                  aria-label="Add to cart"
+                  disabled={product.stockCount === 0}
+                >
+                  <ShoppingCart size={18} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
         ))}
       </motion.div>
       
-      <ProductQuickView 
-        product={quickViewProduct} 
-        open={quickViewOpen} 
-        onOpenChange={setQuickViewOpen} 
-      />
-    </>
-  );
-};
-
-type ProductCardProps = {
-  product: Product;
-  onAddToCart: (product: Product) => void;
-  onQuickView: (product: Product) => void;
-};
-
-const ProductCard = ({ product, onAddToCart, onQuickView }: ProductCardProps) => {
-  const { toggleItem, isInWishlist } = useWishlist();
-  const { toast } = useToast();
-  
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onAddToCart(product);
-    
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart`,
-    });
-  };
-  
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleItem(product);
-    
-    toast({
-      title: isInWishlist(product.id) ? "Removed from wishlist" : "Added to wishlist",
-      description: `${product.name} has been ${isInWishlist(product.id) ? "removed from" : "added to"} your wishlist`,
-    });
-  };
-  
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onQuickView(product);
-  };
-  
-  // Determine stock status
-  const getStockStatus = () => {
-    if (!product.stockCount) return null; // No badge if stockCount is not defined
-    if (product.stockCount <= 0) return "Out of Stock";
-    if (product.stockCount < 5) return "Low Stock";
-    return null; // No badge if plenty in stock
-  };
-  
-  const stockStatus = getStockStatus();
-  const stockColor = 
-    stockStatus === "Low Stock" ? "bg-amber-100 text-amber-800" :
-    stockStatus === "Out of Stock" ? "bg-red-100 text-red-800" : "";
-
-  return (
-    <motion.div variants={item} className="group rounded-xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-      <div className="relative aspect-square overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        
-        {/* Quick Action Buttons */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="flex gap-2 translate-y-4 group-hover:translate-y-0 transition-transform">
-            <Button
-              size="icon"
-              variant="secondary"
-              className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
-              onClick={handleToggleWishlist}
-            >
-              <Heart size={16} className={isInWishlist(product.id) ? "fill-wolly-magenta" : ""} />
-            </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
-              onClick={handleAddToCart}
-              disabled={stockStatus === "Out of Stock"}
-            >
-              <ShoppingCart size={16} />
-            </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
-              onClick={handleQuickView}
-            >
-              <Eye size={16} />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          {product.isNew && (
-            <Badge className="bg-wolly-magenta text-white">NEW</Badge>
-          )}
-          {product.isFeatured && !product.isNew && (
-            <Badge className="bg-wolly-pink text-white">FEATURED</Badge>
-          )}
-          {stockStatus && (
-            <Badge className={stockColor}>{stockStatus}</Badge>
-          )}
-        </div>
-      </div>
+      {/* Quick View Dialog */}
+      {quickViewProduct && (
+        <Dialog open={!!quickViewProduct} onOpenChange={() => setQuickViewProduct(null)}>
+          <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {/* Product Image */}
+              <div className="relative">
+                <img 
+                  src={quickViewProduct.image} 
+                  alt={quickViewProduct.name} 
+                  className="w-full h-full object-cover"
+                />
+                {getStockLabel(quickViewProduct)}
+              </div>
+              
+              {/* Product Details */}
+              <div className="p-6">
+                <DialogTitle className="text-xl font-bold mb-1">
+                  {quickViewProduct.name}
+                </DialogTitle>
+                
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center text-yellow-400 mr-2">
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        size={16} 
+                        className={i < Math.round(quickViewProduct.rating) ? "fill-yellow-400" : "text-gray-300"}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {quickViewProduct.reviews && `(${quickViewProduct.reviews} reviews)`}
+                  </span>
+                </div>
+                
+                <DialogDescription className="mb-4 line-clamp-3">
+                  {quickViewProduct.description || "No description available."}
+                </DialogDescription>
+                
+                <div className="text-xl font-bold text-wolly-magenta mb-4">
+                  ${quickViewProduct.price.toFixed(2)}
+                </div>
+                
+                {/* Colors */}
+                {quickViewProduct.colors && quickViewProduct.colors.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium mb-2">Color</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {quickViewProduct.colors.map(color => (
+                        <button
+                          key={color}
+                          className={`w-8 h-8 rounded-full border ${
+                            selectedColor === color 
+                            ? 'ring-2 ring-wolly-magenta ring-offset-2' 
+                            : 'ring-0'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setSelectedColor(color)}
+                          aria-label={`Select ${color}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Sizes */}
+                {quickViewProduct.sizes && quickViewProduct.sizes.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium">Size</h4>
+                      <button 
+                        className="text-xs text-wolly-magenta underline"
+                        onClick={() => setShowSizeGuide(true)}
+                      >
+                        Size Guide
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {quickViewProduct.sizes.map(size => (
+                        <button
+                          key={size}
+                          className={`px-3 py-1 border rounded-md text-sm ${
+                            selectedSize === size 
+                            ? 'bg-wolly-magenta text-white border-wolly-magenta' 
+                            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                          }`}
+                          onClick={() => setSelectedSize(size)}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                <div className="space-y-2 mt-6">
+                  <Button
+                    className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
+                    disabled={quickViewProduct.stockCount === 0}
+                    onClick={() => {
+                      onAddToCart(quickViewProduct);
+                      setQuickViewProduct(null);
+                    }}
+                  >
+                    <ShoppingCart size={16} className="mr-2" />
+                    Add to Cart
+                  </Button>
+                  
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => oneClickCheckout(quickViewProduct)}
+                    disabled={quickViewProduct.stockCount === 0}
+                  >
+                    <Zap size={16} className="mr-2" />
+                    One-Click Checkout
+                  </Button>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      className="w-1/2"
+                      variant="ghost"
+                      onClick={(e) => {
+                        handleToggleWishlist(quickViewProduct, e);
+                        setQuickViewProduct(null);
+                      }}
+                    >
+                      <Heart 
+                        size={16} 
+                        className={`mr-2 ${isInWishlist(quickViewProduct.id) ? "fill-wolly-magenta text-wolly-magenta" : ""}`}
+                      />
+                      Wishlist
+                    </Button>
+                    
+                    {onSaveForLater && (
+                      <Button
+                        className="w-1/2"
+                        variant="ghost"
+                        onClick={(e) => {
+                          if (onSaveForLater) onSaveForLater(quickViewProduct);
+                          setQuickViewProduct(null);
+                        }}
+                      >
+                        <BookmarkPlus size={16} className="mr-2" />
+                        Save for Later
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-xs text-muted-foreground mt-4">
+                  {quickViewProduct.stockCount === 0 ? (
+                    <span className="text-red-500">Out of stock</span>
+                  ) : quickViewProduct.stockCount && quickViewProduct.stockCount < 5 ? (
+                    <span className="text-amber-600">Only {quickViewProduct.stockCount} left in stock</span>
+                  ) : (
+                    <span className="text-green-600">In stock</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <DialogClose className="absolute top-4 right-4" />
+          </DialogContent>
+        </Dialog>
+      )}
       
-      <div className="p-4">
-        <div className="flex items-center mb-1">
-          <span className="text-xs text-muted-foreground">{product.category}</span>
-          <div className="ml-auto flex items-center gap-1">
-            <Star size={12} className="fill-yellow-400 text-yellow-400" />
-            <span className="text-xs font-medium">{product.rating}</span>
-          </div>
-        </div>
-        
-        <Link to={`/product/${product.id}`} className="block">
-          <h3 className="font-medium text-foreground hover:text-wolly-magenta transition-colors">
-            {product.name}
-          </h3>
-        </Link>
-        
-        <div className="mt-2 flex items-center justify-between">
-          <span className="font-bold text-wolly-magenta">${product.price.toFixed(2)}</span>
-          
-          {/* Stock indicator */}
-          {product.stockCount !== undefined && product.stockCount < 10 && product.stockCount > 0 && (
-            <span className="text-xs text-orange-600">
-              Only {product.stockCount} left
-            </span>
-          )}
-        </div>
-      </div>
-    </motion.div>
+      {/* Size Guide Dialog */}
+      <Dialog open={showSizeGuide} onOpenChange={setShowSizeGuide}>
+        <DialogContent>
+          <DialogTitle>Size Guide</DialogTitle>
+          <SizeGuide />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
