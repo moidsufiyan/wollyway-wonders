@@ -42,9 +42,8 @@ const Shop = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
   const [filters, setFilters] = useState({
-    category: '',
-    minPrice: 0,
-    maxPrice: 1000,
+    categories: [] as string[],
+    priceRange: [0, 1000] as [number, number],
     colors: [] as string[],
   });
   
@@ -63,9 +62,8 @@ const Shop = () => {
   // Reset filters and get back to default state
   const resetFilters = () => {
     setFilters({
-      category: '',
-      minPrice: 0,
-      maxPrice: 1000,
+      categories: [],
+      priceRange: [0, 1000],
       colors: [],
     });
     setSortOption('newest');
@@ -73,8 +71,12 @@ const Shop = () => {
   
   // Apply filters to products
   const filteredProducts = products ? products.filter(product => {
-    const matchesCategory = !filters.category || product.category === filters.category;
-    const matchesPrice = product.price >= filters.minPrice && product.price <= filters.maxPrice;
+    const matchesCategory = 
+      filters.categories.length === 0 || 
+      filters.categories.includes(product.category);
+    const matchesPrice = 
+      product.price >= filters.priceRange[0] && 
+      product.price <= filters.priceRange[1];
     const matchesColor = 
       filters.colors.length === 0 || 
       product.colors.some(color => filters.colors.includes(color));

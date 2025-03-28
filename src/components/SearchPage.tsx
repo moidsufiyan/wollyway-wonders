@@ -9,6 +9,7 @@ import { Search, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { type Product } from '@/pages/Shop';
+import { useToast } from '@/hooks/use-toast';
 
 const SearchPage = () => {
   const location = useLocation();
@@ -25,9 +26,14 @@ const SearchPage = () => {
   } = useProductSearch(initialQuery);
   
   const { addItem } = useCart();
+  const { toast } = useToast();
   
   const handleAddToCart = (product: Product) => {
     addItem(product, 1);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart`,
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

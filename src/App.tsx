@@ -21,6 +21,7 @@ import ScrollToTop from './components/ScrollToTop';
 import BundleDetail from "./pages/BundleDetail";
 import Bundles from "./pages/Bundles";
 import FAQ from "./pages/FAQ";
+import SizeGuidePage from './pages/SizeGuidePage';
 
 function App() {
   return (
@@ -48,6 +49,9 @@ function App() {
           {/* Bundle Routes */}
           <Route path="/bundles" element={<Bundles />} />
           <Route path="/bundle/:id" element={<BundleDetail />} />
+          
+          {/* Add this new route */}
+          <Route path="/size-guide" element={<SizeGuidePage />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

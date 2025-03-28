@@ -1,10 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Heart, ShoppingCart, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { type Product } from '@/pages/Shop';
+import { useWishlist } from '@/contexts/WishlistContext';
+import ProductQuickView from './ProductQuickView';
+import { useToast } from '@/hooks/use-toast';
 
 type ProductGridProps = {
   products: Product[];
@@ -27,21 +31,92 @@ const item = {
 };
 
 const ProductGrid = ({ products, onAddToCart }: ProductGridProps) => {
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+  
+  const handleQuickView = (product: Product) => {
+    setQuickViewProduct(product);
+    setQuickViewOpen(true);
+  };
+
   return (
-    <motion.div 
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-    >
-      {products.map(product => (
-        <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-      ))}
-    </motion.div>
+    <>
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        {products.map(product => (
+          <ProductCard 
+            key={product.id} 
+            product={product} 
+            onAddToCart={onAddToCart} 
+            onQuickView={handleQuickView}
+          />
+        ))}
+      </motion.div>
+      
+      <ProductQuickView 
+        product={quickViewProduct} 
+        open={quickViewOpen} 
+        onOpenChange={setQuickViewOpen} 
+      />
+    </>
   );
 };
 
-const ProductCard = ({ product, onAddToCart }: { product: Product; onAddToCart: (product: Product) => void }) => {
+type ProductCardProps = {
+  product: Product;
+  onAddToCart: (product: Product) => void;
+  onQuickView: (product: Product) => void;
+};
+
+const ProductCard = ({ product, onAddToCart, onQuickView }: ProductCardProps) => {
+  const { toggleItem, isInWishlist } = useWishlist();
+  const { toast } = useToast();
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onAddToCart(product);
+    
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart`,
+    });
+  };
+  
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleItem(product);
+    
+    toast({
+      title: isInWishlist(product.id) ? "Removed from wishlist" : "Added to wishlist",
+      description: `${product.name} has been ${isInWishlist(product.id) ? "removed from" : "added to"} your wishlist`,
+    });
+  };
+  
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onQuickView(product);
+  };
+  
+  // Determine stock status
+  const getStockStatus = () => {
+    if (!product.stockCount) return null; // No badge if stockCount is not defined
+    if (product.stockCount <= 0) return "Out of Stock";
+    if (product.stockCount < 5) return "Low Stock";
+    return null; // No badge if plenty in stock
+  };
+  
+  const stockStatus = getStockStatus();
+  const stockColor = 
+    stockStatus === "Low Stock" ? "bg-amber-100 text-amber-800" :
+    stockStatus === "Out of Stock" ? "bg-red-100 text-red-800" : "";
+
   return (
     <motion.div variants={item} className="group rounded-xl overflow-hidden border border-border bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
       <div className="relative aspect-square overflow-hidden">
@@ -58,48 +133,42 @@ const ProductCard = ({ product, onAddToCart }: { product: Product; onAddToCart: 
               size="icon"
               variant="secondary"
               className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
+              onClick={handleToggleWishlist}
             >
-              <Heart size={16} />
+              <Heart size={16} className={isInWishlist(product.id) ? "fill-wolly-magenta" : ""} />
             </Button>
             <Button
               size="icon"
               variant="secondary"
               className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onAddToCart(product);
-              }}
+              onClick={handleAddToCart}
+              disabled={stockStatus === "Out of Stock"}
             >
               <ShoppingCart size={16} />
             </Button>
-            <Link to={`/product/${product.id}`}>
-              <Button
-                size="icon"
-                variant="secondary"
-                className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
-              >
-                <Eye size={16} />
-              </Button>
-            </Link>
+            <Button
+              size="icon"
+              variant="secondary"
+              className="rounded-full bg-white text-wolly-magenta hover:bg-white/90"
+              onClick={handleQuickView}
+            >
+              <Eye size={16} />
+            </Button>
           </div>
         </div>
         
-        {/* New or Featured badge */}
-        {product.isNew && (
-          <span className="absolute top-3 left-3 bg-wolly-magenta text-white text-xs font-semibold px-2 py-1 rounded-full">
-            NEW
-          </span>
-        )}
-        {product.isFeatured && !product.isNew && (
-          <span className="absolute top-3 left-3 bg-wolly-pink text-white text-xs font-semibold px-2 py-1 rounded-full">
-            FEATURED
-          </span>
-        )}
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1">
+          {product.isNew && (
+            <Badge className="bg-wolly-magenta text-white">NEW</Badge>
+          )}
+          {product.isFeatured && !product.isNew && (
+            <Badge className="bg-wolly-pink text-white">FEATURED</Badge>
+          )}
+          {stockStatus && (
+            <Badge className={stockColor}>{stockStatus}</Badge>
+          )}
+        </div>
       </div>
       
       <div className="p-4">
@@ -121,7 +190,7 @@ const ProductCard = ({ product, onAddToCart }: { product: Product; onAddToCart: 
           <span className="font-bold text-wolly-magenta">${product.price.toFixed(2)}</span>
           
           {/* Stock indicator */}
-          {product.stockCount && product.stockCount < 10 && (
+          {product.stockCount !== undefined && product.stockCount < 10 && product.stockCount > 0 && (
             <span className="text-xs text-orange-600">
               Only {product.stockCount} left
             </span>
