@@ -12,6 +12,7 @@ import RecentlyViewed from '@/components/RecentlyViewed';
 import SearchPage from '@/components/SearchPage';
 import { Button } from '@/components/ui/button';
 import { Filter, Search } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 
 // Define the product type for better type checking
 export type Product = {
@@ -25,6 +26,8 @@ export type Product = {
   rating: number;
   description?: string;
   isNew?: boolean;
+  isFeatured?: boolean;
+  stockCount?: number;
   stock?: number;
   discount?: number;
   reviews?: number;
@@ -47,6 +50,11 @@ const Shop = () => {
   
   const { data: products, isLoading } = useProducts();
   const { recentlyViewed } = useRecentlyViewed();
+  const { addItem } = useCart();
+  
+  const handleAddToCart = (product: Product) => {
+    addItem(product, 1);
+  };
   
   const toggleFilters = () => {
     setShowFilters(prev => !prev);
@@ -137,7 +145,7 @@ const Shop = () => {
                       <span className="text-sm text-muted-foreground mr-3 hidden md:inline">
                         {sortedProducts.length} Products
                       </span>
-                      <ProductSort value={sortOption} onChange={setSortOption} />
+                      <ProductSort onSortChange={setSortOption} />
                     </div>
                   </div>
                   
@@ -156,7 +164,7 @@ const Shop = () => {
                           <Button onClick={resetFilters}>Clear All Filters</Button>
                         </div>
                       ) : (
-                        <ProductGrid products={sortedProducts} />
+                        <ProductGrid products={sortedProducts} onAddToCart={handleAddToCart} />
                       )}
                     </>
                   )}

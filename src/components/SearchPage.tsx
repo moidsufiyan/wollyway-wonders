@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCart } from '@/contexts/CartContext';
+import { type Product } from '@/pages/Shop';
 
 const SearchPage = () => {
   const location = useLocation();
@@ -21,6 +23,12 @@ const SearchPage = () => {
     isSearching,
     isLoading 
   } = useProductSearch(initialQuery);
+  
+  const { addItem } = useCart();
+  
+  const handleAddToCart = (product: Product) => {
+    addItem(product, 1);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +80,7 @@ const SearchPage = () => {
                     Found {searchResults.length} products matching your search
                   </p>
                 </div>
-                <ProductGrid products={searchResults} />
+                <ProductGrid products={searchResults} onAddToCart={handleAddToCart} />
               </>
             ) : (
               <div className="text-center py-12">

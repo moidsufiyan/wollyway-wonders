@@ -9,23 +9,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-type SortOption = 'newest' | 'priceAsc' | 'priceDesc' | 'popularity';
+type SortOption = 'newest' | 'price-low' | 'price-high' | 'rating';
 
 type SortProps = {
-  onSortChange: (option: SortOption) => void;
+  onSortChange: (option: string) => void;
 };
 
 const sortOptions = [
   { value: 'newest', label: 'Newest' },
-  { value: 'priceAsc', label: 'Price: Low to High' },
-  { value: 'priceDesc', label: 'Price: High to Low' },
-  { value: 'popularity', label: 'Most Popular' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'rating', label: 'Most Popular' },
 ];
 
 const ProductSort = ({ onSortChange }: SortProps) => {
-  const [activeSortOption, setActiveSortOption] = useState<SortOption>('newest');
+  const [activeSortOption, setActiveSortOption] = useState<string>('newest');
   
-  const handleSortChange = (option: SortOption) => {
+  const handleSortChange = (option: string) => {
     setActiveSortOption(option);
     onSortChange(option);
   };
@@ -43,7 +43,7 @@ const ProductSort = ({ onSortChange }: SortProps) => {
           <DropdownMenuItem
             key={option.value}
             className="flex items-center justify-between cursor-pointer"
-            onClick={() => handleSortChange(option.value as SortOption)}
+            onClick={() => handleSortChange(option.value)}
           >
             {option.label}
             {activeSortOption === option.value && <Check size={16} />}

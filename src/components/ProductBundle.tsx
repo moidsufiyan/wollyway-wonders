@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import type { Product } from '@/pages/Shop';
 
+// Make BundleProduct compatible with Product
 export type BundleProduct = {
   id: number;
   name: string;
@@ -18,7 +19,7 @@ export type BundleProduct = {
   rating: number;
   isNew?: boolean;
   isFeatured?: boolean;
-  colors?: string[];
+  colors: string[]; // Make required to match Product type
   stockCount?: number;
 };
 
@@ -50,7 +51,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
   const handleAddBundleToCart = () => {
     // Add each product in the bundle to the cart
     bundle.products.forEach(product => {
-      addItem(product, 1);
+      addItem(product as Product, 1);
     });
   };
   
