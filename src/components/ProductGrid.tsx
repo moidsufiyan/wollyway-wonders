@@ -122,10 +122,8 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
             variants={item}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-border dark:border-gray-700 relative group"
           >
-            {/* Stock label */}
             {getStockLabel(product)}
             
-            {/* New & Featured tags */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {product.isNew && (
                 <Badge className="bg-wolly-magenta">New</Badge>
@@ -144,7 +142,6 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
                 />
               </div>
               
-              {/* Action buttons */}
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center">
                 <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-2">
                   <button
@@ -217,12 +214,10 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
         ))}
       </motion.div>
       
-      {/* Quick View Dialog */}
       {quickViewProduct && (
         <Dialog open={!!quickViewProduct} onOpenChange={() => setQuickViewProduct(null)}>
           <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2">
-              {/* Product Image */}
               <div className="relative">
                 <img 
                   src={quickViewProduct.image} 
@@ -232,7 +227,6 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
                 {getStockLabel(quickViewProduct)}
               </div>
               
-              {/* Product Details */}
               <div className="p-6">
                 <DialogTitle className="text-xl font-bold mb-1">
                   {quickViewProduct.name}
@@ -261,7 +255,6 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
                   ${quickViewProduct.price.toFixed(2)}
                 </div>
                 
-                {/* Colors */}
                 {quickViewProduct.colors && quickViewProduct.colors.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-medium mb-2">Color</h4>
@@ -283,7 +276,6 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
                   </div>
                 )}
                 
-                {/* Sizes */}
                 {quickViewProduct.sizes && quickViewProduct.sizes.length > 0 && (
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
@@ -313,7 +305,6 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
                   </div>
                 )}
                 
-                {/* Action Buttons */}
                 <div className="space-y-2 mt-6">
                   <Button
                     className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
@@ -386,11 +377,11 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
         </Dialog>
       )}
       
-      {/* Size Guide Dialog */}
       <Dialog open={showSizeGuide} onOpenChange={setShowSizeGuide}>
         <DialogContent>
           <DialogTitle>Size Guide</DialogTitle>
           <SizeGuide />
+          <DialogClose className="absolute top-4 right-4" />
         </DialogContent>
       </Dialog>
     </>
