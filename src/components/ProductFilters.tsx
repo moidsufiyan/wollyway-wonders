@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
-type FilterProps = {
+export type FilterProps = {
   filters: {
     categories: string[];
     priceRange: [number, number];
@@ -18,6 +18,8 @@ type FilterProps = {
     priceRange: [number, number];
     colors: string[];
   }>) => void;
+  resetFilters: () => void;
+  onClose: () => void;
 };
 
 const categories = ["Bands", "Keychains", "Bracelets", "Accessories"];
@@ -32,7 +34,7 @@ const colors = [
   { name: "Green", value: "green" },
 ];
 
-const ProductFilters = ({ filters, onFilterChange }: FilterProps) => {
+const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: FilterProps) => {
   const handleCategoryChange = (category: string) => {
     const newCategories = filters.categories.includes(category)
       ? filters.categories.filter(c => c !== category)
@@ -54,11 +56,7 @@ const ProductFilters = ({ filters, onFilterChange }: FilterProps) => {
   };
 
   const clearFilters = () => {
-    onFilterChange({
-      categories: [],
-      priceRange: [0, 100],
-      colors: []
-    });
+    resetFilters();
   };
 
   const hasActiveFilters = filters.categories.length > 0 || 
@@ -149,7 +147,10 @@ const ProductFilters = ({ filters, onFilterChange }: FilterProps) => {
 
       {/* Apply Filters Button - Mobile only */}
       <div className="mt-6 lg:hidden">
-        <Button className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90">
+        <Button 
+          className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
+          onClick={onClose}
+        >
           Apply Filters
         </Button>
       </div>

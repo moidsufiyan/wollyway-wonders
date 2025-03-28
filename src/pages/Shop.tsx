@@ -69,6 +69,18 @@ const Shop = () => {
     setSortOption('newest');
   };
   
+  // Handle filter changes coming from the ProductFilters component
+  const handleFilterChange = (newFilters: Partial<{
+    categories: string[];
+    priceRange: [number, number];
+    colors: string[];
+  }>) => {
+    setFilters(prev => ({
+      ...prev,
+      ...newFilters
+    }));
+  };
+  
   // Apply filters to products
   const filteredProducts = products ? products.filter(product => {
     const matchesCategory = 
@@ -126,7 +138,7 @@ const Shop = () => {
                 <div className={`md:w-1/4 ${showFilters ? 'block' : 'hidden md:block'}`}>
                   <ProductFilters 
                     filters={filters}
-                    setFilters={setFilters}
+                    onFilterChange={handleFilterChange}
                     resetFilters={resetFilters}
                     onClose={() => setShowFilters(false)}
                   />
