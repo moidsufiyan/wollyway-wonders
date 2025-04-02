@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Facebook, Github, Mail, ArrowRight } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { Facebook, Github, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,43 +11,78 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+
+// Define form types
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
+
+type RegisterFormValues = {
+  name: string;
+  email: string;
+  password: string;
+};
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { login, register, isAuthenticated } = useAuth();
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerName, setRegisterName] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Get redirect URL from query parameters or default to home
   const from = new URLSearchParams(location.search).get('from') || '/';
   
+  // Initialize form for login
+  const loginForm = useForm<LoginFormValues>({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  // Initialize form for registration
+  const registerForm = useForm<RegisterFormValues>({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+    },
+  });
+  
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
       navigate(from);
     }
   }, [isAuthenticated, navigate, from]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
+    setAuthError(null);
     
     try {
-      await login(loginEmail, loginPassword);
+      await login(values.email, values.password);
       toast({
         title: "Login successful",
         description: "Welcome back to Wollyway!",
       });
       navigate(from);
-    } catch (error) {
+    } catch (error: any) {
+      setAuthError(error.message || "Invalid email or password. Please try again.");
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -57,18 +93,19 @@ const Login = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async (values: RegisterFormValues) => {
     setIsLoading(true);
+    setAuthError(null);
     
     try {
-      await register(registerName, registerEmail, registerPassword);
+      await register(values.name, values.email, values.password);
       toast({
         title: "Registration successful",
         description: "Welcome to Wollyway!",
       });
       navigate(from);
-    } catch (error) {
+    } catch (error: any) {
+      setAuthError(error.message || "Registration failed. Please try again.");
       toast({
         variant: "destructive",
         title: "Registration failed",
@@ -105,46 +142,81 @@ const Login = () => {
               </TabsList>
               
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="you@example.com" 
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required 
+                {authError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{authError}</AlertDescription>
+                  </Alert>
+                )}
+              
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      rules={{
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Invalid email address"
+                        }
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="you@example.com" 
+                              type="email"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
-                      <Link 
-                        to="/reset-password" 
-                        className="text-xs text-wolly-magenta hover:underline"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required 
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      rules={{
+                        required: "Password is required",
+                        minLength: {
+                          value: 6,
+                          message: "Password must be at least 6 characters"
+                        }
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Password</FormLabel>
+                            <Link 
+                              to="/reset-password" 
+                              className="text-xs text-wolly-magenta hover:underline"
+                            >
+                              Forgot password?
+                            </Link>
+                          </div>
+                          <FormControl>
+                            <Input 
+                              type="password"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Signing in...' : 'Sign in'}
-                  </Button>
-                </form>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Signing in...' : 'Sign in'}
+                    </Button>
+                  </form>
+                </Form>
                 
                 <div className="mt-6">
                   <div className="relative">
@@ -172,61 +244,113 @@ const Login = () => {
               </TabsContent>
               
               <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="John Doe" 
-                      value={registerName}
-                      onChange={(e) => setRegisterName(e.target.value)}
-                      required 
+                {authError && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{authError}</AlertDescription>
+                  </Alert>
+                )}
+              
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+                    <FormField
+                      control={registerForm.control}
+                      name="name"
+                      rules={{
+                        required: "Name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Name must be at least 2 characters"
+                        }
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="John Doe" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
-                    <Input 
-                      id="register-email" 
-                      type="email" 
-                      placeholder="you@example.com" 
-                      value={registerEmail}
-                      onChange={(e) => setRegisterEmail(e.target.value)}
-                      required 
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      rules={{
+                        required: "Email is required",
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Invalid email address"
+                        }
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="you@example.com" 
+                              type="email"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password">Password</Label>
-                    <Input 
-                      id="register-password" 
-                      type="password" 
-                      value={registerPassword}
-                      onChange={(e) => setRegisterPassword(e.target.value)}
-                      required 
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      rules={{
+                        required: "Password is required",
+                        minLength: {
+                          value: 6,
+                          message: "Password must be at least 6 characters"
+                        },
+                        pattern: {
+                          value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
+                          message: "Password must include uppercase, lowercase, number and special character"
+                        }
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="password"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Creating account...' : 'Create account'}
-                  </Button>
-                  
-                  <p className="text-xs text-center text-muted-foreground">
-                    By creating an account, you agree to our{' '}
-                    <Link to="/terms" className="text-wolly-magenta hover:underline">
-                      Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link to="/privacy" className="text-wolly-magenta hover:underline">
-                      Privacy Policy
-                    </Link>
-                    .
-                  </p>
-                </form>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Creating account...' : 'Create account'}
+                    </Button>
+                    
+                    <p className="text-xs text-center text-muted-foreground">
+                      By creating an account, you agree to our{' '}
+                      <Link to="/terms" className="text-wolly-magenta hover:underline">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link to="/privacy" className="text-wolly-magenta hover:underline">
+                        Privacy Policy
+                      </Link>
+                      .
+                    </p>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           </div>
