@@ -1,6 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface PasswordStrengthMeterProps {
   password: string;
@@ -70,8 +71,7 @@ const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({ password 
       </div>
       <Progress 
         value={strengthPercentage} 
-        className="h-1" 
-        indicatorClassName={strength.color} 
+        className={cn("h-1", strength.color)} 
       />
       
       <ul className="text-xs text-muted-foreground mt-2 space-y-1">
