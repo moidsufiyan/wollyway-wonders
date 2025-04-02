@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -22,6 +21,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import PasswordStrengthMeter from '@/components/auth/PasswordStrengthMeter';
 
 // Define form types
 type LoginFormValues = {
@@ -42,11 +42,10 @@ const Login = () => {
   const { login, register, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  
-  // Get redirect URL from query parameters or default to home
+  const [password, setPassword] = useState('');
+
   const from = new URLSearchParams(location.search).get('from') || '/';
-  
-  // Initialize form for login
+
   const loginForm = useForm<LoginFormValues>({
     defaultValues: {
       email: '',
@@ -54,7 +53,6 @@ const Login = () => {
     },
   });
 
-  // Initialize form for registration
   const registerForm = useForm<RegisterFormValues>({
     defaultValues: {
       name: '',
@@ -62,8 +60,7 @@ const Login = () => {
       password: '',
     },
   });
-  
-  // Redirect if already logged in
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate(from);
@@ -323,8 +320,13 @@ const Login = () => {
                             <Input 
                               type="password"
                               {...field} 
+                              onChange={(e) => {
+                                field.onChange(e);
+                                setPassword(e.target.value);
+                              }}
                             />
                           </FormControl>
+                          <PasswordStrengthMeter password={password} />
                           <FormMessage />
                         </FormItem>
                       )}
