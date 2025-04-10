@@ -24,6 +24,9 @@ import BundleDetail from "./pages/BundleDetail";
 import Bundles from "./pages/Bundles";
 import FAQ from "./pages/FAQ";
 import SizeGuidePage from './pages/SizeGuidePage';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   return (
@@ -47,13 +50,18 @@ function App() {
           <Route path="/support" element={<Support />} />
           <Route path="/customize" element={<Customize />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/faq" element={<FAQ />} />
           
           {/* Bundle Routes */}
           <Route path="/bundles" element={<Bundles />} />
           <Route path="/bundle/:id" element={<BundleDetail />} />
           
-          {/* Add this new route */}
+          {/* Blog Routes */}
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          
+          {/* Size Guide */}
           <Route path="/size-guide" element={<SizeGuidePage />} />
           
           <Route path="*" element={<NotFound />} />

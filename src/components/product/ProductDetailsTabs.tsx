@@ -28,7 +28,7 @@ const mockReviews: Review[] = [
     images: ['https://i.pravatar.cc/150?img=2', 'https://i.pravatar.cc/150?img=3'],
     createdAt: '2023-04-15T10:30:00Z',
     helpful: 12,
-    verified: true,
+    verified: true
   },
   {
     id: '2',
@@ -40,7 +40,7 @@ const mockReviews: Review[] = [
     comment: 'Great product overall. The only reason I'm not giving 5 stars is because the shipping took longer than expected. Otherwise, very happy with my purchase.',
     createdAt: '2023-03-20T14:15:00Z',
     helpful: 5,
-    verified: true,
+    verified: true
   },
   {
     id: '3',
@@ -51,8 +51,8 @@ const mockReviews: Review[] = [
     comment: 'Average product. It does what it's supposed to do, but nothing exceptional. The material could be better quality for the price.',
     createdAt: '2023-03-10T09:45:00Z',
     helpful: 2,
-    verified: false,
-  },
+    verified: false
+  }
 ];
 
 const ratingsBreakdown = {
@@ -60,7 +60,7 @@ const ratingsBreakdown = {
   4: 8,
   3: 4,
   2: 2,
-  1: 1,
+  1: 1
 };
 
 const ProductDetailsTabs: React.FC<ProductDetailsTabsProps> = ({
