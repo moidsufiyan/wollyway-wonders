@@ -5,38 +5,38 @@ import { ArrowRight, Heart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
 
-// Sample product data
+// Sample product data focused on hand-knitting
 const featuredProducts = [
   {
     id: 1,
-    name: "Cosmic Wave Band",
+    name: "Cosmic Wave Knitted Band",
     price: 24.99,
     image: "https://images.unsplash.com/photo-1617006898062-3575ca439551?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Hand Bands",
+    category: "Hand Knitted Bands",
     isNew: true,
   },
   {
     id: 2,
-    name: "Galaxy Keychain",
+    name: "Galaxy Knitted Keychain",
     price: 19.99,
     image: "https://images.unsplash.com/photo-1622060520458-0d30e8c18cf9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Keychains",
+    category: "Hand Knitted Keychains",
     isNew: false,
   },
   {
     id: 3,
-    name: "Sunset Melody Band",
+    name: "Sunset Melody Knitted Band",
     price: 22.99,
     image: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Hand Bands",
+    category: "Hand Knitted Bands",
     isNew: true,
   },
   {
     id: 4,
-    name: "Nebula Accessory",
+    name: "Cozy Winter Knitted Scarf",
     price: 29.99,
     image: "https://images.unsplash.com/photo-1625591338875-e2cca9de80a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Accessories",
+    category: "Hand Knitted Accessories",
     isNew: false,
   }
 ];
@@ -100,7 +100,7 @@ const FeaturedProducts = () => {
         </span>
         <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Bestsellers</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Discover our most loved handcrafted pieces. Each item is carefully made with premium materials and attention to detail.
+          Discover our most loved hand-knitted pieces. Each item is carefully crafted with premium yarn and attention to detail.
         </p>
       </div>
 
@@ -119,7 +119,7 @@ const FeaturedProducts = () => {
       <div className="mt-16 text-center">
         <Button asChild size="lg" className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white button-hover">
           <Link to="/shop">
-            View All Products <ArrowRight size={16} className="ml-2" />
+            View All Knitted Products <ArrowRight size={16} className="ml-2" />
           </Link>
         </Button>
       </div>

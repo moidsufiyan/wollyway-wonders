@@ -59,11 +59,11 @@ const seedDatabase = async () => {
 
     console.log('Regular user created:', user.email);
 
-    // Create products
+    // Create products focused on hand-knitted items
     const products = [
       {
-        name: 'Super Hero Keychain',
-        description: 'Handcrafted superhero themed keychain made with premium materials. Comes with metal clasp.',
+        name: 'Hand-Knitted Hero Keychain',
+        description: 'Handcrafted superhero themed keychain carefully knitted with premium wool. Features a metal clasp for secure attachment.',
         price: 19.99,
         images: ['/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png'],
         brand: 'WollyWay',
@@ -74,8 +74,8 @@ const seedDatabase = async () => {
         featured: true,
       },
       {
-        name: 'Friendship Bracelets Set',
-        description: 'Set of handwoven friendship bands with custom designs. Perfect gift for friends.',
+        name: 'Knitted Friendship Bracelet Set',
+        description: 'Set of hand-knitted friendship bands with custom designs. Perfect gift for friends made with high-quality wool yarn.',
         price: 24.99,
         images: ['/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png'],
         brand: 'WollyWay',
@@ -86,8 +86,8 @@ const seedDatabase = async () => {
         featured: true,
       },
       {
-        name: 'Batman Inspired Band',
-        description: 'Superhero-inspired handwoven band with iconic pattern. Durable and stylish.',
+        name: 'Batman Inspired Knitted Band',
+        description: 'Superhero-inspired hand-knitted band with iconic pattern. Made from soft merino wool for comfort and durability.',
         price: 22.99,
         images: ['/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png'],
         brand: 'WollyWay',
@@ -99,14 +99,14 @@ const seedDatabase = async () => {
         discount: 10,
       },
       {
-        name: 'Colorful Woven Bracelet',
-        description: 'Vibrant woven bracelet made with sustainable materials. Adjustable size.',
-        price: 16.99,
+        name: 'Wool Winter Headband',
+        description: 'Beautiful hand-knitted wool headband with cable knit pattern. Features soft fleece lining for extra warmth and comfort.',
+        price: 18.99,
         images: ['/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png'],
         brand: 'WollyWay',
-        category: 'Bracelets',
+        category: 'Headbands',
         countInStock: 40,
-        rating: 4.2,
+        rating: 4.6,
         numReviews: 6,
         featured: false,
       },
@@ -121,7 +121,7 @@ const seedDatabase = async () => {
       user: user._id,
       name: user.name,
       rating: 5,
-      comment: 'Great product, highly recommended!',
+      comment: 'Beautiful knitting work! The wool is so soft and the colors are vibrant. Highly recommended!',
     });
     await product.save();
     console.log('Sample review added.');
