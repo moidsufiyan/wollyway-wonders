@@ -1,20 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductFilters from '@/components/ProductFilters';
 import ProductGrid from '@/components/ProductGrid';
-import ProductSort from '@/components/ProductSort';
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts, parseQueryFilters } from '@/hooks/useProducts';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import SearchPage from '@/components/SearchPage';
 import { Button } from '@/components/ui/button';
-import { Filter, Search, Moon, Sun, ShoppingBag } from 'lucide-react';
+import { Filter, Moon, Sun, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Toggle } from '@/components/ui/toggle';
+import ProductBreadcrumb from '@/components/product/ProductBreadcrumb';
 
 // Define the product type for better type checking
 export type Product = {
@@ -38,8 +38,9 @@ export type Product = {
 
 const Shop = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
-  const isSearchMode = searchParams.has('search');
+  const isSearchMode = searchParams.has('search') || searchParams.has('keyword');
   
   const [showFilters, setShowFilters] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -48,16 +49,27 @@ const Shop = () => {
     return savedPreference ? JSON.parse(savedPreference) : false;
   });
   const [savedCart, setSavedCart] = useState<Product[]>([]);
-  const [filters, setFilters] = useState({
-    categories: [] as string[],
-    priceRange: [0, 100] as [number, number],
-    colors: [] as string[],
-    ratingRange: [1, 5] as [number, number],
-    inStock: false,
-    sortBy: 'newest'
-  });
   
-  const { data: products, isLoading } = useProducts();
+  // Get filters from URL
+  const queryFilters = parseQueryFilters(location.search);
+  const activeCategory = queryFilters.category as string | undefined;
+  
+  // Define default filter values
+  const defaultFilters = {
+    categories: Array.isArray(queryFilters.category) 
+      ? queryFilters.category 
+      : queryFilters.category ? [queryFilters.category] : [],
+    priceRange: queryFilters.priceRange || [0, 100] as [number, number],
+    colors: queryFilters.colors || [] as string[],
+    ratingRange: queryFilters.ratingRange || [1, 5] as [number, number],
+    inStock: queryFilters.inStock || false,
+    sortBy: queryFilters.sortBy || 'newest'
+  };
+  
+  const [filters, setFilters] = useState(defaultFilters);
+  
+  // Use enhanced products hook
+  const { data: products, isLoading } = useProducts(queryFilters);
   const { recentlyViewed } = useRecentlyViewed();
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -71,6 +83,59 @@ const Shop = () => {
     }
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
+  
+  // Handle URL updates when filters change
+  useEffect(() => {
+    const currentParams = new URLSearchParams(location.search);
+    
+    // Preserve search term if it exists
+    const searchTerm = currentParams.get('search') || currentParams.get('keyword');
+    
+    const newParams = new URLSearchParams();
+    
+    // Add search term if it exists
+    if (searchTerm) {
+      newParams.set('search', searchTerm);
+    }
+    
+    // Add categories
+    if (filters.categories.length > 0) {
+      newParams.set('category', filters.categories.join(','));
+    }
+    
+    // Add price range if not default
+    if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 100) {
+      newParams.set('minPrice', filters.priceRange[0].toString());
+      newParams.set('maxPrice', filters.priceRange[1].toString());
+    }
+    
+    // Add colors
+    if (filters.colors.length > 0) {
+      newParams.set('colors', filters.colors.join(','));
+    }
+    
+    // Add rating range if not default
+    if (filters.ratingRange[0] !== 1 || filters.ratingRange[1] !== 5) {
+      newParams.set('minRating', filters.ratingRange[0].toString());
+      newParams.set('maxRating', filters.ratingRange[1].toString());
+    }
+    
+    // Add in stock flag if true
+    if (filters.inStock) {
+      newParams.set('inStock', 'true');
+    }
+    
+    // Add sort option if not default
+    if (filters.sortBy !== 'newest') {
+      newParams.set('sortBy', filters.sortBy);
+    }
+    
+    // Update URL if params have changed
+    const newSearch = newParams.toString();
+    if (newSearch !== location.search.replace(/^\?/, '')) {
+      navigate(`/shop${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+    }
+  }, [filters, navigate]);
   
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
@@ -225,6 +290,13 @@ const Shop = () => {
                   </Toggle>
                 </div>
               </div>
+              
+              {/* Category Breadcrumb for filtered views */}
+              {activeCategory && (
+                <div className="mb-6">
+                  <ProductBreadcrumb categoryPath={activeCategory} product={{} as Product} />
+                </div>
+              )}
               
               <div className="flex flex-col md:flex-row gap-8">
                 {/* Filters - show on larger screens or when toggled */}

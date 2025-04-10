@@ -6,9 +6,10 @@ import { Product } from '@/pages/Shop';
 
 interface ProductBreadcrumbProps {
   product: Product;
+  categoryPath?: string;
 }
 
-const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ product }) => {
+const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ product, categoryPath }) => {
   return (
     <div className="mb-6">
       <nav className="flex items-center text-sm text-muted-foreground flex-wrap">
@@ -21,22 +22,26 @@ const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ product }) => {
           Shop
         </Link>
         
-        {product?.category && (
+        {(product?.category || categoryPath) && (
           <>
             <ChevronRight size={14} className="mx-2" />
             <Link 
-              to={`/shop/${product.category.toLowerCase()}`} 
+              to={`/shop?category=${encodeURIComponent((categoryPath || product?.category || '').toLowerCase())}`} 
               className="hover:text-wolly-magenta"
             >
-              {product.category}
+              {categoryPath || product?.category}
             </Link>
           </>
         )}
         
-        <ChevronRight size={14} className="mx-2" />
-        <span className="text-foreground font-medium truncate max-w-[200px]">
-          {product?.name}
-        </span>
+        {product?.name && (
+          <>
+            <ChevronRight size={14} className="mx-2" />
+            <span className="text-foreground font-medium truncate max-w-[200px]">
+              {product.name}
+            </span>
+          </>
+        )}
       </nav>
     </div>
   );

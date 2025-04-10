@@ -10,12 +10,13 @@ import { motion } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { type Product } from '@/pages/Shop';
 import { useToast } from '@/hooks/use-toast';
+import ProductBreadcrumb from './product/ProductBreadcrumb';
 
 const SearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
-  const initialQuery = searchParams.get('search') || '';
+  const initialQuery = searchParams.get('search') || searchParams.get('keyword') || '';
   
   const { 
     keyword, 
@@ -45,7 +46,7 @@ const SearchPage = () => {
 
   useEffect(() => {
     // Update search term if URL parameter changes
-    const searchParam = searchParams.get('search');
+    const searchParam = searchParams.get('search') || searchParams.get('keyword');
     if (searchParam && searchParam !== keyword) {
       setKeyword(searchParam);
     }
@@ -79,6 +80,10 @@ const SearchPage = () => {
             {searchResults.length > 0 ? (
               <>
                 <div className="mb-6">
+                  <ProductBreadcrumb 
+                    product={{} as Product} 
+                    categoryPath={`Search results: "${keyword}"`} 
+                  />
                   <h2 className="text-2xl font-bold">
                     Search Results for "{keyword}"
                   </h2>
