@@ -3,6 +3,8 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductReviewsSection from './ProductReviewsSection';
 import { Review } from '@/types/review';
+import { Progress } from '@/components/ui/progress';
+import { Star } from 'lucide-react';
 
 interface ProductDetailsTabsProps {
   description: string;
