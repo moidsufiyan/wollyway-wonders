@@ -13,7 +13,7 @@ const blogPosts: BlogPost[] = [
     id: '1',
     title: 'The Art of Knot Tying: Creating Beautiful Bracelets',
     slug: 'art-of-knot-tying',
-    excerpt: 'Learn the ancient techniques of knot tying and how they're applied to create our beautiful handcrafted bracelets.',
+    excerpt: "Learn the ancient techniques of knot tying and how they're applied to create our beautiful handcrafted bracelets.",
     content: `<p>Knot tying is an ancient art that has been practiced across cultures for centuries. From sailors to artisans, knot tying has served both practical and decorative purposes.</p>
     <p>In this article, we'll explore the history of decorative knot tying and share some basic techniques that you can try at home.</p>
     <h2>The History of Decorative Knotting</h2>

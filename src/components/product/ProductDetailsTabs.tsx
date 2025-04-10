@@ -24,7 +24,7 @@ const mockReviews: Review[] = [
     userAvatar: 'https://i.pravatar.cc/150?img=1',
     rating: 5,
     title: 'Absolutely love it!',
-    comment: 'This product exceeded my expectations. The quality is excellent and it looks even better in person. Would definitely recommend to anyone considering it!',
+    comment: "This product exceeded my expectations. The quality is excellent and it looks even better in person. Would definitely recommend to anyone considering it!",
     images: ['https://i.pravatar.cc/150?img=2', 'https://i.pravatar.cc/150?img=3'],
     createdAt: '2023-04-15T10:30:00Z',
     helpful: 12,
@@ -37,7 +37,7 @@ const mockReviews: Review[] = [
     userName: 'Mike Johnson',
     userAvatar: 'https://i.pravatar.cc/150?img=4',
     rating: 4,
-    comment: 'Great product overall. The only reason I'm not giving 5 stars is because the shipping took longer than expected. Otherwise, very happy with my purchase.',
+    comment: "Great product overall. The only reason I'm not giving 5 stars is because the shipping took longer than expected. Otherwise, very happy with my purchase.",
     createdAt: '2023-03-20T14:15:00Z',
     helpful: 5,
     verified: true
@@ -48,7 +48,7 @@ const mockReviews: Review[] = [
     userId: 'user-3',
     userName: 'Sarah Williams',
     rating: 3,
-    comment: 'Average product. It does what it's supposed to do, but nothing exceptional. The material could be better quality for the price.',
+    comment: "Average product. It does what it's supposed to do, but nothing exceptional. The material could be better quality for the price.",
     createdAt: '2023-03-10T09:45:00Z',
     helpful: 2,
     verified: false
