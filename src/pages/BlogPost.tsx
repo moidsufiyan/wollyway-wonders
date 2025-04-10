@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -87,9 +86,7 @@ const relatedPosts = [
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  // In a real app, you would fetch the specific post based on slug
   
-  // If the post doesn't exist, show a not found message
   if (!blogPost) {
     return (
       <div className="min-h-screen">
