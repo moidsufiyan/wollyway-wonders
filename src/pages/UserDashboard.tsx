@@ -129,7 +129,7 @@ const initialOrders: Order[] = [
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, updateProfile } = useAuth();
-  const { wishlist, removeItem: removeWishlistItem } = useWishlist();
+  const { items, removeItem: removeWishlistItem } = useWishlist();
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState('overview');
@@ -255,7 +255,7 @@ const UserDashboard = () => {
     });
   };
 
-  const handleRemoveFromWishlist = (productId: string) => {
+  const handleRemoveFromWishlist = (productId: number) => {
     removeWishlistItem(productId);
     toast({
       title: "Removed from wishlist",
@@ -446,10 +446,10 @@ const UserDashboard = () => {
                             <h3 className="font-medium">Wishlist</h3>
                           </div>
                           
-                          {wishlist.length > 0 ? (
+                          {items.length > 0 ? (
                             <div>
                               <p className="text-sm text-muted-foreground mb-2">
-                                You have {wishlist.length} items in your wishlist
+                                You have {items.length} items in your wishlist
                               </p>
                               <Button 
                                 variant="outline" 
@@ -545,12 +545,11 @@ const UserDashboard = () => {
                       <div className="flex justify-center py-12">
                         <Loader2 className="animate-spin h-8 w-8 text-wolly-magenta" />
                       </div>
-                    ) : wishlist.length > 0 ? (
+                    ) : items.length > 0 ? (
                       <ProductGrid 
-                        products={wishlist} 
-                        onAddToCart={handleAddToCart} 
-                        onRemoveFromWishlist={handleRemoveFromWishlist}
-                        showRemoveButton={true}
+                        products={items} 
+                        onAddToCart={handleAddToCart}
+                        onSaveForLater={() => {}}
                       />
                     ) : (
                       <div className="text-center py-12">

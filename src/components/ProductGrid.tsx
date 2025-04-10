@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -16,6 +17,8 @@ export type ProductGridProps = {
   products: Product[];
   onAddToCart: (product: Product) => void;
   onSaveForLater?: (product: Product) => void;
+  onRemoveFromWishlist?: (productId: number) => void;
+  showRemoveButton?: boolean;
 };
 
 const container = {
@@ -33,7 +36,7 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps) => {
+const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishlist, showRemoveButton }: ProductGridProps) => {
   const { addItem, removeItem, isInWishlist } = useWishlist();
   const { addItem: addToCart } = useCart();
   const { addProduct } = useRecentlyViewed();
@@ -80,6 +83,13 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
     e.preventDefault();
     if (onSaveForLater) {
       onSaveForLater(product);
+    }
+  };
+
+  const handleRemoveFromWishlist = (product: Product, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onRemoveFromWishlist) {
+      onRemoveFromWishlist(product.id);
     }
   };
 
@@ -144,18 +154,28 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
               
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center">
                 <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-2">
-                  <button
-                    onClick={(e) => handleToggleWishlist(product, e)}
-                    className={`bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:bg-wolly-magenta hover:text-white transition-colors ${
-                      isInWishlist(product.id) ? 'text-wolly-magenta' : ''
-                    }`}
-                    aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-                  >
-                    <Heart 
-                      size={16} 
-                      className={isInWishlist(product.id) ? "fill-wolly-magenta" : ""}
-                    />
-                  </button>
+                  {showRemoveButton ? (
+                    <button
+                      onClick={(e) => handleRemoveFromWishlist(product, e)}
+                      className="bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:bg-red-500 hover:text-white transition-colors"
+                      aria-label="Remove from wishlist"
+                    >
+                      <Heart size={16} className="fill-red-500" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => handleToggleWishlist(product, e)}
+                      className={`bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:bg-wolly-magenta hover:text-white transition-colors ${
+                        isInWishlist(product.id) ? 'text-wolly-magenta' : ''
+                      }`}
+                      aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                    >
+                      <Heart 
+                        size={16} 
+                        className={isInWishlist(product.id) ? "fill-wolly-magenta" : ""}
+                      />
+                    </button>
+                  )}
                   
                   <button
                     onClick={(e) => handleQuickView(product, e)}
@@ -329,20 +349,37 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater }: ProductGridProps
                   </Button>
                   
                   <div className="flex gap-2">
-                    <Button
-                      className="w-1/2"
-                      variant="ghost"
-                      onClick={(e) => {
-                        handleToggleWishlist(quickViewProduct, e);
-                        setQuickViewProduct(null);
-                      }}
-                    >
-                      <Heart 
-                        size={16} 
-                        className={`mr-2 ${isInWishlist(quickViewProduct.id) ? "fill-wolly-magenta text-wolly-magenta" : ""}`}
-                      />
-                      Wishlist
-                    </Button>
+                    {showRemoveButton ? (
+                      <Button
+                        className="w-1/2"
+                        variant="ghost"
+                        onClick={(e) => {
+                          if (onRemoveFromWishlist) onRemoveFromWishlist(quickViewProduct.id);
+                          setQuickViewProduct(null);
+                        }}
+                      >
+                        <Heart 
+                          size={16} 
+                          className="mr-2 fill-red-500 text-red-500"
+                        />
+                        Remove
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-1/2"
+                        variant="ghost"
+                        onClick={(e) => {
+                          handleToggleWishlist(quickViewProduct, e);
+                          setQuickViewProduct(null);
+                        }}
+                      >
+                        <Heart 
+                          size={16} 
+                          className={`mr-2 ${isInWishlist(quickViewProduct.id) ? "fill-wolly-magenta text-wolly-magenta" : ""}`}
+                        />
+                        Wishlist
+                      </Button>
+                    )}
                     
                     {onSaveForLater && (
                       <Button
