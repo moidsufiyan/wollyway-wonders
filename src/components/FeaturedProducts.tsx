@@ -4,42 +4,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Heart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
+import ProductDataService from '@/services/ProductDataService';
 
-// Sample product data focused on hand-knitting
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Cosmic Wave Knitted Band",
-    price: 24.99,
-    image: "https://images.unsplash.com/photo-1617006898062-3575ca439551?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Hand Knitted Bands",
-    isNew: true,
-  },
-  {
-    id: 2,
-    name: "Galaxy Knitted Keychain",
-    price: 19.99,
-    image: "https://images.unsplash.com/photo-1622060520458-0d30e8c18cf9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Hand Knitted Keychains",
-    isNew: false,
-  },
-  {
-    id: 3,
-    name: "Sunset Melody Knitted Band",
-    price: 22.99,
-    image: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Hand Knitted Bands",
-    isNew: true,
-  },
-  {
-    id: 4,
-    name: "Cozy Winter Knitted Scarf",
-    price: 29.99,
-    image: "https://images.unsplash.com/photo-1625591338875-e2cca9de80a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    category: "Hand Knitted Accessories",
-    isNew: false,
-  }
-];
+// Get featured products from our data service
+const featuredProducts = ProductDataService.allProducts.filter(p => p.isFeatured || p.isNew).slice(0, 4);
 
 const container = {
   hidden: { opacity: 0 },
@@ -57,7 +25,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };
 
-const ProductCard = ({ product }: { product: typeof featuredProducts[0] }) => {
+const ProductCard = ({ product }: { product: typeof ProductDataService.allProducts[0] }) => {
   return (
     <motion.div variants={item} className="group">
       <div className="product-image-container aspect-square mb-4">
@@ -100,7 +68,7 @@ const FeaturedProducts = () => {
         </span>
         <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Bestsellers</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Discover our most loved hand-knitted pieces. Each item is carefully crafted with premium yarn and attention to detail.
+          Discover our most loved hand-knitted pieces. Each item is carefully crafted with premium yarn and attention to detail by our skilled artisans.
         </p>
       </div>
 
