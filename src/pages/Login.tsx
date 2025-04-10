@@ -22,8 +22,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PasswordStrengthMeter from '@/components/auth/PasswordStrengthMeter';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
-// Define form types
 type LoginFormValues = {
   email: string;
   password: string;
@@ -227,16 +227,7 @@ const Login = () => {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mt-4">
-                    <Button variant="outline" className="w-full">
-                      <Github className="mr-2 h-4 w-4" />
-                      Github
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Facebook className="mr-2 h-4 w-4 text-blue-600" />
-                      Facebook
-                    </Button>
-                  </div>
+                  <SocialLoginButtons className="mt-4" />
                 </div>
               </TabsContent>
               

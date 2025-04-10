@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -12,6 +13,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Wishlist from './pages/Wishlist';
 import UserAccount from './pages/UserAccount';
+import UserDashboard from './pages/UserDashboard';
 import OrderTracking from './pages/OrderTracking';
 import Support from './pages/Support';
 import Customize from './pages/Customize';
@@ -40,6 +42,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/user-account" element={<UserAccount />} />
+          <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/order-tracking" element={<OrderTracking />} />
           <Route path="/support" element={<Support />} />
           <Route path="/customize" element={<Customize />} />
