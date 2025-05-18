@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import ProductDataService from '@/services/ProductDataService';
 
 // Get featured products from our data service
-const featuredProducts = ProductDataService.allProducts.filter(p => p.isFeatured || p.isNew).slice(0, 4);
+const featuredProducts = ProductDataService.allProducts.filter(p => p.isFeatured || p.isNew).slice(0, 3);
 
 const container = {
   hidden: { opacity: 0 },
@@ -32,16 +32,15 @@ const ProductCard = ({ product }: { product: typeof ProductDataService.allProduc
         <img 
           src={product.image} 
           alt={product.name} 
-          className="product-image"
+          className="product-image w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <div className="space-y-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-            <Button className="bg-white hover:bg-white/90 text-wolly-magenta rounded-full shadow-md button-hover">
-              Quick View
-            </Button>
-            <Button variant="ghost" size="icon" className="bg-white hover:bg-white/90 text-wolly-magenta rounded-full shadow-md ml-2">
-              <Heart size={18} />
-            </Button>
+            <Link to={`/product/${product.id}`}>
+              <Button className="bg-white hover:bg-white/90 text-wolly-magenta rounded-full shadow-md button-hover">
+                View Product
+              </Button>
+            </Link>
           </div>
         </div>
         {product.isNew && (
@@ -61,12 +60,12 @@ const ProductCard = ({ product }: { product: typeof ProductDataService.allProduc
 
 const FeaturedProducts = () => {
   return (
-    <section className="section-container">
+    <section className="section-container py-16">
       <div className="text-center mb-12">
         <span className="inline-block px-4 py-1.5 bg-wolly-pink/10 text-wolly-magenta rounded-full text-sm font-medium mb-4">
           Featured Collection
         </span>
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Bestsellers</h2>
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Hand-Knitted Favorites</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Discover our most loved hand-knitted pieces. Each item is carefully crafted with premium yarn and attention to detail by our skilled artisans.
         </p>
@@ -77,7 +76,7 @@ const FeaturedProducts = () => {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
       >
         {featuredProducts.map(product => (
           <ProductCard key={product.id} product={product} />
