@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 
 type ProductContextType = {
   recentlyViewed: Product[];
   comparisonList: Product[];
   addToRecentlyViewed: (product: Product) => void;
   addToComparison: (product: Product) => void;
-  removeFromComparison: (productId: number) => void;
+  removeFromComparison: (productId: string) => void;
   clearComparison: () => void;
-  isInComparison: (productId: number) => boolean;
+  isInComparison: (productId: string) => boolean;
 };
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -75,7 +75,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const removeFromComparison = (productId: number) => {
+  const removeFromComparison = (productId: string) => {
     setComparisonList(prev => prev.filter(item => item.id !== productId));
   };
 
@@ -83,7 +83,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setComparisonList([]);
   };
 
-  const isInComparison = (productId: number) => {
+  const isInComparison = (productId: string) => {
     return comparisonList.some(item => item.id === productId);
   };
 

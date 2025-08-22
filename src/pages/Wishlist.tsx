@@ -13,7 +13,7 @@ const Wishlist = () => {
   const { items, removeItem, clearWishlist } = useWishlist();
   const { addItem } = useCart();
   
-  const handleMoveToCart = (productId: number) => {
+  const handleMoveToCart = (productId: string) => {
     const product = items.find(item => item.id === productId);
     if (product) {
       addItem(product);

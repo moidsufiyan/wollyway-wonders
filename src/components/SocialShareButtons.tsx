@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Product } from '@/pages/Shop';
+import { Product } from '@/types/Product';
 import { useToast } from '@/hooks/use-toast';
 
 interface SocialShareButtonsProps {

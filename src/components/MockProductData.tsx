@@ -1,0 +1,61 @@
+import { Product } from '@/types/Product';
+
+export const mockProducts: Product[] = [
+  {
+    id: "1",
+    name: "Cozy Winter Scarf",
+    price: 45.99,
+    image: "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
+    images: ["/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png"],
+    description: "Hand-knitted wool scarf perfect for cold winter days. Made with premium merino wool in a classic cable knit pattern.",
+    category: "Accessories",
+    brand: "WollyWay",
+    countInStock: 15,
+    rating: 4.8,
+    numReviews: 24,
+    featured: true,
+    discount: 0,
+    colors: ["Cream", "Navy", "Burgundy"],
+    tags: ["winter", "scarf", "wool"],
+    stockCount: 15,
+    sizes: ["One Size"]
+  },
+  {
+    id: "2", 
+    name: "Handmade Wool Keychain",
+    price: 12.99,
+    image: "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
+    images: ["/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png"],
+    description: "Adorable hand-knitted wool keychain featuring a cute animal design. Perfect as a gift or personal accessory.",
+    category: "Keychains",
+    brand: "WollyWay",
+    countInStock: 32,
+    rating: 4.6,
+    numReviews: 18,
+    featured: true,
+    discount: 15,
+    colors: ["Brown", "Gray", "Pink"],
+    tags: ["keychain", "cute", "gift"],
+    stockCount: 32,
+    isNew: true
+  },
+  {
+    id: "3",
+    name: "Knitted Hair Band", 
+    price: 18.99,
+    image: "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
+    images: ["/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png"],
+    description: "Stylish hand-knitted hair band that keeps your hair in place while adding a cozy touch to your outfit.",
+    category: "Hair Accessories", 
+    brand: "WollyWay",
+    countInStock: 28,
+    rating: 4.7,
+    numReviews: 15,
+    featured: false,
+    discount: 0,
+    colors: ["Beige", "Black", "Forest Green"],
+    tags: ["hairband", "stylish", "comfortable"],
+    stockCount: 28,
+    sizes: ["S", "M", "L"]
+  }
+];

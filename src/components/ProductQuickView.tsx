@@ -4,7 +4,7 @@ import { X, Minus, Plus, ShoppingCart, Heart } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { Link } from 'react-router-dom';

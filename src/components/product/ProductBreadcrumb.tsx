@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
-import { Product } from '@/pages/Shop';
+import { Product } from '@/types/Product';
 
 interface ProductBreadcrumbProps {
   product: Product;

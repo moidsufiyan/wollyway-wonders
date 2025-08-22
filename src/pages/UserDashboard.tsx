@@ -22,7 +22,7 @@ import AddressCard, { Address } from '@/components/user/AddressCard';
 import AddressForm from '@/components/user/AddressForm';
 import OrderCard from '@/components/user/OrderCard';
 import { Order } from '@/types/order';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 
 // Mock data for addresses
 const initialAddresses: Address[] = [
@@ -255,7 +255,7 @@ const UserDashboard = () => {
     });
   };
 
-  const handleRemoveFromWishlist = (productId: number) => {
+  const handleRemoveFromWishlist = (productId: string) => {
     removeWishlistItem(productId);
     toast({
       title: "Removed from wishlist",

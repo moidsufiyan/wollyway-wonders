@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 
 type RecentlyViewedProps = {
   products: Product[];

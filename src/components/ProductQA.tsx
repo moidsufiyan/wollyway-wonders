@@ -26,7 +26,7 @@ interface Answer {
 }
 
 interface ProductQAProps {
-  productId: number;
+  productId: string;
 }
 
 // Mock data for demo purposes

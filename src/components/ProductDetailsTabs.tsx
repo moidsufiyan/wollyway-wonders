@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Info, Truck, RotateCcw } from 'lucide-react';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 import { motion } from 'framer-motion';
 
 type ProductDetailsTabsProps = {
