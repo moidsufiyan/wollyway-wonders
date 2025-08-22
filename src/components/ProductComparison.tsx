@@ -3,11 +3,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { type Product } from '@/types/Product';
+import { type Product } from '@/pages/Shop';
 
 type ProductComparisonProps = {
   products: Product[];
-  onRemove: (id: string) => void;
+  onRemove: (id: number) => void;
   onClose: () => void;
 };
 

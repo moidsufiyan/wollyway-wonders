@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Product } from '@/types/Product';
+import { Product } from '@/pages/Shop';
 import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductQA from '@/components/ProductQA';
 import ReferralProgram from '@/components/ReferralProgram';

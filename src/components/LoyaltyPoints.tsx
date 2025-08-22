@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Product } from '@/types/Product';
+import { Product } from '@/pages/Shop';
 
 interface LoyaltyPointsProps {
   product: Product;

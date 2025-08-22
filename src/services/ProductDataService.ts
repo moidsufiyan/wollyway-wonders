@@ -1,9 +1,9 @@
 
-import { Product } from '@/types/Product';
+import { Product } from '@/pages/Shop';
 
 const allProducts: Product[] = [
   {
-    id: "1",
+    id: 1,
     name: "Hand-Knitted Wool Beanie",
     price: 29.99,
     image: "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
@@ -16,7 +16,7 @@ const allProducts: Product[] = [
     stockCount: 15
   },
   {
-    id: "2",
+    id: 2,
     name: "Hand-Knitted Wool Scarf",
     price: 39.99,
     image: "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
@@ -29,7 +29,7 @@ const allProducts: Product[] = [
     stockCount: 20
   },
   {
-    id: "3",
+    id: 3,
     name: "Hand-Knitted Winter Mittens",
     price: 24.99,
     image: "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
@@ -42,7 +42,7 @@ const allProducts: Product[] = [
     stockCount: 18
   },
   {
-    id: "4",
+    id: 4,
     name: "Hand-Knitted Wool Headband",
     price: 18.99,
     image: "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
@@ -56,14 +56,13 @@ const allProducts: Product[] = [
 ];
 
 export const getProductById = (id: string | number): Product | null => {
-  const productId = typeof id === 'number' ? id.toString() : id;
+  const productId = typeof id === 'string' ? parseInt(id) : id;
   return allProducts.find(p => p.id === productId) || null;
 };
 
-export const getRelatedProducts = (currentId: string | number): Product[] => {
-  const productId = typeof currentId === 'number' ? currentId.toString() : currentId;
+export const getRelatedProducts = (currentId: number): Product[] => {
   return allProducts
-    .filter(product => product.id !== productId)
+    .filter(product => product.id !== currentId)
     .slice(0, 3);
 };
 

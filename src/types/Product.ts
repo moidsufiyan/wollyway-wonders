@@ -15,11 +15,6 @@ export type Product = {
   countInStock?: number;
   numReviews?: number;
   discount?: number;
-  // Legacy compatibility properties
-  stockCount?: number;
-  isNew?: boolean;
-  isFeatured?: boolean;
-  sizes?: string[];
   reviews?: Array<{
     id: string;
     user: string;

@@ -4,7 +4,7 @@ import { Heart, Star, Minus, Plus, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Product } from '@/types/Product';
+import { Product } from '@/pages/Shop';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -150,14 +150,14 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
           variant="outline" 
           size="lg" 
           className={`border-wolly-pink button-hover ${
-            isInWishlist(product.id) 
+            isInWishlist(product.id || 0) 
               ? 'bg-wolly-pink/20 text-wolly-magenta' 
               : 'text-wolly-magenta'
           }`}
           onClick={handleToggleWishlist}
         >
-          <Heart size={18} className={`mr-2 ${isInWishlist(product.id) ? 'fill-wolly-magenta' : ''}`} />
-          {isInWishlist(product.id) ? 'In Wishlist' : 'Add to Wishlist'}
+          <Heart size={18} className={`mr-2 ${isInWishlist(product.id || 0) ? 'fill-wolly-magenta' : ''}`} />
+          {isInWishlist(product.id || 0) ? 'In Wishlist' : 'Add to Wishlist'}
         </Button>
       </div>
       

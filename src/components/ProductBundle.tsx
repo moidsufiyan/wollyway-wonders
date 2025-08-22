@@ -5,7 +5,7 @@ import { Package, ShoppingCart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
-import type { Product } from '@/types/Product';
+import type { Product } from '@/pages/Shop';
 
 // Make BundleProduct compatible with Product
 export type BundleProduct = {
@@ -51,8 +51,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
   const handleAddBundleToCart = () => {
     // Add each product in the bundle to the cart
     bundle.products.forEach(product => {
-      const productWithStringId = { ...product, id: String(product.id) } as Product;
-      addItem(productWithStringId, 1);
+      addItem(product as Product, 1);
     });
   };
   

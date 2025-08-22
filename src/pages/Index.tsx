@@ -1,100 +1,91 @@
-import React from "react";
+
+import React, { useEffect } from 'react';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import FeaturedProducts from '@/components/FeaturedProducts';
+import Collections from '@/components/Collections';
+import Features from '@/components/Features';
+import Testimonials from '@/components/Testimonials';
+import Newsletter from '@/components/Newsletter';
+import Footer from '@/components/Footer';
+import { motion, useScroll, useSpring } from 'framer-motion';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import RecentlyViewed from '@/components/RecentlyViewed';
+import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+  const navigate = useNavigate();
+  const { recentlyViewed } = useRecentlyViewed();
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  useEffect(() => {
+    // Scroll to top when page loads
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-screen">
-      {/* Simple Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-          <div className="text-center">
-            <span className="inline-block px-4 py-1.5 bg-pink-100 text-pink-800 rounded-full text-sm font-medium mb-6">
-              Handcrafted with love
-            </span>
+      {/* Progress bar */}
+      <motion.div 
+        className="fixed top-0 left-0 right-0 h-1 bg-wolly-pink z-50 origin-left"
+        style={{ scaleX }}
+      />
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Uniquely Crafted <br className="hidden md:block" />
-              <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                Accessories
-              </span>{" "}
-              <br className="hidden md:block" />
-              For Your Style
-            </h1>
-
-            <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
-              Discover our collection of handmade knotted bands, keychains, and
-              accessories that blend craftsmanship with pop culture inspiration.
+      <Navbar />
+      <Hero />
+      
+      {/* Search Section */}
+      <section className="py-12 bg-gradient-to-b from-purple-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">Find Your Perfect Accessory</h2>
+            <p className="text-muted-foreground mb-8">
+              Explore our collection of handcrafted accessories designed to express your unique style
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium">
-                Shop Collection
-              </button>
-              <button className="border border-pink-300 text-purple-600 hover:bg-pink-50 px-8 py-3 rounded-lg font-medium">
-                Customize Your Own
-              </button>
-            </div>
+            
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Search by name, category, or style..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" className="bg-wolly-magenta hover:bg-wolly-magenta/90">
+                <Search size={18} className="mr-2" />
+                Search
+              </Button>
+            </form>
           </div>
         </div>
       </section>
-
-      {/* Simple Features Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Why Choose WollyWay?
-            </h2>
-            <p className="text-lg text-gray-600">
-              Handcrafted quality meets modern design
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🎨</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Handcrafted</h3>
-              <p className="text-gray-600">
-                Each piece is carefully made by hand with attention to detail
-              </p>
-            </div>
-
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✨</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Unique Design</h3>
-              <p className="text-gray-600">
-                Pop culture inspired designs that stand out from the crowd
-              </p>
-            </div>
-
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💝</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Perfect Gift</h3>
-              <p className="text-gray-600">
-                Thoughtful presents for friends, family, or yourself
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Simple Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-2xl font-bold mb-4">WollyWay</h3>
-          <p className="text-gray-400 mb-6">
-            Handcrafted accessories for the modern individual
-          </p>
-          <p className="text-sm text-gray-500">
-            © 2024 WollyWay. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      
+      <FeaturedProducts />
+      <Collections />
+      <Features />
+      <Testimonials />
+      
+      {/* Recently Viewed Section - Only show if there are items */}
+      {recentlyViewed.length > 0 && <RecentlyViewed products={recentlyViewed} />}
+      
+      <Newsletter />
+      <Footer />
     </div>
   );
 };

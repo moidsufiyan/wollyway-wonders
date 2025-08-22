@@ -81,7 +81,7 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ["DM Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+				sans: ["DM Sans", "sans-serif"],
 			},
 			keyframes: {
 				'accordion-down': {

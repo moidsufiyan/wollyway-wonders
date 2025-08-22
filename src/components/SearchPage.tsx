@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
-import { type Product } from '@/types/Product';
+import { type Product } from '@/pages/Shop';
 import { useToast } from '@/hooks/use-toast';
 import ProductBreadcrumb from './product/ProductBreadcrumb';
 

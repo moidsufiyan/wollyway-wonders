@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { type Product } from '@/types/Product';
+import { type Product } from '@/pages/Shop';
 
 export const useRecentlyViewed = (initialLimit: number = 6) => {
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);

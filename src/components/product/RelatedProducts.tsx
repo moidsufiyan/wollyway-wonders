@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '@/types/Product';
+import { Product } from '@/pages/Shop';
 
 interface RelatedProductsProps {
   products: Product[];

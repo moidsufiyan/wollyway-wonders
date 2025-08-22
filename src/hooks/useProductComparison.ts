@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { type Product } from '@/types/Product';
+import { type Product } from '@/pages/Shop';
 
 export const useProductComparison = (maxItems: number = 4) => {
   const [comparisonList, setComparisonList] = useState<Product[]>([]);
@@ -62,7 +62,7 @@ export const useProductComparison = (maxItems: number = 4) => {
     }
   };
 
-  const removeFromComparison = (productId: string) => {
+  const removeFromComparison = (productId: number) => {
     if (!productId) return;
     
     setComparisonList(prev => prev.filter(p => p.id !== productId));
@@ -83,7 +83,7 @@ export const useProductComparison = (maxItems: number = 4) => {
     }
   };
 
-  const isInComparison = (productId: string): boolean => {
+  const isInComparison = (productId: number): boolean => {
     return comparisonList.some(p => p.id === productId);
   };
 
