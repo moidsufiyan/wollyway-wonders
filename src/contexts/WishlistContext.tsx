@@ -6,10 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 type WishlistContextType = {
   items: Product[];
   addItem: (product: Product) => void;
-  removeItem: (productId: number) => void;
+  removeItem: (productId: string) => void;
   toggleItem: (product: Product) => void;
   clearWishlist: () => void;
-  isInWishlist: (productId: number) => boolean;
+  isInWishlist: (productId: string) => boolean;
 };
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -55,7 +55,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
     }
   };
 
-  const removeItem = (productId: number) => {
+  const removeItem = (productId: string) => {
     setItems(prevItems => prevItems.filter(item => item.id !== productId));
     
     toast({
@@ -82,7 +82,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
     });
   };
 
-  const isInWishlist = (productId: number) => {
+  const isInWishlist = (productId: string) => {
     return items.some(item => item.id === productId);
   };
 

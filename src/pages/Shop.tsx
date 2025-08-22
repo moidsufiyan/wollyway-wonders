@@ -16,25 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toggle } from '@/components/ui/toggle';
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb';
 
-// Define the product type for better type checking
-export type Product = {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  colors: string[];
-  tags: string[];
-  category: string;
-  rating: number;
-  description?: string;
-  isNew?: boolean;
-  isFeatured?: boolean;
-  stockCount?: number;
-  stock?: number;
-  discount?: number;
-  reviews?: number;
-  sizes?: string[];
-};
+import { type Product } from '@/types/Product';
 
 const Shop = () => {
   const location = useLocation();
@@ -204,7 +186,7 @@ const Shop = () => {
   };
   
   // Apply filters to products
-  const filteredProducts = products ? products.filter(product => {
+  const filteredProducts = products?.products?.filter(product => {
     const matchesCategory = 
       filters.categories.length === 0 || 
       filters.categories.includes(product.category);
@@ -218,10 +200,10 @@ const Shop = () => {
       product.rating >= filters.ratingRange[0] &&
       product.rating <= filters.ratingRange[1];
     const matchesStock =
-      !filters.inStock || (product.stockCount && product.stockCount > 0);
+      !filters.inStock || (product.countInStock && product.countInStock > 0);
     
     return matchesCategory && matchesPrice && matchesColor && matchesRating && matchesStock;
-  }) : [];
+  }) || [];
   
   // Sort filtered products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -233,11 +215,11 @@ const Shop = () => {
       case 'rating':
         return b.rating - a.rating;
       case 'bestsellers':
-        return (b.reviews || 0) - (a.reviews || 0);
+        return (b.numReviews || 0) - (a.numReviews || 0);
       case 'trending':
-        return ((b.reviews || 0) * b.rating) - ((a.reviews || 0) * a.rating);
+        return ((b.numReviews || 0) * b.rating) - ((a.numReviews || 0) * a.rating);
       default: // newest
-        return b.id - a.id;
+        return Number(b.id) - Number(a.id);
     }
   });
   

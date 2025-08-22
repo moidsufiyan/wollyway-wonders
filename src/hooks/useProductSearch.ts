@@ -7,7 +7,8 @@ export const useProductSearch = (initialKeyword: string = '') => {
   const [keyword, setKeyword] = useState(initialKeyword);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { data: products, isLoading } = useProducts();
+  const { data: productData, isLoading } = useProducts();
+  const products = productData?.products || [];
 
   useEffect(() => {
     if (!keyword.trim() || !products?.length) {

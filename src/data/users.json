@@ -1,0 +1,10 @@
+[
+  {
+    "id": "1",
+    "name": "Demo User",
+    "email": "demo@wollyway.com",
+    "password": "password123",
+    "avatar": "https://i.pravatar.cc/150",
+    "role": "user"
+  }
+]

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "1",
+    "name": "Cozy Winter Scarf",
+    "price": 45.99,
+    "image": "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
+    "images": ["/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png"],
+    "description": "Hand-knitted wool scarf perfect for cold winter days. Made with premium merino wool in a classic cable knit pattern.",
+    "category": "Accessories",
+    "brand": "WollyWay",
+    "countInStock": 15,
+    "rating": 4.8,
+    "numReviews": 24,
+    "featured": true,
+    "discount": 0,
+    "colors": ["Cream", "Navy", "Burgundy"],
+    "tags": ["winter", "scarf", "wool"],
+    "reviews": [
+      {
+        "id": "1",
+        "user": "Sarah M.",
+        "rating": 5,
+        "comment": "Absolutely love this scarf! So soft and warm.",
+        "createdAt": "2024-01-15"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Handmade Wool Keychain",
+    "price": 12.99,
+    "image": "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
+    "images": ["/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png"],
+    "description": "Adorable hand-knitted wool keychain featuring a cute animal design. Perfect as a gift or personal accessory.",
+    "category": "Keychains",
+    "brand": "WollyWay",
+    "countInStock": 32,
+    "rating": 4.6,
+    "numReviews": 18,
+    "featured": true,
+    "discount": 15,
+    "colors": ["Brown", "Gray", "Pink"],
+    "tags": ["keychain", "cute", "gift"],
+    "reviews": [
+      {
+        "id": "2",
+        "user": "Mike T.",
+        "rating": 5,
+        "comment": "Great quality and super cute design!",
+        "createdAt": "2024-01-20"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Knitted Hair Band",
+    "price": 18.99,
+    "image": "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
+    "images": ["/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png"],
+    "description": "Stylish hand-knitted hair band that keeps your hair in place while adding a cozy touch to your outfit.",
+    "category": "Hair Accessories",
+    "brand": "WollyWay",
+    "countInStock": 28,
+    "rating": 4.7,
+    "numReviews": 15,
+    "featured": false,
+    "discount": 0,
+    "colors": ["Beige", "Black", "Forest Green"],
+    "tags": ["hairband", "stylish", "comfortable"],
+    "reviews": [
+      {
+        "id": "3",
+        "user": "Emma L.",
+        "rating": 4,
+        "comment": "Very comfortable and looks great!",
+        "createdAt": "2024-01-18"
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Chunky Knit Beanie",
+    "price": 32.99,
+    "image": "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
+    "images": ["/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png"],
+    "description": "Warm and stylish chunky knit beanie. Hand-crafted with thick wool yarn for maximum warmth and comfort.",
+    "category": "Hats",
+    "brand": "WollyWay",
+    "countInStock": 22,
+    "rating": 4.9,
+    "numReviews": 31,
+    "featured": true,
+    "discount": 10,
+    "colors": ["Gray", "Cream", "Charcoal"],
+    "tags": ["beanie", "chunky", "warm"],
+    "reviews": []
+  },
+  {
+    "id": "5",
+    "name": "Cable Knit Mittens",
+    "price": 28.99,
+    "image": "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
+    "images": ["/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png"],
+    "description": "Hand-knitted cable pattern mittens that provide excellent warmth while maintaining dexterity.",
+    "category": "Gloves",
+    "brand": "WollyWay",
+    "countInStock": 18,
+    "rating": 4.5,
+    "numReviews": 12,
+    "featured": false,
+    "discount": 0,
+    "colors": ["Navy", "Burgundy", "Cream"],
+    "tags": ["mittens", "cable", "warm"],
+    "reviews": []
+  },
+  {
+    "id": "6",
+    "name": "Wool Leg Warmers",
+    "price": 38.99,
+    "image": "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
+    "images": ["/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png"],
+    "description": "Cozy hand-knitted leg warmers perfect for layering. Made with soft wool blend for all-day comfort.",
+    "category": "Leg Wear",
+    "brand": "WollyWay",
+    "countInStock": 14,
+    "rating": 4.4,
+    "numReviews": 8,
+    "featured": false,
+    "discount": 20,
+    "colors": ["Charcoal", "Cream", "Forest Green"],
+    "tags": ["legwarmers", "cozy", "layering"],
+    "reviews": []
+  }
+]

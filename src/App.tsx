@@ -27,6 +27,8 @@ import SizeGuidePage from './pages/SizeGuidePage';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import AdminPanel from './pages/AdminPanel';
+import MockCheckout from './pages/MockCheckout';
+import CheckoutSuccess from './pages/CheckoutSuccess';
 
 function App() {
   return (
@@ -40,7 +42,8 @@ function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout" element={<MockCheckout />} />
+          <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />

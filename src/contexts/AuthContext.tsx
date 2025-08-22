@@ -57,8 +57,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await userService.login(email, password);
       
       const userData = {
-        id: data._id,
-        _id: data._id,
+        id: data.id,
+        _id: data.id,
         name: data.name,
         email: data.email,
         avatar: data.avatar,
@@ -92,8 +92,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await userService.register(name, email, password);
       
       const userData = {
-        id: data._id,
-        _id: data._id,
+        id: data.id,
+        _id: data.id,
         name: data.name,
         email: data.email,
         avatar: data.avatar,

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product } from '@/pages/Shop';
+import { Product } from '@/types/Product';
 import { useToast } from '@/hooks/use-toast';
 
 type CartItem = {
