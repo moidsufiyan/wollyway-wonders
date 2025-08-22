@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 
 type ProductContextType = {
   recentlyViewed: Product[];

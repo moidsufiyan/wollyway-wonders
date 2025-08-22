@@ -1,31 +1,30 @@
-
-import React, { useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import Hero from '@/components/Hero';
-import FeaturedProducts from '@/components/FeaturedProducts';
-import Collections from '@/components/Collections';
-import Features from '@/components/Features';
-import Testimonials from '@/components/Testimonials';
-import Newsletter from '@/components/Newsletter';
-import Footer from '@/components/Footer';
-import { motion, useScroll, useSpring } from 'framer-motion';
-import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
-import RecentlyViewed from '@/components/RecentlyViewed';
-import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import React, { useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import FeaturedProducts from "@/components/FeaturedProducts";
+import Collections from "@/components/Collections";
+import Features from "@/components/Features";
+import Testimonials from "@/components/Testimonials";
+import Newsletter from "@/components/Newsletter";
+import Footer from "@/components/Footer";
+import { motion, useScroll, useSpring } from "framer-motion";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import { useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
   const navigate = useNavigate();
   const { recentlyViewed } = useRecentlyViewed();
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,23 +41,28 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Progress bar */}
-      <motion.div 
-        className="fixed top-0 left-0 right-0 h-1 bg-wolly-pink z-50 origin-left"
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
         style={{ scaleX }}
-      />
+      >
+        <div className="h-full bg-gradient-to-r from-wolly-magenta via-wolly-pink to-wolly-blush" />
+      </motion.div>
 
       <Navbar />
       <Hero />
-      
+
       {/* Search Section */}
       <section className="py-12 bg-gradient-to-b from-purple-50 to-white">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">Find Your Perfect Accessory</h2>
+            <h2 className="text-3xl font-bold mb-6">
+              Find Your Perfect Accessory
+            </h2>
             <p className="text-muted-foreground mb-8">
-              Explore our collection of handcrafted accessories designed to express your unique style
+              Explore our collection of handcrafted accessories designed to
+              express your unique style
             </p>
-            
+
             <form onSubmit={handleSearch} className="flex gap-2">
               <Input
                 type="text"
@@ -67,7 +71,10 @@ const Index = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
-              <Button type="submit" className="bg-wolly-magenta hover:bg-wolly-magenta/90">
+              <Button
+                type="submit"
+                className="bg-wolly-magenta hover:bg-wolly-magenta/90"
+              >
                 <Search size={18} className="mr-2" />
                 Search
               </Button>
@@ -75,15 +82,17 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
+
       <FeaturedProducts />
       <Collections />
       <Features />
       <Testimonials />
-      
+
       {/* Recently Viewed Section - Only show if there are items */}
-      {recentlyViewed.length > 0 && <RecentlyViewed products={recentlyViewed} />}
-      
+      {recentlyViewed.length > 0 && (
+        <RecentlyViewed products={recentlyViewed} />
+      )}
+
       <Newsletter />
       <Footer />
     </div>

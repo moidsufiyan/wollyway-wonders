@@ -4,7 +4,7 @@ import { Heart, Star, Minus, Plus, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Product } from '@/pages/Shop';
+import { Product } from '@/types/Product';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';

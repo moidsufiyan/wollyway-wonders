@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { useProducts } from './useProducts';
-import { type Product } from '@/pages/Shop';
+import { useProducts } from '@/hooks/useProducts';
+import { type Product } from '@/types/Product';
 
 export const useProductSearch = (initialKeyword: string = '') => {
   const [keyword, setKeyword] = useState(initialKeyword);

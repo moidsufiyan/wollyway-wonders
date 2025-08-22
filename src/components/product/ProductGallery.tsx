@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
-import { Product } from '@/pages/Shop';
+import { Product } from '@/types/Product';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 interface ProductGalleryProps {

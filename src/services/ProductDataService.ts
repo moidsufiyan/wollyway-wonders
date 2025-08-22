@@ -1,5 +1,5 @@
 
-import { Product } from '@/pages/Shop';
+import { Product } from '@/types/Product';
 
 const allProducts: Product[] = [
   {

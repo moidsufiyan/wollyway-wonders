@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 
 export const useProductComparison = (maxItems: number = 4) => {
   const [comparisonList, setComparisonList] = useState<Product[]>([]);

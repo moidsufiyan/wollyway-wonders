@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, BookmarkPlus, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';

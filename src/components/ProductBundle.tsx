@@ -5,7 +5,7 @@ import { Package, ShoppingCart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
-import type { Product } from '@/pages/Shop';
+import type { Product } from '@/types/Product';
 
 // Make BundleProduct compatible with Product
 export type BundleProduct = {

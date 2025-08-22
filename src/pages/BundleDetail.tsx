@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { type Bundle, type BundleProduct } from '@/components/ProductBundle';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { type Product } from '@/pages/Shop';
+import { type Product } from '@/types/Product';
 
 // Sample bundles data - in a real app, fetch from API
 const sampleBundles: Bundle[] = [
