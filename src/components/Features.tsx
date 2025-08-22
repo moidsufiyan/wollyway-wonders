@@ -48,7 +48,28 @@ const item = {
 
 const Features = () => {
   return (
-    <section className="section-container py-20">
+    <section className="section-container py-24 section-gradient relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-1/4 left-10 w-80 h-80 rounded-full bg-gradient-to-br from-wolly-mint/20 to-transparent filter blur-3xl animate-float"></div>
+        <div className="absolute bottom-1/4 right-10 w-72 h-72 rounded-full bg-gradient-to-br from-wolly-blush/30 to-transparent filter blur-3xl animate-pulse"></div>
+      </div>
+      
+      {/* Section header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center mb-16"
+      >
+        <h2 className="text-4xl md:text-5xl font-black text-gradient-bold mb-4">
+          Why Choose WollyWay? 🌟
+        </h2>
+        <p className="text-xl font-semibold text-wolly-purple/80 max-w-2xl mx-auto">
+          Experience the difference with our <span className="text-gradient font-bold">premium handcrafted</span> accessories!
+        </p>
+      </motion.div>
+      
       <motion.div
         initial="hidden"
         whileInView="show"
@@ -60,13 +81,24 @@ const Features = () => {
           <motion.div 
             key={feature.id}
             variants={item}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-wolly-blush/30 hover:shadow-md transition-shadow duration-300 hover:border-wolly-pink/30"
+            whileHover={{ y: -15, rotateY: 5 }}
+            className="gradient-card rounded-3xl p-8 glow-effect hover:shadow-2xl hover:shadow-wolly-pink/30 
+                       transition-all duration-500 hover:scale-105 group border-2 border-wolly-pink/50 
+                       hover:border-wolly-magenta/70 cursor-pointer"
           >
-            <div className="w-12 h-12 flex items-center justify-center bg-wolly-pink/10 rounded-xl mb-4">
+            <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-wolly-magenta/30 via-wolly-pink/40 to-wolly-blush/20 
+                            rounded-2xl mb-6 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 
+                            shadow-lg shadow-wolly-pink/20 glow-effect">
               {feature.icon}
             </div>
-            <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-            <p className="text-muted-foreground">{feature.description}</p>
+            <h3 className="text-xl font-black mb-3 text-wolly-purple group-hover:text-gradient transition-all duration-300">
+              {feature.title}
+            </h3>
+            <p className="text-wolly-purple/70 font-medium leading-relaxed">{feature.description}</p>
+            
+            {/* Decorative element */}
+            <div className="mt-4 w-full h-1 bg-gradient-to-r from-transparent via-wolly-pink/50 to-transparent rounded-full 
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </motion.div>
         ))}
       </motion.div>
