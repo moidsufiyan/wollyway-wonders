@@ -17,9 +17,16 @@ const NavLink = ({
   const location = useLocation();
   const isActive = location.pathname === to;
 
+  const handleClick = () => {
+    if (to === "/") {
+      window.scrollTo(0, 0);
+    }
+  };
+
   return (
     <Link
       to={to}
+      onClick={handleClick}
       className={`text-sm font-medium transition-colors duration-300 ${
         isActive
           ? "text-wolly-magenta"
@@ -66,8 +73,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <span className="font-bold text-2xl text-wolly-magenta opacity-80 hover:opacity-100 transition-opacity duration-300">
+          <Link to="/" className="flex items-center" onClick={() => window.scrollTo(0, 0)}>
+            <span className="text-2xl font-bold bg-gradient-to-r from-wolly-magenta to-wolly-pink bg-clip-text text-transparent hover:opacity-80 transition-opacity duration-300">
               WollyWay
             </span>
           </Link>
@@ -171,7 +178,7 @@ const Navbar = () => {
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-lg p-8">
-                  <Link to="/" onClick={closeMenu}>
+                  <Link to="/" onClick={() => { closeMenu(); window.scrollTo(0, 0); }}>
                     Home
                   </Link>
                   <Link to="/shop" onClick={closeMenu}>

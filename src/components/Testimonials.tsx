@@ -112,10 +112,10 @@ const Testimonials = () => {
       </div>
 
       {/* Infinite Review Cards */}
-      <div className="relative">
+      <div className="relative group">
         {/* First layer - moving left to right */}
         <div className="relative mb-6 overflow-hidden">
-          <div className="flex animate-scroll-right">
+          <div className="flex animate-scroll-right group-hover:pause">
             {duplicatedReviews.map((review, index) => (
               <ReviewCard key={`${review.id}-${index}`} review={review} />
             ))}
@@ -124,7 +124,7 @@ const Testimonials = () => {
 
         {/* Second layer - moving right to left */}
         <div className="relative overflow-hidden">
-          <div className="flex animate-scroll-left">
+          <div className="flex animate-scroll-left group-hover:pause">
             {duplicatedReviewsReverse.map((review, index) => (
               <ReviewCard
                 key={`reverse-${review.id}-${index}`}

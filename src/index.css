@@ -273,4 +273,9 @@
   .animate-scroll-left {
     animation: scroll-left 25s linear infinite;
   }
+
+  .group:hover .animate-scroll-right,
+  .group:hover .animate-scroll-left {
+    animation-play-state: paused;
+  }
 }
