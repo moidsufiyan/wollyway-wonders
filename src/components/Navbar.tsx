@@ -67,7 +67,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="font-bold text-2xl logo-enhanced">WollyWay</span>
+            <span className="font-bold text-2xl text-wolly-magenta opacity-80 hover:opacity-100 transition-opacity duration-300">
+              WollyWay
+            </span>
           </Link>
 
           {/* Search Bar - Desktop */}

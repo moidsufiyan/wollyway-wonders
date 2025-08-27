@@ -9,22 +9,23 @@ const Hero = () => {
     <section className="relative min-h-screen flex items-center pt-16 overflow-hidden hero-background">
       {/* Dynamic Background decoration */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        {/* Large floating orbs */}
-        <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-gradient-to-br from-wolly-pink/50 via-wolly-magenta/30 to-transparent filter blur-3xl animate-float glow-effect"></div>
-        <div className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-gradient-to-br from-wolly-blush/60 via-wolly-mint/40 to-transparent filter blur-3xl animate-pulse glow-effect"></div>
+        {/* Large floating orbs - removed top-left orb */}
         <div
-          className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full bg-gradient-to-br from-wolly-mint/40 via-wolly-pink/50 to-transparent filter blur-3xl animate-float glow-effect"
+          className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full bg-gradient-to-br from-wolly-mint/30 via-wolly-pink/40 to-transparent filter blur-3xl animate-float"
           style={{ animationDelay: "1s" }}
         ></div>
 
-        {/* Additional floating elements */}
+        {/* Color accent moved to bottom right */}
+        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-gradient-to-br from-wolly-pink/60 via-wolly-magenta/40 to-wolly-blush/50 filter blur-3xl animate-pulse glow-effect"></div>
         <div
-          className="absolute top-1/3 left-1/2 w-32 h-32 rounded-full bg-gradient-to-r from-wolly-magenta/40 to-wolly-pink/60 filter blur-2xl animate-float"
-          style={{ animationDelay: "2s" }}
-        ></div>
-        <div
-          className="absolute bottom-1/4 left-1/3 w-48 h-48 rounded-full bg-gradient-to-r from-wolly-blush/50 to-wolly-mint/30 filter blur-2xl animate-pulse"
+          className="absolute bottom-20 right-20 w-80 h-80 rounded-full bg-gradient-to-br from-wolly-blush/70 via-wolly-mint/50 to-transparent filter blur-3xl animate-float glow-effect"
           style={{ animationDelay: "0.5s" }}
+        ></div>
+
+        {/* Additional floating elements - moved to bottom right */}
+        <div
+          className="absolute bottom-32 right-32 w-32 h-32 rounded-full bg-gradient-to-r from-wolly-magenta/40 to-wolly-pink/60 filter blur-2xl animate-float"
+          style={{ animationDelay: "2s" }}
         ></div>
 
         {/* Animated gradient overlay */}
