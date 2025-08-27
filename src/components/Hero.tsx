@@ -16,7 +16,7 @@ const Hero = () => {
         ></div>
 
         {/* Color accent moved to bottom right */}
-        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-gradient-to-br from-wolly-pink/60 via-wolly-magenta/40 to-wolly-blush/50 filter blur-3xl animate-pulse glow-effect"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-gradient-to-br from-wolly-pink/60 via-wolly-magenta/40 to-wolly-blush/50 filter blur-3xl glow-effect"></div>
         <div
           className="absolute bottom-20 right-20 w-80 h-80 rounded-full bg-gradient-to-br from-wolly-blush/70 via-wolly-mint/50 to-transparent filter blur-3xl animate-float glow-effect"
           style={{ animationDelay: "0.5s" }}
@@ -29,7 +29,7 @@ const Hero = () => {
         ></div>
 
         {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-wolly-pink/10 via-transparent to-wolly-magenta/10 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-wolly-pink/10 via-transparent to-wolly-magenta/10"></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
@@ -69,9 +69,8 @@ const Hero = () => {
               className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight mb-8"
             >
               Uniquely Crafted <br className="hidden md:block" />
-              <span className="text-gradient-bold relative">
+              <span className="text-wolly-magenta font-bold">
                 Accessories
-                <div className="absolute -inset-1 bg-gradient-to-r from-wolly-magenta/20 via-wolly-pink/20 to-wolly-blush/20 blur-xl opacity-75 animate-pulse"></div>
               </span>{" "}
               <br className="hidden md:block" />
               <span className="text-wolly-purple">For Your Style</span>
@@ -89,7 +88,7 @@ const Hero = () => {
               </span>{" "}
               of handmade knotted bands, keychains, and accessories that blend
               craftsmanship with{" "}
-              <span className="text-gradient font-bold">
+              <span className="text-wolly-magenta font-bold">
                 pop culture inspiration
               </span>
               . 🌟
@@ -101,7 +100,7 @@ const Hero = () => {
               transition={{ delay: 0.8, duration: 0.8 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              <Button asChild size="lg" className="wolly-button">
+              <Button asChild size="lg" className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300">
                 <Link to="/shop">
                   Shop Collection <ArrowRight size={16} className="ml-2" />
                 </Link>
@@ -110,7 +109,7 @@ const Hero = () => {
                 asChild
                 variant="outline"
                 size="lg"
-                className="wolly-button-outline"
+                className="font-bold px-8 py-4 rounded-2xl transition-all duration-300 border-2 border-wolly-magenta text-wolly-magenta hover:bg-wolly-magenta hover:text-white"
               >
                 <Link to="/customize">Customize Your Own</Link>
               </Button>

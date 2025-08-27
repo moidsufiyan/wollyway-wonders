@@ -55,21 +55,21 @@ const ProductCard = ({
             </div>
           </div>
           {product.isNew && (
-            <span className="absolute top-4 left-4 bg-gradient-to-r from-wolly-magenta to-wolly-pink text-white text-sm font-black px-4 py-2 rounded-full shadow-lg animate-pulse">
-              ✨ NEW ✨
-            </span>
+                          <span className="absolute top-4 left-4 bg-gradient-to-r from-wolly-magenta to-wolly-pink text-white text-sm font-black px-4 py-2 rounded-full shadow-lg">
+                ✨ NEW ✨
+              </span>
           )}
         </div>
         <div className="text-center">
           <span className="text-sm uppercase text-wolly-magenta/70 tracking-wider font-bold">
             {product.category}
           </span>
-          <h3 className="font-black text-xl mt-2 text-foreground group-hover:text-gradient transition-all duration-300">
-            {product.name}
-          </h3>
-          <p className="font-black text-2xl text-gradient mt-2">
-            ${product.price.toFixed(2)}
-          </p>
+                      <h3 className="font-black text-xl mt-2 text-foreground group-hover:text-wolly-magenta transition-all duration-300">
+              {product.name}
+            </h3>
+            <p className="font-black text-2xl text-wolly-magenta mt-2">
+              ${product.price.toFixed(2)}
+            </p>
 
           {/* Add to cart button */}
           <motion.div
@@ -77,7 +77,7 @@ const ProductCard = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <button className="wolly-button text-sm px-6 py-2">
+            <button className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white font-bold text-sm px-6 py-2 rounded-2xl transition-all duration-300">
               Add to Cart 🛒
             </button>
           </motion.div>
@@ -93,7 +93,7 @@ const FeaturedProducts = () => {
       {/* Background decoration */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-10 left-20 w-72 h-72 rounded-full bg-gradient-to-br from-wolly-pink/30 to-transparent filter blur-3xl animate-float"></div>
-        <div className="absolute bottom-10 right-20 w-64 h-64 rounded-full bg-gradient-to-br from-wolly-blush/40 to-transparent filter blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-20 w-64 h-64 rounded-full bg-gradient-to-br from-wolly-blush/40 to-transparent filter blur-3xl"></div>
       </div>
 
       <div className="text-center mb-16">
@@ -111,7 +111,7 @@ const FeaturedProducts = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-4xl md:text-6xl font-black mb-6 text-gradient-bold"
+          className="text-4xl md:text-6xl font-black mb-6 text-wolly-magenta"
         >
           Our Hand-Knitted Favorites
         </motion.h2>
@@ -122,7 +122,7 @@ const FeaturedProducts = () => {
           className="text-xl font-semibold text-wolly-purple/80 max-w-3xl mx-auto"
         >
           ✨ Discover our most loved hand-knitted pieces. Each item is{" "}
-          <span className="text-gradient font-bold">carefully crafted</span>{" "}
+              <span className="text-wolly-magenta font-bold">carefully crafted</span>{" "}
           with premium yarn and attention to detail! ✨
         </motion.p>
       </div>
