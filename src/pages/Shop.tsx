@@ -6,14 +6,13 @@ import Footer from '@/components/Footer';
 import ProductFilters from '@/components/ProductFilters';
 import ProductGrid from '@/components/ProductGrid';
 import { useProducts, parseQueryFilters } from '@/hooks/useProducts';
-import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
-import RecentlyViewed from '@/components/RecentlyViewed';
+
 import SearchPage from '@/components/SearchPage';
 import { Button } from '@/components/ui/button';
-import { Filter, Moon, Sun, ShoppingBag } from 'lucide-react';
+import { Filter, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
-import { Toggle } from '@/components/ui/toggle';
+
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb';
 
 import { type Product } from '@/types/Product';
@@ -25,11 +24,7 @@ const Shop = () => {
   const isSearchMode = searchParams.has('search') || searchParams.has('keyword');
   
   const [showFilters, setShowFilters] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check if user has a preference in localStorage
-    const savedPreference = localStorage.getItem('darkMode');
-    return savedPreference ? JSON.parse(savedPreference) : false;
-  });
+
   const [savedCart, setSavedCart] = useState<Product[]>([]);
   
   // Get filters from URL
@@ -52,19 +47,11 @@ const Shop = () => {
   
   // Use enhanced products hook
   const { data: products, isLoading } = useProducts(queryFilters);
-  const { recentlyViewed } = useRecentlyViewed();
+
   const { addItem } = useCart();
   const { toast } = useToast();
   
-  // Effect to toggle dark mode class on body
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
+
   
   // Handle URL updates when filters change
   useEffect(() => {
@@ -119,9 +106,7 @@ const Shop = () => {
     }
   }, [filters, navigate]);
   
-  const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
-  };
+
   
   const handleAddToCart = (product: Product) => {
     addItem(product, 1);
@@ -261,16 +246,7 @@ const Shop = () => {
                     Browse our handcrafted products made with love
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Toggle 
-                    pressed={isDarkMode} 
-                    onPressedChange={toggleDarkMode}
-                    aria-label="Toggle dark mode"
-                    className="h-10 w-10"
-                  >
-                    {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-                  </Toggle>
-                </div>
+
               </div>
               
               {/* Category Breadcrumb for filtered views */}
@@ -338,11 +314,7 @@ const Shop = () => {
           )}
           
           {/* Recently Viewed Products */}
-          {recentlyViewed.length > 0 && !isSearchMode && (
-            <div className="mt-16">
-              <RecentlyViewed products={recentlyViewed} />
-            </div>
-          )}
+
           
           {/* Saved for Later Products */}
           {savedCart.length > 0 && !isSearchMode && (

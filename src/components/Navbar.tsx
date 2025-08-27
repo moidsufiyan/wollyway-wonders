@@ -82,8 +82,8 @@ const Navbar = () => {
             <NavLink to="/">Home</NavLink>
             <NavLink to="/shop">Shop</NavLink>
             <NavLink to="/bundles">Bundles</NavLink>
-            <NavLink to="/customize">Customize</NavLink>
-            <NavLink to="/about">About</NavLink>
+
+
             <NavLink to="/contact">Contact</NavLink>
           </nav>
 
@@ -180,12 +180,8 @@ const Navbar = () => {
                   <Link to="/bundles" onClick={closeMenu}>
                     Bundles
                   </Link>
-                  <Link to="/customize" onClick={closeMenu}>
-                    Customize
-                  </Link>
-                  <Link to="/about" onClick={closeMenu}>
-                    About
-                  </Link>
+
+
                   <Link to="/contact" onClick={closeMenu}>
                     Contact
                   </Link>

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } fr
 import { Badge } from '@/components/ui/badge';
 import SizeGuide from '@/components/SizeGuide';
 import { useCart } from '@/contexts/CartContext';
-import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+
 
 export type ProductGridProps = {
   products: Product[];
@@ -39,7 +39,7 @@ const item = {
 const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishlist, showRemoveButton }: ProductGridProps) => {
   const { addItem, removeItem, isInWishlist } = useWishlist();
   const { addItem: addToCart } = useCart();
-  const { addProduct } = useRecentlyViewed();
+
   const { toast } = useToast();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('');
@@ -71,7 +71,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
     setQuickViewProduct(product);
     setSelectedColor(product.colors && product.colors.length > 0 ? product.colors[0] : '');
     setSelectedSize(product.sizes && product.sizes.length > 0 ? product.sizes[0] : '');
-    addProduct(product); // Add to recently viewed
+
   };
 
   const handleQuickAddToCart = (product: Product, e: React.MouseEvent) => {

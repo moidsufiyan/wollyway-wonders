@@ -5,17 +5,14 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 import Collections from "@/components/Collections";
 import Features from "@/components/Features";
 import Testimonials from "@/components/Testimonials";
-import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import { motion, useScroll, useSpring } from "framer-motion";
-import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
-import RecentlyViewed from "@/components/RecentlyViewed";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const Index = () => {
+const Index: React.FC = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -23,7 +20,6 @@ const Index = () => {
     restDelta: 0.001,
   });
   const navigate = useNavigate();
-  const { recentlyViewed } = useRecentlyViewed();
   const [searchQuery, setSearchQuery] = React.useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -87,13 +83,6 @@ const Index = () => {
       <Collections />
       <Features />
       <Testimonials />
-
-      {/* Recently Viewed Section - Only show if there are items */}
-      {recentlyViewed.length > 0 && (
-        <RecentlyViewed products={recentlyViewed} />
-      )}
-
-      <Newsletter />
       <Footer />
     </div>
   );

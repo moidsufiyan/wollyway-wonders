@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import Index from "./pages/Index";
-import About from "./pages/About";
+
 import Contact from "./pages/Contact";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -15,7 +15,7 @@ import UserAccount from "./pages/UserAccount";
 import UserDashboard from "./pages/UserDashboard";
 import OrderTracking from "./pages/OrderTracking";
 import Support from "./pages/Support";
-import Customize from "./pages/Customize";
+
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import BundleDetail from "./pages/BundleDetail";
@@ -32,7 +32,7 @@ function App() {
       <div className="app">
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
+
           <Route path="/contact" element={<Contact />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
@@ -46,7 +46,7 @@ function App() {
           <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/order-tracking" element={<OrderTracking />} />
           <Route path="/support" element={<Support />} />
-          <Route path="/customize" element={<Customize />} />
+
           <Route path="/faq" element={<FAQ />} />
 
           {/* Bundle Routes */}
