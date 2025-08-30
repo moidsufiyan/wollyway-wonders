@@ -16,8 +16,8 @@ interface LoyaltyPointsProps {
 }
 
 const LoyaltyPoints: React.FC<LoyaltyPointsProps> = ({ product, quantity }) => {
-  // Calculate points - typically 10 points per dollar spent
-  const pointsEarned = Math.floor(product.price * quantity * 10);
+  // Calculate points - typically 10 points per 100 rupees spent
+  const pointsEarned = Math.floor((product.price * quantity) / 10);
   
   return (
     <div className="mb-4">

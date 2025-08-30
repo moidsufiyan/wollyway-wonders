@@ -101,7 +101,7 @@ const Wishlist = () => {
                           </Link>
                           <p className="text-muted-foreground text-sm mb-2">{product.category}</p>
                           <div className="flex justify-between items-center">
-                            <span className="font-bold text-wolly-magenta">${product.price.toFixed(2)}</span>
+                            <span className="font-bold text-wolly-magenta">₹{product.price.toFixed(2)}</span>
                             <div className="flex space-x-2">
                               <Button
                                 variant="ghost"

@@ -13,12 +13,12 @@ const ContactInfo = [
   {
     icon: <MapPin size={24} className="text-wolly-magenta" />,
     title: "Our Location",
-    details: ["123 Crafty Lane", "Artisan District", "Creative City, 56789"]
+    details: ["Suncity, 500091", "Hyderabad, India"]
   },
   {
     icon: <Phone size={24} className="text-wolly-magenta" />,
     title: "Phone Number",
-    details: ["+1 (555) 123-4567", "Mon-Fri 9am-5pm"]
+    details: ["+91 91004 13434", "Mon-Fri 9am-5pm"]
   },
   {
     icon: <Mail size={24} className="text-wolly-magenta" />,
@@ -236,30 +236,7 @@ const Contact = () => {
         </div>
       </div>
       
-      {/* Map Section */}
-      <div className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl font-bold mb-4">Visit Our Workshop</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Our studio is open for visits Monday through Friday, 9am to 5pm.
-            </p>
-          </motion.div>
-          
-          {/* Map Placeholder */}
-          <div className="h-96 bg-gray-200 rounded-xl overflow-hidden relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-lg font-medium text-muted-foreground">Interactive Map Goes Here</p>
-            </div>
-          </div>
-        </div>
-      </div>
+
       
       <Footer />
     </div>

@@ -68,7 +68,7 @@ const ProductCard = ({
               {product.name}
             </h3>
             <p className="font-black text-2xl text-wolly-magenta mt-2">
-              ${product.price.toFixed(2)}
+              ₹{product.price.toFixed(2)}
             </p>
 
           {/* Add to cart button */}

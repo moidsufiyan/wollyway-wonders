@@ -8,7 +8,6 @@ export type ProductFilters = {
   search?: string;
   category?: string | string[];
   priceRange?: [number, number];
-  colors?: string[];
   ratingRange?: [number, number];
   inStock?: boolean;
   sortBy?: string;
@@ -38,9 +37,7 @@ export const parseQueryFilters = (search: string): ProductFilters => {
     filters.priceRange = [Number(minPrice), Number(maxPrice)];
   }
   
-  // Handle colors
-  const colors = params.get('colors');
-  if (colors) filters.colors = colors.split(',');
+
   
   // Handle rating range
   const minRating = params.get('minRating');

@@ -103,7 +103,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">${product.price.toFixed(2)}</p>
+                  <p className="text-sm font-semibold">₹{product.price.toFixed(2)}</p>
                 </div>
               </div>
             </React.Fragment>

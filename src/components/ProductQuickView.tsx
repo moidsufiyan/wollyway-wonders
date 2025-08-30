@@ -92,7 +92,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
           {/* Product Details */}
           <div className="p-6 flex flex-col">
             <DialogTitle className="text-xl font-bold mb-2">{product.name}</DialogTitle>
-            <div className="text-lg font-bold text-wolly-magenta mb-3">${product.price.toFixed(2)}</div>
+            <div className="text-lg font-bold text-wolly-magenta mb-3">₹{product.price.toFixed(2)}</div>
             
             <Badge className={`mb-4 w-fit ${stockColor}`}>
               {stockStatus}

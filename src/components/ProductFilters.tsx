@@ -1,61 +1,55 @@
-
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { X, Star } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import React from "react";
+import { motion } from "framer-motion";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { X, Star } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export type FilterProps = {
   filters: {
     categories: string[];
     priceRange: [number, number];
-    colors: string[];
     ratingRange: [number, number];
     inStock: boolean;
     sortBy: string;
   };
-  onFilterChange: (filters: Partial<{
-    categories: string[];
-    priceRange: [number, number];
-    colors: string[];
-    ratingRange: [number, number];
-    inStock: boolean;
-    sortBy: string;
-  }>) => void;
+  onFilterChange: (
+    filters: Partial<{
+      categories: string[];
+      priceRange: [number, number];
+      ratingRange: [number, number];
+      inStock: boolean;
+      sortBy: string;
+    }>
+  ) => void;
   resetFilters: () => void;
   onClose: () => void;
 };
 
 const categories = ["Bands", "Keychains", "Bracelets", "Accessories"];
-const colors = [
-  { name: "Black", value: "black" },
-  { name: "White", value: "white" },
-  { name: "Red", value: "red" },
-  { name: "Blue", value: "blue" },
-  { name: "Yellow", value: "yellow" },
-  { name: "Purple", value: "purple" },
-  { name: "Orange", value: "orange" },
-  { name: "Green", value: "green" },
-];
 const sortOptions = [
   { value: "newest", label: "Newest" },
   { value: "price-low", label: "Price: Low to High" },
   { value: "price-high", label: "Price: High to Low" },
   { value: "bestsellers", label: "Best Sellers" },
   { value: "trending", label: "Trending" },
-  { value: "rating", label: "Highest Rated" }
+  { value: "rating", label: "Highest Rated" },
 ];
 
-const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: FilterProps) => {
+const ProductFilters = ({
+  filters,
+  onFilterChange,
+  resetFilters,
+  onClose,
+}: FilterProps) => {
   const handleCategoryChange = (category: string) => {
     const newCategories = filters.categories.includes(category)
-      ? filters.categories.filter(c => c !== category)
+      ? filters.categories.filter((c) => c !== category)
       : [...filters.categories, category];
-    
+
     onFilterChange({ categories: newCategories });
   };
 
@@ -65,14 +59,6 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
 
   const handleRatingChange = (value: number[]) => {
     onFilterChange({ ratingRange: [value[0], value[1]] });
-  };
-
-  const handleColorChange = (color: string) => {
-    const newColors = filters.colors.includes(color)
-      ? filters.colors.filter(c => c !== color)
-      : [...filters.colors, color];
-    
-    onFilterChange({ colors: newColors });
   };
 
   const handleInStockChange = (checked: boolean) => {
@@ -87,15 +73,15 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
     resetFilters();
   };
 
-  const hasActiveFilters = filters.categories.length > 0 || 
-                           filters.colors.length > 0 || 
-                           filters.priceRange[0] > 0 || 
-                           filters.priceRange[1] < 100 ||
-                           filters.ratingRange[0] > 1 ||
-                           filters.inStock;
+  const hasActiveFilters =
+    filters.categories.length > 0 ||
+    filters.priceRange[0] > 0 ||
+    filters.priceRange[1] < 5000 ||
+    filters.ratingRange[0] > 1 ||
+    filters.inStock;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
@@ -104,9 +90,9 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold">Filters</h3>
         {hasActiveFilters && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clearFilters}
             className="text-xs text-muted-foreground flex items-center"
           >
@@ -119,14 +105,14 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
       <div className="mb-8">
         <h4 className="font-medium mb-3">Categories</h4>
         <div className="space-y-2">
-          {categories.map(category => (
+          {categories.map((category) => (
             <div key={category} className="flex items-center">
-              <Checkbox 
+              <Checkbox
                 id={`category-${category}`}
                 checked={filters.categories.includes(category)}
                 onCheckedChange={() => handleCategoryChange(category)}
               />
-              <Label 
+              <Label
                 htmlFor={`category-${category}`}
                 className="ml-2 text-sm cursor-pointer"
               >
@@ -142,15 +128,15 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
         <h4 className="font-medium mb-3">Price Range</h4>
         <Slider
           defaultValue={[filters.priceRange[0], filters.priceRange[1]]}
-          max={100}
-          step={1}
+          max={5000}
+          step={100}
           value={[filters.priceRange[0], filters.priceRange[1]]}
           onValueChange={handlePriceChange}
           className="mb-4"
         />
         <div className="flex justify-between items-center text-sm">
-          <span>${filters.priceRange[0]}</span>
-          <span>${filters.priceRange[1]}</span>
+          <span>₹{filters.priceRange[0]}</span>
+          <span>₹{filters.priceRange[1]}</span>
         </div>
       </div>
 
@@ -177,35 +163,14 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
         </div>
       </div>
 
-      {/* Colors */}
-      <div className="mb-6">
-        <h4 className="font-medium mb-3">Colors</h4>
-        <div className="flex flex-wrap gap-2">
-          {colors.map(color => (
-            <button
-              key={color.value}
-              className={`w-7 h-7 rounded-full border ${
-                filters.colors.includes(color.value) 
-                ? 'ring-2 ring-wolly-magenta ring-offset-2' 
-                : 'ring-0'
-              }`}
-              style={{ backgroundColor: color.value }}
-              onClick={() => handleColorChange(color.value)}
-              aria-label={`Filter by ${color.name}`}
-              title={color.name}
-            />
-          ))}
-        </div>
-      </div>
-
       {/* In Stock Only */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <Label htmlFor="in-stock" className="font-medium cursor-pointer">
             In Stock Only
           </Label>
-          <Switch 
-            id="in-stock" 
+          <Switch
+            id="in-stock"
             checked={filters.inStock}
             onCheckedChange={handleInStockChange}
           />
@@ -215,15 +180,15 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
       {/* Sort By */}
       <div className="mb-6">
         <h4 className="font-medium mb-3">Sort By</h4>
-        <ToggleGroup 
-          type="single" 
-          value={filters.sortBy} 
+        <ToggleGroup
+          type="single"
+          value={filters.sortBy}
           onValueChange={handleSortChange}
           className="flex flex-wrap gap-2"
         >
-          {sortOptions.map(option => (
-            <ToggleGroupItem 
-              key={option.value} 
+          {sortOptions.map((option) => (
+            <ToggleGroupItem
+              key={option.value}
               value={option.value}
               className="text-xs px-3 py-1"
             >
@@ -235,7 +200,7 @@ const ProductFilters = ({ filters, onFilterChange, resetFilters, onClose }: Filt
 
       {/* Apply Filters Button - Mobile only */}
       <div className="mt-6 lg:hidden">
-        <Button 
+        <Button
           className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
           onClick={onClose}
         >

@@ -217,7 +217,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
               
               <div className="flex items-center justify-between">
                 <p className="text-wolly-magenta font-bold">
-                  ${product.price.toFixed(2)}
+                  ₹{product.price.toFixed(2)}
                 </p>
                 
                 <button
@@ -272,7 +272,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 </DialogDescription>
                 
                 <div className="text-xl font-bold text-wolly-magenta mb-4">
-                  ${quickViewProduct.price.toFixed(2)}
+                  ₹{quickViewProduct.price.toFixed(2)}
                 </div>
                 
                 {quickViewProduct.colors && quickViewProduct.colors.length > 0 && (

@@ -118,7 +118,7 @@ const Cart = () => {
                               </div>
                               <div className="sm:text-right">
                                 <span className="font-bold text-wolly-magenta">
-                                  ${item.product.price.toFixed(2)}
+                                  ₹{item.product.price.toFixed(2)}
                                 </span>
                               </div>
                             </div>
@@ -183,19 +183,19 @@ const Cart = () => {
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>₹{subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Shipping</span>
                       {shipping === 0 ? (
                         <span className="text-green-600">Free</span>
                       ) : (
-                        <span>${shipping.toFixed(2)}</span>
+                        <span>₹{shipping.toFixed(2)}</span>
                       )}
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax (8%)</span>
-                      <span>${tax.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Tax (18%)</span>
+                      <span>₹{tax.toFixed(2)}</span>
                     </div>
                     
                     <Separator />
@@ -203,7 +203,7 @@ const Cart = () => {
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
                       <span className="text-wolly-magenta text-xl">
-                        ${total.toFixed(2)}
+                        ₹{total.toFixed(2)}
                       </span>
                     </div>
                   </div>

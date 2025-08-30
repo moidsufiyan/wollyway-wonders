@@ -26,7 +26,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
             <h3 className="font-medium group-hover:text-wolly-magenta transition-colors">
               <Link to={`/product/${product.id}`}>{product.name}</Link>
             </h3>
-            <span className="font-bold text-wolly-magenta">${product.price.toFixed(2)}</span>
+                            <span className="font-bold text-wolly-magenta">₹{product.price.toFixed(2)}</span>
           </div>
         ))}
       </div>

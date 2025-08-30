@@ -49,7 +49,7 @@ const OrderDetailsCard: React.FC<OrderDetailsCardProps> = ({
               </p>
               <p className="text-sm">Qty: {item.quantity}</p>
             </div>
-            <div className="font-semibold">${item.price.toFixed(2)}</div>
+                            <div className="font-semibold">₹{item.price.toFixed(2)}</div>
           </div>
         ))}
         

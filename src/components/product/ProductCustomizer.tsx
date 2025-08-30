@@ -40,23 +40,23 @@ const colorOptions = [
 
 const charmOptions: CustomizationOption[] = [
   { type: 'charm', name: 'None', price: 0 },
-  { type: 'charm', name: 'Heart', price: 2.99 },
-  { type: 'charm', name: 'Star', price: 2.99 },
-  { type: 'charm', name: 'Infinity', price: 3.99 },
-  { type: 'charm', name: 'Moon', price: 3.99 },
+  { type: 'charm', name: 'Heart', price: 249 },
+  { type: 'charm', name: 'Star', price: 249 },
+  { type: 'charm', name: 'Infinity', price: 331 },
+  { type: 'charm', name: 'Moon', price: 331 },
 ];
 
 const knotStyleOptions: CustomizationOption[] = [
   { type: 'knot', name: 'Standard', price: 0 },
-  { type: 'knot', name: 'Double', price: 1.99 },
-  { type: 'knot', name: 'Celtic', price: 3.99 },
-  { type: 'knot', name: 'Fishtail', price: 2.99 },
+  { type: 'knot', name: 'Double', price: 165 },
+  { type: 'knot', name: 'Celtic', price: 331 },
+  { type: 'knot', name: 'Fishtail', price: 249 },
 ];
 
 const additionalOptions: CustomizationOption[] = [
-  { type: 'additional', name: 'Gift Wrap', price: 2.99 },
-  { type: 'additional', name: 'Premium Box', price: 4.99 },
-  { type: 'additional', name: 'Personalized Card', price: 1.99 },
+  { type: 'additional', name: 'Gift Wrap', price: 249 },
+  { type: 'additional', name: 'Premium Box', price: 414 },
+  { type: 'additional', name: 'Personalized Card', price: 165 },
 ];
 
 const ProductCustomizer: React.FC<ProductCustomizerProps> = ({ 
@@ -199,7 +199,7 @@ const ProductCustomizer: React.FC<ProductCustomizerProps> = ({
           <SelectContent>
             {charmOptions.map((charm) => (
               <SelectItem key={charm.name} value={charm.name}>
-                {charm.name} {charm.price > 0 ? `(+$${charm.price.toFixed(2)})` : '(No charge)'}
+                {charm.name} {charm.price > 0 ? `(+₹${charm.price.toFixed(2)})` : '(No charge)'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -217,7 +217,7 @@ const ProductCustomizer: React.FC<ProductCustomizerProps> = ({
             <SelectContent>
               {knotStyleOptions.map((style) => (
                 <SelectItem key={style.name} value={style.name}>
-                  {style.name} {style.price > 0 ? `(+$${style.price.toFixed(2)})` : '(No charge)'}
+                  {style.name} {style.price > 0 ? `(+₹${style.price.toFixed(2)})` : '(No charge)'}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -242,7 +242,7 @@ const ProductCustomizer: React.FC<ProductCustomizerProps> = ({
                 htmlFor={`option-${option.name}`} 
                 className="text-sm"
               >
-                {option.name} (+${option.price.toFixed(2)})
+                {option.name} (+₹{option.price.toFixed(2)})
               </label>
             </div>
           ))}
@@ -253,7 +253,7 @@ const ProductCustomizer: React.FC<ProductCustomizerProps> = ({
       <div className="pt-3 border-t">
         <div className="text-lg font-semibold flex justify-between">
           <span>Total Price:</span>
-          <span className="text-primary">${calculateTotalPrice().toFixed(2)}</span>
+          <span className="text-primary">₹{calculateTotalPrice().toFixed(2)}</span>
         </div>
       </div>
     </div>

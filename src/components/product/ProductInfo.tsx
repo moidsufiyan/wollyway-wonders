@@ -78,7 +78,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
         <span className="text-sm ml-2">{product.rating} ({Math.floor((product.rating || 0) * 10)} reviews)</span>
       </div>
       
-      <span className="text-2xl font-bold text-wolly-magenta mb-4">${product.price?.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-wolly-magenta mb-4">₹{product.price?.toFixed(2)}</span>
       
       <LoyaltyPoints product={product} quantity={quantity} />
       

@@ -2,7 +2,7 @@
   {
     "id": "1",
     "name": "Cozy Winter Scarf",
-    "price": 45.99,
+    "price": 3817,
     "image": "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
     "images": ["/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png"],
     "description": "Hand-knitted wool scarf perfect for cold winter days. Made with premium merino wool in a classic cable knit pattern.",
@@ -28,7 +28,7 @@
   {
     "id": "2",
     "name": "Handmade Wool Keychain",
-    "price": 12.99,
+    "price": 1078,
     "image": "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
     "images": ["/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png"],
     "description": "Adorable hand-knitted wool keychain featuring a cute animal design. Perfect as a gift or personal accessory.",
@@ -54,7 +54,7 @@
   {
     "id": "3",
     "name": "Knitted Hair Band",
-    "price": 18.99,
+    "price": 1576,
     "image": "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
     "images": ["/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png"],
     "description": "Stylish hand-knitted hair band that keeps your hair in place while adding a cozy touch to your outfit.",
@@ -80,7 +80,7 @@
   {
     "id": "4",
     "name": "Chunky Knit Beanie",
-    "price": 32.99,
+    "price": 2738,
     "image": "/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
     "images": ["/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png"],
     "description": "Warm and stylish chunky knit beanie. Hand-crafted with thick wool yarn for maximum warmth and comfort.",
@@ -98,7 +98,7 @@
   {
     "id": "5",
     "name": "Cable Knit Mittens",
-    "price": 28.99,
+    "price": 2406,
     "image": "/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
     "images": ["/lovable-uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png"],
     "description": "Hand-knitted cable pattern mittens that provide excellent warmth while maintaining dexterity.",
@@ -116,7 +116,7 @@
   {
     "id": "6",
     "name": "Wool Leg Warmers",
-    "price": 38.99,
+    "price": 3236,
     "image": "/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
     "images": ["/lovable-uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png"],
     "description": "Cozy hand-knitted leg warmers perfect for layering. Made with soft wool blend for all-day comfort.",

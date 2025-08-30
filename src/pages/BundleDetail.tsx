@@ -192,7 +192,7 @@ const BundleDetail = () => {
                         )}
                       </div>
                       <div className="flex justify-between items-end">
-                        <span className="font-bold">${product.price.toFixed(2)}</span>
+                        <span className="font-bold">₹{product.price.toFixed(2)}</span>
                         <Button
                           size="sm"
                           variant="outline"
@@ -217,7 +217,7 @@ const BundleDetail = () => {
                       <Check size={16} className="text-green-500 mr-2" />
                       {product.name}
                     </span>
-                    <span>${product.price.toFixed(2)}</span>
+                    <span>₹{product.price.toFixed(2)}</span>
                   </div>
                 ))}
               </div>

@@ -84,7 +84,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               <div className="flex-1">
                 <p className="font-medium text-sm line-clamp-1">{item.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Qty: {item.quantity} · ${item.price.toFixed(2)}
+                  Qty: {item.quantity} · ₹{item.price.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       
       <CardFooter className="flex justify-between pt-3 border-t px-5 py-3">
         <div>
-          <p className="font-medium">${order.totalPrice.toFixed(2)}</p>
+                          <p className="font-medium">₹{order.totalPrice.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground">
             {order.items.reduce((total, item) => total + item.quantity, 0)} items
           </p>
