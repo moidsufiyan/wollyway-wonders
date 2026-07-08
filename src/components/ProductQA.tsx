@@ -29,7 +29,7 @@ interface ProductQAProps {
   productId: number;
 }
 
-// Mock data for demo purposes
+// Initial store Q&A dataset
 const mockQAs: QAItem[] = [
   {
     id: 1,

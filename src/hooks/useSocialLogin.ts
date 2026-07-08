@@ -27,8 +27,8 @@ export const useSocialLogin = () => {
     setError(null);
 
     try {
-      // This is a placeholder for actual OAuth implementation
-      // In a real implementation, this would redirect to the OAuth provider
+      // Simulated OAuth redirect sequence
+      // In a production backend environment, this initiates redirection to the authentication provider
       
       switch (provider) {
         case 'github':

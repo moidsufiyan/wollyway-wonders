@@ -2,7 +2,7 @@
 
 A modern, responsive frontend e-commerce platform for handcrafted accessories built with React, TypeScript, and Tailwind CSS. **First Public Release** - Streamlined for core e-commerce functionality.
 
-![WollyWay Preview](public/lovable-uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png)
+![WollyWay Preview](public/uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png)
 
 ## ✨ Features
 
@@ -111,7 +111,7 @@ npm run lint
 
 ```
 ├── public/                 # Static assets and images
-│   ├── lovable-uploads/   # Product images and assets
+│   ├── uploads/           # Product images and assets
 │   └── favicon.ico        # Site favicon
 ├── src/
 │   ├── components/        # Reusable UI components
@@ -252,9 +252,9 @@ vercel
 - Responsive Design (mobile-first)
 - WollyWay Branding (colors, cozy knitted theme)
 - Smooth Animations & Transitions (Framer Motion)
-- Social Login Buttons (UI placeholders)
-- Product Reviews & Ratings (UI only, static data)
-- Payment Gateway UI (placeholders for Stripe/PayPal)
+- Social Login Buttons (Mock UI integration)
+- Product Reviews & Ratings (Mock data representation)
+- Payment Gateway UI (Simulated checkout flow)
 
 ### **❌ Removed for First Release**
 

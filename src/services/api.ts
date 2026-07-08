@@ -205,7 +205,7 @@ export const orderService = {
       orderNumber: `WW${Date.now().toString().slice(-6)}`
     };
     
-    // Store order in localStorage for demo purposes
+    // Persist client order transaction to local storage
     const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
     existingOrders.push(order);
     localStorage.setItem('orders', JSON.stringify(existingOrders));
