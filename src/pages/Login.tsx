@@ -187,12 +187,19 @@ const Login = () => {
                         <FormItem>
                           <div className="flex items-center justify-between">
                             <FormLabel>Password</FormLabel>
-                            <Link 
-                              to="/reset-password" 
-                              className="text-xs text-wolly-magenta hover:underline"
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                toast({
+                                  title: "Password reset link sent",
+                                  description: "If this email is registered, you will receive a password reset link shortly.",
+                                });
+                              }}
+                              className="text-xs text-wolly-magenta hover:underline bg-transparent border-0 cursor-pointer"
                             >
                               Forgot password?
-                            </Link>
+                            </button>
                           </div>
                           <FormControl>
                             <Input 
@@ -337,7 +344,7 @@ const Login = () => {
                         Terms of Service
                       </Link>{' '}
                       and{' '}
-                      <Link to="/privacy" className="text-wolly-magenta hover:underline">
+                      <Link to="/privacy-policy" className="text-wolly-magenta hover:underline">
                         Privacy Policy
                       </Link>
                       .

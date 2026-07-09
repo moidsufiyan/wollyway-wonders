@@ -36,16 +36,25 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              {['Home', 'Shop', 'Collections', 'About', 'Contact'].map((item) => (
-                <li key={item}>
-                  <Link 
-                    to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
-                    className="text-muted-foreground hover:text-wolly-magenta transition-colors"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              {['Home', 'Shop', 'Collections', 'About', 'Contact'].map((item) => {
+                const paths: Record<string, string> = {
+                  'Home': '/',
+                  'Shop': '/shop',
+                  'Collections': '/shop',
+                  'About': '/about',
+                  'Contact': '/contact'
+                };
+                return (
+                  <li key={item}>
+                    <Link 
+                      to={paths[item] || '/'}
+                      className="text-muted-foreground hover:text-wolly-magenta transition-colors"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -59,16 +68,25 @@ const Footer = () => {
                 'Track Order', 
                 'Privacy Policy', 
                 'Terms & Conditions'
-              ].map((item) => (
-                <li key={item}>
-                  <Link 
-                    to={`/${item.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="text-muted-foreground hover:text-wolly-magenta transition-colors"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              ].map((item) => {
+                const paths: Record<string, string> = {
+                  'FAQ': '/faq',
+                  'Shipping & Returns': '/shipping-policy',
+                  'Track Order': '/order-tracking',
+                  'Privacy Policy': '/privacy-policy',
+                  'Terms & Conditions': '/terms'
+                };
+                return (
+                  <li key={item}>
+                    <Link 
+                      to={paths[item] || '/'}
+                      className="text-muted-foreground hover:text-wolly-magenta transition-colors"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

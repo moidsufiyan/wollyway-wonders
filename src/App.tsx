@@ -11,10 +11,13 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
-import UserAccount from "./pages/UserAccount";
-import UserDashboard from "./pages/UserDashboard";
 import OrderTracking from "./pages/OrderTracking";
 import Support from "./pages/Support";
+import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import ReturnPolicy from "./pages/ReturnPolicy";
 
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
@@ -22,7 +25,6 @@ import BundleDetail from "./pages/BundleDetail";
 import Bundles from "./pages/Bundles";
 import FAQ from "./pages/FAQ";
 import SizeGuidePage from "./pages/SizeGuidePage";
-import MockCheckout from "./pages/MockCheckout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 
 function App() {
@@ -37,15 +39,18 @@ function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<MockCheckout />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/user-account" element={<UserAccount />} />
-          <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/order-tracking" element={<OrderTracking />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/return-policy" element={<ReturnPolicy />} />
 
           <Route path="/faq" element={<FAQ />} />
 

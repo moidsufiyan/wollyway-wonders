@@ -105,14 +105,6 @@ const Hero = () => {
                   Shop Collection <ArrowRight size={16} className="ml-2" />
                 </Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="font-bold px-8 py-4 rounded-2xl transition-all duration-300 border-2 border-wolly-magenta text-wolly-magenta hover:bg-wolly-magenta hover:text-white"
-              >
-                <Link to="/customize">Customize Your Own</Link>
-              </Button>
             </motion.div>
           </motion.div>
 

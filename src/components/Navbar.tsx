@@ -130,9 +130,6 @@ const Navbar = () => {
                     <Link to="/profile">Profile</Link>
                   </li>
                   <li>
-                    <Link to="/user-account">Account Settings</Link>
-                  </li>
-                  <li>
                     <button onClick={logout}>Logout</button>
                   </li>
                 </ul>
@@ -199,9 +196,6 @@ const Navbar = () => {
                     <div className="flex flex-col space-y-2">
                       <Link to="/profile" onClick={closeMenu}>
                         Profile
-                      </Link>
-                      <Link to="/user-account" onClick={closeMenu}>
-                        Account Settings
                       </Link>
                       <button
                         onClick={() => {
