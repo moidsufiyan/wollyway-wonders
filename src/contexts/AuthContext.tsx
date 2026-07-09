@@ -1,4 +1,5 @@
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { userService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';

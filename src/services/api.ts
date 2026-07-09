@@ -1,4 +1,5 @@
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Static data imports
 import productsData from '@/data/products.json';
 import usersData from '@/data/users.json';

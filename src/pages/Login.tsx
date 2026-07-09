@@ -78,7 +78,8 @@ const Login = () => {
         description: "Welcome back to Wollyway!",
       });
       navigate(from);
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error;
       setAuthError(error.message || "Invalid email or password. Please try again.");
       toast({
         variant: "destructive",
@@ -101,7 +102,8 @@ const Login = () => {
         description: "Welcome to Wollyway!",
       });
       navigate(from);
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as Error;
       setAuthError(error.message || "Registration failed. Please try again.");
       toast({
         variant: "destructive",

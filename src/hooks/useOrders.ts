@@ -31,7 +31,7 @@ export const useCreateOrder = () => {
         description: "Your order has been placed and is being processed.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to place order",
         description: error.message || "Something went wrong. Please try again.",

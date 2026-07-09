@@ -50,12 +50,13 @@ export const useSocialLogin = () => {
       // Simulate OAuth flow timing
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-    } catch (err: any) {
-      setError(err.message || 'Failed to login with social provider');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Failed to login with social provider');
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: err.message || "Failed to login with social provider",
+        description: error.message || "Failed to login with social provider",
       });
     } finally {
       setIsLoading(false);

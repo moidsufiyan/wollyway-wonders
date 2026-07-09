@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useCreateOrder } from '@/hooks/useOrders';
 
 interface CheckoutForm {
   name: string;
@@ -24,7 +25,8 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCart();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createOrderMutation = useCreateOrder();
+  const isSubmitting = createOrderMutation.isPending;
   
   const [form, setForm] = useState<CheckoutForm>({
     name: '',
@@ -67,58 +69,39 @@ const Checkout = () => {
       return;
     }
 
-    setIsSubmitting(true);
+    const shipping = 9.99;
+    const tax = subtotal * 0.08;
+    const total = subtotal + shipping + tax;
 
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    const orderData = {
+      items: items.map(item => ({
+        id: String(item.product.id),
+        productId: String(item.product.id),
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image
+      })),
+      shippingAddress: {
+        street: form.address,
+        city: form.city,
+        state: '',
+        zipCode: form.zipCode,
+        country: form.country,
+      },
+      paymentMethod: 'Credit Card',
+      itemsPrice: subtotal,
+      shippingPrice: shipping,
+      taxPrice: tax,
+      totalPrice: total,
+    };
 
-      // Generate mock order data
-      const order = {
-        id: Date.now().toString(),
-        orderNumber: `WW${Date.now().toString().slice(-6)}`,
-        items: items.map(item => ({
-          id: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          quantity: item.quantity,
-          image: item.product.image
-        })),
-        shippingAddress: form,
-        subtotal,
-        shipping: 9.99,
-        tax: subtotal * 0.08,
-        total: subtotal + 9.99 + (subtotal * 0.08),
-        status: 'Processing',
-        estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        createdAt: new Date().toISOString()
-      };
-
-      // Store order in localStorage
-      const existingOrders = JSON.parse(localStorage.getItem('demo_orders') || '[]');
-      existingOrders.push(order);
-      localStorage.setItem('demo_orders', JSON.stringify(existingOrders));
-
-      // Clear cart
-      clearCart();
-
-      toast({
-        title: "Order placed successfully!",
-        description: "This is a demo order. No actual payment was processed.",
-      });
-
-      // Navigate to success page with order data
-      navigate('/checkout-success', { state: { order } });
-      
-    } catch (error) {
-      toast({
-        title: "Something went wrong",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    createOrderMutation.mutate(orderData, {
+      onSuccess: (order) => {
+        clearCart();
+        navigate('/checkout-success', { state: { order } });
+      }
+    });
   };
 
   const shipping = 9.99;

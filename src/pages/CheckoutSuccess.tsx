@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { OrderItem } from '@/types/order';
 
 const CheckoutSuccess = () => {
   const location = useLocation();
@@ -84,7 +85,7 @@ const CheckoutSuccess = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.items.map((item: any, index: number) => (
+                {order.items.map((item: OrderItem, index: number) => (
                   <div key={index} className="flex items-center space-x-4">
                     <img
                       src={item.image}
@@ -109,20 +110,20 @@ const CheckoutSuccess = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>₹{order.subtotal.toFixed(2)}</span>
+                  <span>₹{Number(order.subtotal ?? order.itemsPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>₹{order.shipping.toFixed(2)}</span>
+                  <span>₹{Number(order.shipping ?? order.shippingPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>₹{order.tax.toFixed(2)}</span>
+                  <span>₹{Number(order.tax ?? order.taxPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>₹{order.total.toFixed(2)}</span>
+                  <span>₹{Number(order.total ?? order.totalPrice ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -135,8 +136,13 @@ const CheckoutSuccess = () => {
             </CardHeader>
             <CardContent>
               <div className="text-sm">
-                <p className="font-medium">{order.shippingAddress.name}</p>
-                <p>{order.shippingAddress.address}</p>
+                <p className="font-medium">
+                  {order.shippingAddress.name ?? 
+                   (order.shippingAddress.firstName 
+                     ? `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}` 
+                     : 'Customer')}
+                </p>
+                <p>{order.shippingAddress.address ?? order.shippingAddress.street}</p>
                 <p>
                   {order.shippingAddress.city}, {order.shippingAddress.zipCode}
                 </p>

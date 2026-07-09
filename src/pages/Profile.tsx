@@ -21,6 +21,7 @@ import AddressForm from '@/components/user/AddressForm';
 import OrderCard from '@/components/user/OrderCard';
 import { Order } from '@/types/order';
 import { type Product } from '@/types/Product';
+import { useOrders } from '@/hooks/useOrders';
 
 // Mock data for addresses
 const initialAddresses: Address[] = [
@@ -145,7 +146,8 @@ const Profile = () => {
   const [currentAddress, setCurrentAddress] = useState<Address | undefined>(undefined);
   
   // State for orders
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const { data: userOrders = [], isLoading: isOrdersLoading } = useOrders();
+  const orders = userOrders.length > 0 ? userOrders : initialOrders;
   
   // State for password change
   const [passwordForm, setPasswordForm] = useState({
@@ -500,7 +502,7 @@ const Profile = () => {
                   <div className="p-6">
                     <h2 className="text-xl font-bold mb-6">Order History</h2>
                     
-                    {isLoading ? (
+                    {isOrdersLoading ? (
                       <div className="flex justify-center py-12">
                         <Loader2 className="animate-spin h-8 w-8 text-wolly-magenta" />
                       </div>

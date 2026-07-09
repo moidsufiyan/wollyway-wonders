@@ -29,6 +29,7 @@ export type Product = {
 };
 
 // Legacy compatibility - map old property names to new ones
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const normalizeProduct = (product: any): Product => {
   return {
     ...product,
