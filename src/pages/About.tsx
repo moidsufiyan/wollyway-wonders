@@ -110,7 +110,7 @@ const About = () => {
             We love collaborating on custom orders and unique size fits. Reach out to our design team!
           </p>
           <Button asChild size="lg" className="bg-wolly-magenta hover:bg-wolly-magenta/90 button-hover">
-            <Link to="/contact">
+            <Link href="/contact">
               Contact Us <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

@@ -83,7 +83,7 @@ const OrderDetailsCard: React.FC<OrderDetailsCardProps> = ({
           className="bg-wolly-magenta hover:bg-wolly-magenta/90"
           asChild
         >
-          <Link to="/shop">
+          <Link href="/shop">
             Continue Shopping
           </Link>
         </Button>

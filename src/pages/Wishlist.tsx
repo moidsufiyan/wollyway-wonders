@@ -50,7 +50,7 @@ const Wishlist = () => {
                   asChild
                   className="bg-wolly-magenta hover:bg-wolly-magenta/90"
                 >
-                  <Link to="/shop">
+                  <Link href="/shop">
                     Start Shopping
                   </Link>
                 </Button>
@@ -83,8 +83,7 @@ const Wishlist = () => {
                         transition={{ duration: 0.4 }}
                         className="border border-border rounded-lg overflow-hidden"
                       >
-                        <Link
-                          to={`/product/${product.id}`}
+                        <Link href={`/product/${product.id}`}
                           className="block aspect-square relative overflow-hidden"
                         >
                           <img
@@ -94,8 +93,7 @@ const Wishlist = () => {
                           />
                         </Link>
                         <div className="p-4">
-                          <Link
-                            to={`/product/${product.id}`}
+                          <Link href={`/product/${product.id}`}
                             className="block hover:text-wolly-magenta"
                           >
                             <h3 className="font-medium mb-1 truncate">{product.name}</h3>
@@ -137,7 +135,7 @@ const Wishlist = () => {
                   variant="outline"
                   className="flex items-center"
                 >
-                  <Link to="/shop">
+                  <Link href="/shop">
                     <ArrowLeft size={16} className="mr-2" />
                     Continue Shopping
                   </Link>

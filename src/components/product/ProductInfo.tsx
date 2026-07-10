@@ -169,7 +169,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
         </div>
         <div className="flex items-center text-sm mb-2">
           <span className="text-muted-foreground w-20">Category:</span>
-          <Link to={`/shop/${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
+          <Link href={`/shop/${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
             {product.category}
           </Link>
         </div>

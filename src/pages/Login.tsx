@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Facebook, Github, Mail, ArrowRight, AlertCircle } from 'lucide-react';
@@ -47,7 +47,8 @@ const Login = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [password, setPassword] = useState('');
 
-  const from = new URLSearchParams(location.search).get('from') || '/';
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') || '/';
 
   const loginForm = useForm<LoginFormValues>({
     defaultValues: {
@@ -66,9 +67,9 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from);
+      router.push(from);
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, router, from]);
 
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
@@ -80,7 +81,7 @@ const Login = () => {
         title: "Login successful",
         description: "Welcome back to Wollyway!",
       });
-      navigate(from);
+      router.push(from);
     } catch (err) {
       const error = err as Error;
       setAuthError(error.message || "Invalid email or password. Please try again.");
@@ -104,7 +105,7 @@ const Login = () => {
         title: "Registration successful",
         description: "Welcome to Wollyway!",
       });
-      navigate(from);
+      router.push(from);
     } catch (err) {
       const error = err as Error;
       setAuthError(error.message || "Registration failed. Please try again.");
@@ -345,11 +346,11 @@ const Login = () => {
                     
                     <p className="text-xs text-center text-muted-foreground">
                       By creating an account, you agree to our{' '}
-                      <Link to="/terms" className="text-wolly-magenta hover:underline">
+                      <Link href="/terms" className="text-wolly-magenta hover:underline">
                         Terms of Service
                       </Link>{' '}
                       and{' '}
-                      <Link to="/privacy-policy" className="text-wolly-magenta hover:underline">
+                      <Link href="/privacy-policy" className="text-wolly-magenta hover:underline">
                         Privacy Policy
                       </Link>
                       .
@@ -368,7 +369,7 @@ const Login = () => {
                 variant="link" 
                 className="p-0 h-auto text-wolly-magenta hover:text-wolly-magenta/90"
               >
-                <Link to="/shop" className="inline-flex items-center">
+                <Link href="/shop" className="inline-flex items-center">
                   Continue as guest
                   <ArrowRight size={14} className="ml-1" />
                 </Link>

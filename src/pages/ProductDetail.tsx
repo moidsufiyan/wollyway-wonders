@@ -72,7 +72,7 @@ const ProductDetail = () => {
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
           <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
           <Button asChild>
-            <Link to="/shop">
+            <Link href="/shop">
               <ArrowLeft size={16} className="mr-2" /> Back to Shop
             </Link>
           </Button>

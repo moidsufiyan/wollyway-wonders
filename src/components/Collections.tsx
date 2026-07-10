@@ -84,7 +84,7 @@ const Collections = () => {
                 <p className="mb-4 text-white/90">{collection.description}</p>
                 <div className="transform translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                   <Button asChild className="bg-white text-wolly-magenta hover:bg-white/90 button-hover">
-                    <Link to={collection.link}>
+                    <Link href={collection.link}>
                       Shop Now <ArrowRight size={16} className="ml-2" />
                     </Link>
                   </Button>

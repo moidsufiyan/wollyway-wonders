@@ -144,7 +144,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
               )}
             </div>
             
-            <Link to={`/product/${product.id}`} className="block relative">
+            <Link href={`/product/${product.id}`} className="block relative">
               <div className="aspect-square overflow-hidden">
                 <img 
                   src={product.image} 
@@ -209,8 +209,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 </span>
               </div>
               
-              <Link 
-                to={`/product/${product.id}`}
+              <Link href={`/product/${product.id}`}
                 className="block font-medium text-sm line-clamp-1 hover:text-wolly-magenta transition-colors mb-1"
               >
                 {product.name}

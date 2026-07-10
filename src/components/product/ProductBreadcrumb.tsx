@@ -14,20 +14,19 @@ const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ product, category
   return (
     <div className="mb-6">
       <nav className="flex items-center text-sm text-muted-foreground flex-wrap">
-        <Link to="/" className="hover:text-wolly-magenta flex items-center">
+        <Link href="/" className="hover:text-wolly-magenta flex items-center">
           <Home size={14} className="mr-1" />
           <span>Home</span>
         </Link>
         <ChevronRight size={14} className="mx-2" />
-        <Link to="/shop" className="hover:text-wolly-magenta">
+        <Link href="/shop" className="hover:text-wolly-magenta">
           Shop
         </Link>
         
         {(product?.category || categoryPath) && (
           <>
             <ChevronRight size={14} className="mx-2" />
-            <Link 
-              to={`/shop?category=${encodeURIComponent((categoryPath || product?.category || '').toLowerCase())}`} 
+            <Link href={`/shop?category=${encodeURIComponent((categoryPath || product?.category || '').toLowerCase())}`} 
               className="hover:text-wolly-magenta"
             >
               {categoryPath || product?.category}

@@ -38,13 +38,13 @@ const NotFound = () => {
           
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button asChild variant="outline" className="border-wolly-pink text-wolly-magenta button-hover">
-              <Link to="/">
+              <Link href="/">
                 <ArrowLeft size={16} className="mr-2" /> Go Back
               </Link>
             </Button>
             
             <Button asChild className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white button-hover">
-              <Link to="/">
+              <Link href="/">
                 <Home size={16} className="mr-2" /> Back to Home
               </Link>
             </Button>

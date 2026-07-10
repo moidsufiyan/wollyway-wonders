@@ -1,8 +1,7 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, Package, Truck, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,17 +9,45 @@ import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { OrderItem } from '@/types/order';
+import { orderService } from '@/services/api';
 
 const CheckoutSuccess = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const order = location.state?.order;
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get('orderId');
+
+  const [order, setOrder] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!order) {
+    if (!orderId) {
       router.push('/');
+      return;
     }
-  }, [order, navigate]);
+
+    const fetchOrder = async () => {
+      try {
+        const orderData = await orderService.getOrderById(orderId);
+        setOrder(orderData);
+      } catch (err) {
+        console.error('Error fetching order', err);
+        router.push('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center">
+        <p className="text-muted-foreground animate-pulse">Loading order details...</p>
+      </div>
+    );
+  }
 
   if (!order) {
     return null;
@@ -162,13 +189,13 @@ const CheckoutSuccess = () => {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild variant="outline">
-              <Link to="/shop">
+              <Link href="/shop">
                 Continue Shopping
               </Link>
             </Button>
             
             <Button asChild>
-              <Link to="/">
+              <Link href="/">
                 <Home className="w-4 h-4 mr-2" />
                 Back to Home
               </Link>

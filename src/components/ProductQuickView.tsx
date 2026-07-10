@@ -131,7 +131,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-sm">Size</h3>
                   <Button variant="link" className="text-xs p-0 h-auto" asChild>
-                    <Link to="/size-guide" target="_blank">Size Guide</Link>
+                    <Link href="/size-guide" target="_blank">Size Guide</Link>
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -200,7 +200,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
             
             <div className="mt-4 text-center">
               <Button variant="link" asChild className="text-sm">
-                <Link to={`/product/${product.id}`}>View Full Details</Link>
+                <Link href={`/product/${product.id}`}>View Full Details</Link>
               </Button>
             </div>
           </div>

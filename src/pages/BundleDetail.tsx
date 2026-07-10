@@ -129,9 +129,9 @@ const BundleDetail = () => {
         {/* Breadcrumb */}
         <div className="mb-6">
           <nav className="flex items-center text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-wolly-magenta">Home</Link>
+            <Link href="/" className="hover:text-wolly-magenta">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/bundles" className="hover:text-wolly-magenta">Bundles</Link>
+            <Link href="/bundles" className="hover:text-wolly-magenta">Bundles</Link>
             <span className="mx-2">/</span>
             <span className="text-foreground">{bundle?.name}</span>
           </nav>
@@ -148,7 +148,7 @@ const BundleDetail = () => {
               The bundle you're looking for doesn't exist or has been removed.
             </p>
             <Button asChild>
-              <Link to="/bundles">
+              <Link href="/bundles">
                 <ArrowLeft size={16} className="mr-2" /> Back to Bundles
               </Link>
             </Button>
@@ -184,7 +184,7 @@ const BundleDetail = () => {
                     </div>
                     <div className="p-4 sm:w-2/3 flex flex-col justify-between">
                       <div>
-                        <Link to={`/product/${product.id}`} className="text-lg font-medium hover:text-wolly-magenta">
+                        <Link href={`/product/${product.id}`} className="text-lg font-medium hover:text-wolly-magenta">
                           {product.name}
                         </Link>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -201,7 +201,7 @@ const BundleDetail = () => {
                           variant="outline"
                           asChild
                         >
-                          <Link to={`/product/${product.id}`}>View Details</Link>
+                          <Link href={`/product/${product.id}`}>View Details</Link>
                         </Button>
                       </div>
                     </div>

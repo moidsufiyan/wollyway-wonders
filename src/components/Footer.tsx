@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Column */}
           <div className="space-y-4">
-            <Link to="/" className="inline-block" onClick={() => window.scrollTo(0, 0)}>
+            <Link href="/" className="inline-block" onClick={() => window.scrollTo(0, 0)}>
               <span className="text-2xl font-bold bg-gradient-to-r from-wolly-magenta to-wolly-pink bg-clip-text text-transparent hover:opacity-80 transition-opacity duration-300">
                 Wollyway
               </span>
@@ -47,8 +47,7 @@ const Footer = () => {
                 };
                 return (
                   <li key={item}>
-                    <Link 
-                      to={paths[item] || '/'}
+                    <Link href={paths[item] || '/'}
                       className="text-muted-foreground hover:text-wolly-magenta transition-colors"
                     >
                       {item}
@@ -79,8 +78,7 @@ const Footer = () => {
                 };
                 return (
                   <li key={item}>
-                    <Link 
-                      to={paths[item] || '/'}
+                    <Link href={paths[item] || '/'}
                       className="text-muted-foreground hover:text-wolly-magenta transition-colors"
                     >
                       {item}

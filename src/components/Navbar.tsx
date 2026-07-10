@@ -27,8 +27,7 @@ const NavLink = ({
   };
 
   return (
-    <Link
-      to={to}
+    <Link href={to}
       onClick={handleClick}
       className={`text-sm font-medium transition-colors duration-300 ${
         isActive
@@ -76,7 +75,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center" onClick={() => window.scrollTo(0, 0)}>
+          <Link href="/" className="flex items-center" onClick={() => window.scrollTo(0, 0)}>
             <span className="text-2xl font-bold bg-gradient-to-r from-wolly-magenta to-wolly-pink bg-clip-text text-transparent hover:opacity-80 transition-opacity duration-300">
               WollyWay
             </span>
@@ -100,7 +99,7 @@ const Navbar = () => {
           {/* Actions */}
           <div className="flex items-center">
             {/* Cart */}
-            <Link to="/cart" className="relative mr-4">
+            <Link href="/cart" className="relative mr-4">
               <ShoppingCart className="h-5 w-5 text-foreground hover:text-wolly-magenta transition-colors duration-300" />
               {items.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-wolly-magenta text-white text-xs rounded-full px-1.5 py-0.5">
@@ -130,7 +129,7 @@ const Navbar = () => {
                   className="dropdown-content z-[1] menu shadow bg-base-100 rounded-box w-52"
                 >
                   <li>
-                    <Link to="/profile">Profile</Link>
+                    <Link href="/profile">Profile</Link>
                   </li>
                   <li>
                     <button onClick={logout}>Logout</button>
@@ -138,8 +137,7 @@ const Navbar = () => {
                 </ul>
               </div>
             ) : (
-              <Link
-                to="/login"
+              <Link href="/login"
                 className="text-sm font-medium text-foreground hover:text-wolly-magenta transition-colors duration-300"
               >
                 Login
@@ -178,18 +176,18 @@ const Navbar = () => {
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-lg p-8">
-                  <Link to="/" onClick={() => { closeMenu(); window.scrollTo(0, 0); }}>
+                  <Link href="/" onClick={() => { closeMenu(); window.scrollTo(0, 0); }}>
                     Home
                   </Link>
-                  <Link to="/shop" onClick={closeMenu}>
+                  <Link href="/shop" onClick={closeMenu}>
                     Shop
                   </Link>
-                  <Link to="/bundles" onClick={closeMenu}>
+                  <Link href="/bundles" onClick={closeMenu}>
                     Bundles
                   </Link>
 
 
-                  <Link to="/contact" onClick={closeMenu}>
+                  <Link href="/contact" onClick={closeMenu}>
                     Contact
                   </Link>
                 </nav>
@@ -197,7 +195,7 @@ const Navbar = () => {
                 <div className="mt-auto p-8 border-t">
                   {isAuthenticated ? (
                     <div className="flex flex-col space-y-2">
-                      <Link to="/profile" onClick={closeMenu}>
+                      <Link href="/profile" onClick={closeMenu}>
                         Profile
                       </Link>
                       <button
@@ -210,8 +208,7 @@ const Navbar = () => {
                       </button>
                     </div>
                   ) : (
-                    <Link
-                      to="/login"
+                    <Link href="/login"
                       onClick={closeMenu}
                       className="text-wolly-magenta"
                     >

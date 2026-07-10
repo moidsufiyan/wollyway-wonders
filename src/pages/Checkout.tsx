@@ -101,7 +101,7 @@ const Checkout = () => {
     createOrderMutation.mutate(orderData, {
       onSuccess: (order) => {
         clearCart();
-        navigate('/checkout-success', { state: { order } });
+        router.push(`/checkout-success?orderId=${order.id}`);
       }
     });
   };

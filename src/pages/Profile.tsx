@@ -163,7 +163,7 @@ const Profile = () => {
     if (!isAuthenticated) {
       router.push('/login?from=/profile');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, router]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -340,7 +340,7 @@ const Profile = () => {
   };
   
   const handleViewOrderDetails = (orderId: string) => {
-    navigate(`/order-tracking?id=${orderId}`);
+    router.push(`/order-tracking?id=${orderId}`);
   };
 
   // Loading state

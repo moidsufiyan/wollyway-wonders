@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductFilters from "@/components/ProductFilters";
@@ -21,7 +21,7 @@ import { type Product } from "@/types/Product";
 const Shop = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = new URLSearchParams(location.search);
+  const searchParams = useSearchParams();
   const isSearchMode =
     searchParams.has("search") || searchParams.has("keyword");
 
@@ -30,7 +30,7 @@ const Shop = () => {
   const [savedCart, setSavedCart] = useState<Product[]>([]);
 
   // Get filters from URL
-  const queryFilters = parseQueryFilters(location.search);
+  const queryFilters = parseQueryFilters(searchParams.toString());
   const activeCategory = queryFilters.category as string | undefined;
 
   // Define default filter values
@@ -56,7 +56,7 @@ const Shop = () => {
 
   // Handle URL updates when filters change
   useEffect(() => {
-    const currentParams = new URLSearchParams(location.search);
+    const currentParams = new URLSearchParams(searchParams.toString());
 
     // Preserve search term if it exists
     const searchTerm =
@@ -98,10 +98,10 @@ const Shop = () => {
 
     // Update URL if params have changed
     const newSearch = newParams.toString();
-    if (newSearch !== location.search.replace(/^\?/, "")) {
-      navigate(`/shop${newSearch ? `?${newSearch}` : ""}`, { replace: true });
+    if (newSearch !== searchParams.toString()) {
+      router.replace(`/shop${newSearch ? `?${newSearch}` : ""}`);
     }
-  }, [filters, navigate]);
+  }, [filters, router, searchParams]);
 
   const handleAddToCart = (product: Product) => {
     addItem(product, 1);

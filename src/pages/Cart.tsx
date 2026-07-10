@@ -60,7 +60,7 @@ const Cart = () => {
                   asChild
                   className="bg-wolly-magenta hover:bg-wolly-magenta/90"
                 >
-                  <Link to="/shop">
+                  <Link href="/shop">
                     Continue Shopping
                   </Link>
                 </Button>
@@ -102,8 +102,7 @@ const Cart = () => {
                             <div className="flex flex-col sm:flex-row sm:justify-between">
                               <div>
                                 <h3 className="font-medium">
-                                  <Link
-                                    to={`/product/${item.product.id}`}
+                                  <Link href={`/product/${item.product.id}`}
                                     className="hover:text-wolly-magenta"
                                   >
                                     {item.product.name}
@@ -169,7 +168,7 @@ const Cart = () => {
                     variant="outline"
                     className="flex items-center"
                   >
-                    <Link to="/shop">
+                    <Link href="/shop">
                       <ArrowLeft size={16} className="mr-2" />
                       Continue Shopping
                     </Link>

@@ -63,7 +63,7 @@ const OrderTracking = () => {
           className="max-w-3xl mx-auto"
         >
           <div className="flex items-center mb-6">
-            <Link to="/profile" className="mr-4">
+            <Link href="/profile" className="mr-4">
               <Button variant="ghost" size="icon">
                 <ArrowLeft size={20} />
               </Button>
