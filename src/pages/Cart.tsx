@@ -1,6 +1,8 @@
+"use client";
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -14,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const Cart = () => {
   const { items, removeItem, updateQuantity, clearCart, subtotal } = useCart();
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   
   // Calculate shipping, total, etc.
   const shipping = items.length > 0 ? (subtotal >= 50 ? 0 : 5.99) : 0;
@@ -24,9 +26,9 @@ const Cart = () => {
   const handleCheckout = () => {
     if (!isAuthenticated) {
       // For demo, we could either redirect to login or just proceed
-      navigate('/checkout');
+      router.push('/checkout');
     } else {
-      navigate('/checkout');
+      router.push('/checkout');
     }
   };
 

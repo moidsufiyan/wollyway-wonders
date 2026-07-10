@@ -1,6 +1,7 @@
+"use client";
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, BookmarkPlus, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';

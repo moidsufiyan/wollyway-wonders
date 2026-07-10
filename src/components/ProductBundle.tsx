@@ -1,8 +1,9 @@
+"use client";
 
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Package, ShoppingCart, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import type { Product } from '@/types/Product';

@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,7 +128,7 @@ const initialOrders: Order[] = [
 ];
 
 const Profile = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user, isAuthenticated, logout, updateProfile } = useAuth();
   const { items, removeItem: removeWishlistItem } = useWishlist();
   const { toast } = useToast();
@@ -159,7 +161,7 @@ const Profile = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login?from=/profile');
+      router.push('/login?from=/profile');
     }
   }, [isAuthenticated, navigate]);
 
@@ -265,7 +267,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    router.push('/');
     
     toast({
       title: "Logged out",
@@ -525,7 +527,7 @@ const Profile = () => {
                         </p>
                         <Button
                           className="bg-wolly-magenta hover:bg-wolly-magenta/90"
-                          onClick={() => navigate('/shop')}
+                          onClick={() => router.push('/shop')}
                         >
                           Start Shopping
                         </Button>
@@ -560,7 +562,7 @@ const Profile = () => {
                         </p>
                         <Button
                           className="bg-wolly-magenta hover:bg-wolly-magenta/90"
-                          onClick={() => navigate('/shop')}
+                          onClick={() => router.push('/shop')}
                         >
                           Browse Products
                         </Button>

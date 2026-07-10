@@ -1,8 +1,10 @@
+"use client";
+
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import ProductDataService from "@/services/ProductDataService";
 
 // Get featured products from our data service

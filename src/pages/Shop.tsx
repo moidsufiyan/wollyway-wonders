@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { usePathname, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductFilters from "@/components/ProductFilters";
@@ -17,8 +19,8 @@ import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
 import { type Product } from "@/types/Product";
 
 const Shop = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const searchParams = new URLSearchParams(location.search);
   const isSearchMode =
     searchParams.has("search") || searchParams.has("keyword");

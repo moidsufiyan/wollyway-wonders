@@ -1,5 +1,8 @@
+"use client";
+
 import React from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { CheckCircle, Package, Truck, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,13 +12,13 @@ import Footer from '@/components/Footer';
 import { OrderItem } from '@/types/order';
 
 const CheckoutSuccess = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const order = location.state?.order;
 
   React.useEffect(() => {
     if (!order) {
-      navigate('/');
+      router.push('/');
     }
   }, [order, navigate]);
 

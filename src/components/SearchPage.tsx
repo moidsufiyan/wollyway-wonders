@@ -1,6 +1,7 @@
+"use client";
 
 import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { usePathname, useRouter } from 'next/navigation';
 import { useProductSearch } from '@/hooks/useProductSearch';
 import ProductGrid from '@/components/ProductGrid';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import ProductBreadcrumb from './product/ProductBreadcrumb';
 
 const SearchPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const searchParams = new URLSearchParams(location.search);
   const initialQuery = searchParams.get('search') || searchParams.get('keyword') || '';
   
@@ -104,7 +105,7 @@ const SearchPage = () => {
                       We couldn't find any products matching "{keyword}"
                     </p>
                     <Button 
-                      onClick={() => navigate('/shop')}
+                      onClick={() => router.push('/shop')}
                       variant="outline"
                     >
                       <ArrowLeft size={16} className="mr-2" />

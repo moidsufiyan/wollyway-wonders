@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +24,7 @@ interface CheckoutForm {
 }
 
 const Checkout = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
   const { toast } = useToast();
   const createOrderMutation = useCreateOrder();

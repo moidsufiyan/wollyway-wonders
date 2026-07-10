@@ -1,3 +1,4 @@
+"use client";
 
 import React from 'react';
 import { Truck, AlertTriangle, CheckCircle, Info } from 'lucide-react';

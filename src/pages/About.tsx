@@ -1,5 +1,7 @@
+"use client";
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, Compass, ShieldCheck, Mail, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';

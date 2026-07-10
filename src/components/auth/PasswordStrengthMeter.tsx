@@ -1,3 +1,4 @@
+"use client";
 
 import React, { useMemo } from 'react';
 import { Progress } from '@/components/ui/progress';

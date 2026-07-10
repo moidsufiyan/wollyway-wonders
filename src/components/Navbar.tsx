@@ -1,5 +1,8 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ShoppingCart, User } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -14,8 +17,8 @@ const NavLink = ({
   to: string;
   children: React.ReactNode;
 }) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
+  const pathname = usePathname();
+  const isActive = pathname === to;
 
   const handleClick = () => {
     if (to === "/") {
