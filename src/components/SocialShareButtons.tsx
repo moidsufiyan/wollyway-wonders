@@ -21,7 +21,14 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ product }) => {
 
   if (!product) return null;
 
-  const shareableUrl = `${window.location.origin}/product/${product.id}`;
+  const [shareableUrl, setShareableUrl] = React.useState("");
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setShareableUrl(`${window.location.origin}/product/${product.id}`);
+    }
+  }, [product.id, product.name]);
+
   const shareText = `Check out this ${product.name} at Wolly Handcrafts!`;
 
   const shareToTwitter = () => {

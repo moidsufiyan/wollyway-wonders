@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,14 @@ interface ReferralProgramProps {
 
 const ReferralProgram: React.FC<ReferralProgramProps> = ({ open, onOpenChange }) => {
   const { toast } = useToast();
-  // Generate a fake referral code
-  const referralCode = "FRIEND" + Math.floor(1000 + Math.random() * 9000);
-  const referralLink = `${window.location.origin}/ref/${referralCode}`;
+  const [referralCode] = useState(() => "FRIEND" + Math.floor(1000 + Math.random() * 9000));
+  const [referralLink, setReferralLink] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setReferralLink(`${window.location.origin}/ref/${referralCode}`);
+    }
+  }, [referralCode]);
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
