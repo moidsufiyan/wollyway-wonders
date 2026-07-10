@@ -9,10 +9,11 @@ export const useProductSearch = (initialKeyword: string = '') => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { data: productData, isLoading } = useProducts();
-  const products = productData?.products || [];
+  const products = productData?.products;
 
   useEffect(() => {
-    if (!keyword.trim() || !products?.length) {
+    const productsList = products || [];
+    if (!keyword.trim() || !productsList.length) {
       setSearchResults([]);
       setIsSearching(false);
       return;
@@ -22,7 +23,7 @@ export const useProductSearch = (initialKeyword: string = '') => {
     const lowerKeyword = keyword.toLowerCase();
     
     // Simple search implementation - can be expanded for more sophisticated searching
-    const results = products.filter(product => 
+    const results = productsList.filter(product => 
       product.name.toLowerCase().includes(lowerKeyword) || 
       product.description?.toLowerCase().includes(lowerKeyword) ||
       product.category.toLowerCase().includes(lowerKeyword) ||

@@ -179,7 +179,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
             {product.tags?.map(tag => (
               <Link 
                 key={tag} 
-                to={`/shop/tag/${tag}`}
+                href={`/shop/tag/${tag}`}
                 className="hover:text-wolly-magenta"
               >
                 #{tag}
