@@ -33,7 +33,9 @@ export const userService = {
     };
     
     // Store in localStorage
-    localStorage.setItem('user', JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
     
     return userData;
   },
@@ -66,13 +68,19 @@ export const userService = {
     };
     
     // Store in localStorage
-    localStorage.setItem('user', JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
     
     return userData;
   },
   
   getProfile: async () => {
     await mockDelay();
+    
+    if (typeof window === 'undefined') {
+      return null;
+    }
     
     const userData = localStorage.getItem('user');
     if (!userData) {
@@ -84,6 +92,10 @@ export const userService = {
   
   updateProfile: async (userData: any) => {
     await mockDelay();
+    
+    if (typeof window === 'undefined') {
+      return userData;
+    }
     
     const currentUser = localStorage.getItem('user');
     if (!currentUser) {
@@ -207,15 +219,21 @@ export const orderService = {
     };
     
     // Persist client order transaction to local storage
-    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    existingOrders.push(order);
-    localStorage.setItem('orders', JSON.stringify(existingOrders));
+    if (typeof window !== 'undefined') {
+      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+      existingOrders.push(order);
+      localStorage.setItem('orders', JSON.stringify(existingOrders));
+    }
     
     return order;
   },
   
   getOrderById: async (id: string) => {
     await mockDelay();
+    
+    if (typeof window === 'undefined') {
+      throw new Error('Order not found');
+    }
     
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     const order = orders.find((o: any) => o.id === id);
@@ -229,6 +247,10 @@ export const orderService = {
   
   payOrder: async (id: string, paymentResult: any) => {
     await mockDelay();
+    
+    if (typeof window === 'undefined') {
+      throw new Error('Order not found');
+    }
     
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     const orderIndex = orders.findIndex((o: any) => o.id === id);
@@ -251,6 +273,10 @@ export const orderService = {
   
   getMyOrders: async () => {
     await mockDelay();
+    
+    if (typeof window === 'undefined') {
+      return [];
+    }
     
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     
