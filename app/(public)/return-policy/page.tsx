@@ -1,5 +1,5 @@
 "use client";
 
-import ReturnPolicy from "@/pages/ReturnPolicy";
+import ReturnPolicy from "@/views/ReturnPolicy";
 
 export default ReturnPolicy;

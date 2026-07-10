@@ -1,5 +1,5 @@
 "use client";
 
-import Cart from "@/pages/Cart";
+import Cart from "@/views/Cart";
 
 export default Cart;

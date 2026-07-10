@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -83,7 +83,9 @@ const Navbar = () => {
 
           {/* Search Bar - Desktop */}
           <div className="hidden md:block mx-4 flex-1 max-w-md">
-            <SearchBar />
+            <Suspense fallback={<div className="h-10 bg-muted animate-pulse rounded-md" />}>
+              <SearchBar />
+            </Suspense>
           </div>
 
           {/* Navigation Links - Desktop */}
@@ -172,7 +174,9 @@ const Navbar = () => {
 
                 {/* Search Bar - Mobile */}
                 <div className="px-8 mb-4">
-                  <SearchBar />
+                  <Suspense fallback={<div className="h-10 bg-muted animate-pulse rounded-md" />}>
+                    <SearchBar />
+                  </Suspense>
                 </div>
 
                 <nav className="flex flex-col space-y-4 text-lg p-8">

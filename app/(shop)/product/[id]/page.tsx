@@ -1,5 +1,5 @@
 "use client";
 
-import ProductDetail from "@/pages/ProductDetail";
+import ProductDetail from "@/views/ProductDetail";
 
 export default ProductDetail;

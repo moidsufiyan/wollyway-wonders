@@ -1,5 +1,5 @@
 "use client";
 
-import TermsOfService from "@/pages/TermsOfService";
+import TermsOfService from "@/views/TermsOfService";
 
 export default TermsOfService;

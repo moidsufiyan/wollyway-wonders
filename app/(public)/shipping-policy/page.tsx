@@ -1,5 +1,5 @@
 "use client";
 
-import ShippingPolicy from "@/pages/ShippingPolicy";
+import ShippingPolicy from "@/views/ShippingPolicy";
 
 export default ShippingPolicy;

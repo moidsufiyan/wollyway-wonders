@@ -1,5 +1,5 @@
 "use client";
 
-import FAQ from "@/pages/FAQ";
+import FAQ from "@/views/FAQ";
 
 export default FAQ;

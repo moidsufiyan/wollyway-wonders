@@ -1,5 +1,5 @@
 "use client";
 
-import BundleDetail from "@/pages/BundleDetail";
+import BundleDetail from "@/views/BundleDetail";
 
 export default BundleDetail;

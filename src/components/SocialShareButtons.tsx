@@ -19,15 +19,15 @@ interface SocialShareButtonsProps {
 const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ product }) => {
   const { toast } = useToast();
 
-  if (!product) return null;
-
   const [shareableUrl, setShareableUrl] = React.useState("");
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && product) {
       setShareableUrl(`${window.location.origin}/product/${product.id}`);
     }
-  }, [product.id, product.name]);
+  }, [product?.id, product?.name]);
+
+  if (!product) return null;
 
   const shareText = `Check out this ${product.name} at Wolly Handcrafts!`;
 

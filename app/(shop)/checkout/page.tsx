@@ -1,5 +1,5 @@
 "use client";
 
-import Checkout from "@/pages/Checkout";
+import Checkout from "@/views/Checkout";
 
 export default Checkout;

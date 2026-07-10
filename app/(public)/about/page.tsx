@@ -1,5 +1,5 @@
 "use client";
 
-import About from "@/pages/About";
+import About from "@/views/About";
 
 export default About;

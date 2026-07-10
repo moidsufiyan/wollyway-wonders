@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { CheckCircle, Package, Truck, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { OrderItem } from '@/types/order';
+import { OrderItem, Order } from '@/types/order';
 import { orderService } from '@/services/api';
 
 const CheckoutSuccess = () => {
@@ -17,7 +18,7 @@ const CheckoutSuccess = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
 
-  const [order, setOrder] = React.useState<any>(null);
+  const [order, setOrder] = React.useState<Order | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {

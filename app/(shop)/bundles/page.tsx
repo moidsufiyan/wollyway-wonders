@@ -1,5 +1,5 @@
 "use client";
 
-import Bundles from "@/pages/Bundles";
+import Bundles from "@/views/Bundles";
 
 export default Bundles;

@@ -1,5 +1,5 @@
 "use client";
 
-import SizeGuidePage from "@/pages/SizeGuidePage";
+import SizeGuidePage from "@/views/SizeGuidePage";
 
 export default SizeGuidePage;
