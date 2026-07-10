@@ -14,8 +14,8 @@ import ShippingUpdateBanner from '@/components/order/ShippingUpdateBanner';
 import OrderDetailsCard from '@/components/order/OrderDetailsCard';
 
 const OrderTracking = () => {
-  const [searchParams] = useSearchParams();
-  const orderNumber = searchParams.get('orderNumber') || '1234567';
+  const searchParams = useSearchParams();
+  const orderNumber = searchParams?.get('orderNumber') || '1234567';
   
   // Mock data - in a real app, you would fetch this based on the order number
   const orderStatus: OrderStatus = 'shipped';

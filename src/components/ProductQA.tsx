@@ -27,7 +27,7 @@ interface Answer {
 }
 
 interface ProductQAProps {
-  productId: number;
+  productId: string;
 }
 
 // Initial store Q&A dataset

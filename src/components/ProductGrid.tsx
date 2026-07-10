@@ -18,7 +18,7 @@ export type ProductGridProps = {
   products: Product[];
   onAddToCart: (product: Product) => void;
   onSaveForLater?: (product: Product) => void;
-  onRemoveFromWishlist?: (productId: number) => void;
+  onRemoveFromWishlist?: (productId: string) => void;
   showRemoveButton?: boolean;
 };
 

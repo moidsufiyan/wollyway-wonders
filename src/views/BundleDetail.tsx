@@ -112,7 +112,7 @@ const BundleDetail = () => {
     if (bundle) {
       // Add each product in the bundle to the cart
       bundle.products.forEach(product => {
-        addItem(product as Product, 1);
+        addItem({ ...product, id: String(product.id) } as Product, 1);
       });
     }
   };

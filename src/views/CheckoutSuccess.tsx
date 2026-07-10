@@ -141,20 +141,20 @@ const CheckoutSuccess = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>₹{Number(order.subtotal ?? order.itemsPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{Number(order.itemsPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>₹{Number(order.shipping ?? order.shippingPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{Number(order.shippingPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>₹{Number(order.tax ?? order.taxPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{Number(order.taxPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>₹{Number(order.total ?? order.totalPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{Number(order.totalPrice ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -167,22 +167,12 @@ const CheckoutSuccess = () => {
             </CardHeader>
             <CardContent>
               <div className="text-sm">
-                <p className="font-medium">
-                  {order.shippingAddress.name ?? 
-                   (order.shippingAddress.firstName 
-                     ? `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}` 
-                     : 'Customer')}
-                </p>
-                <p>{order.shippingAddress.address ?? order.shippingAddress.street}</p>
+                <p className="font-medium">Customer</p>
+                <p>{order.shippingAddress.street}</p>
                 <p>
                   {order.shippingAddress.city}, {order.shippingAddress.zipCode}
                 </p>
                 <p>{order.shippingAddress.country}</p>
-                {order.shippingAddress.email && (
-                  <p className="mt-2 text-muted-foreground">
-                    Email: {order.shippingAddress.email}
-                  </p>
-                )}
               </div>
             </CardContent>
           </Card>

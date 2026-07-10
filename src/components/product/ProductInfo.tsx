@@ -151,14 +151,14 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
           variant="outline" 
           size="lg" 
           className={`border-wolly-pink button-hover ${
-            isInWishlist(product.id || 0) 
+            isInWishlist(String(product.id)) 
               ? 'bg-wolly-pink/20 text-wolly-magenta' 
               : 'text-wolly-magenta'
           }`}
           onClick={handleToggleWishlist}
         >
-          <Heart size={18} className={`mr-2 ${isInWishlist(product.id || 0) ? 'fill-wolly-magenta' : ''}`} />
-          {isInWishlist(product.id || 0) ? 'In Wishlist' : 'Add to Wishlist'}
+          <Heart size={18} className={`mr-2 ${isInWishlist(String(product.id)) ? 'fill-wolly-magenta' : ''}`} />
+          {isInWishlist(String(product.id)) ? 'In Wishlist' : 'Add to Wishlist'}
         </Button>
       </div>
       
