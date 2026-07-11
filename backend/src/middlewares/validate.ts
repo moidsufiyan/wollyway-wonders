@@ -3,7 +3,6 @@ import { AnyZodObject, ZodError } from 'zod';
 import { AppError } from '../utils/AppError.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
-
 export const validate = (schema: AnyZodObject) => {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {

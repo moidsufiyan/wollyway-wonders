@@ -5,7 +5,7 @@ import pkg from '../../package.json';
 
 export const getHealth = (_req: Request, res: Response): void => {
   const uptime = process.uptime();
-  
+
   res.status(HTTP_STATUS.OK).json({
     success: true,
     message: 'API is healthy',

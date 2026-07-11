@@ -1,11 +1,11 @@
-import { HttpStatusCode } from '../constants';
+import { HttpStatusCode } from '../constants/index.js';
 
 export class AppError extends Error {
   public readonly statusCode: HttpStatusCode;
   public readonly isOperational: boolean;
-  public readonly details: any;
+  public readonly details: unknown;
 
-  constructor(message: string, statusCode: HttpStatusCode, details: any = null) {
+  constructor(message: string, statusCode: HttpStatusCode, details: unknown = null) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true;

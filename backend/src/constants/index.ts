@@ -13,14 +13,14 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
 } as const;
 
-export type HttpStatusCode = typeof HTTP_STATUS[keyof typeof HTTP_STATUS];
+export type HttpStatusCode = (typeof HTTP_STATUS)[keyof typeof HTTP_STATUS];
 
 export const USER_ROLES = {
   ADMIN: 'admin',
   CUSTOMER: 'customer',
 } as const;
 
-export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
 export const COOKIE_KEYS = {
   REFRESH_TOKEN: 'refreshToken',

@@ -1,7 +1,6 @@
 import Redis from 'ioredis';
 import { env } from './env.config.js';
 
-
 let redis: Redis | null = null;
 
 export const initRedis = (): Redis => {

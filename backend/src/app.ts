@@ -1,3 +1,4 @@
+import { IncomingMessage } from 'http';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -13,8 +14,6 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import healthRoutes from './routes/health.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
-
-
 const app = express();
 
 // Set up correlation request ID before logging/routing
@@ -24,7 +23,8 @@ app.use(requestId);
 app.use(
   pinoHttp({
     logger,
-    genReqId: (req: any) => req.id || 'unknown',
+    genReqId: (req: IncomingMessage) => (req as IncomingMessage & { id?: string }).id || 'unknown',
+
     customLogLevel: (_req, res, err) => {
       if (res.statusCode >= 500 || err) return 'error';
       if (res.statusCode >= 400) return 'warn';
@@ -60,6 +60,5 @@ app.use(notFoundHandler);
 
 // Central error boundary
 app.use(errorHandler);
-
 
 export default app;

@@ -4,7 +4,6 @@ import { HTTP_STATUS } from '../constants/index.js';
 import { logger } from '../utils/logger.js';
 import { env } from '../config/env.config.js';
 
-
 export const errorHandler = (
   err: Error | AppError,
   req: Request,
@@ -13,16 +12,16 @@ export const errorHandler = (
 ): void => {
   let statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let message = 'Something went wrong';
-  let errors: any[] = [];
+  let errors: unknown[] = [];
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-    errors = err.details || [];
+    errors = (err.details as unknown[]) || [];
   } else if (err.name === 'ValidationError') {
     statusCode = HTTP_STATUS.BAD_REQUEST;
     message = 'Validation Error';
-  } else if (err.name === 'MongoServerError' && (err as any).code === 11000) {
+  } else if (err.name === 'MongoServerError' && (err as Error & { code?: number }).code === 11000) {
     statusCode = HTTP_STATUS.CONFLICT;
     message = 'Duplicate field value entered';
   }
@@ -48,4 +47,3 @@ export const errorHandler = (
 export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
   next(new AppError(`Cannot find route ${req.originalUrl} on this server`, HTTP_STATUS.NOT_FOUND));
 };
-
