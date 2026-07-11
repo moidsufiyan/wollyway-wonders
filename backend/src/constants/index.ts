@@ -39,3 +39,8 @@ export const MESSAGES = {
   NOT_FOUND: 'Resource not found',
   INTERNAL_ERROR: 'Something went wrong on the server',
 } as const;
+
+export const API = {
+  PREFIX: '/api',
+  VERSION: 'v1',
+} as const;

@@ -13,6 +13,7 @@ import { rateLimiter } from './middlewares/rateLimiter.middleware.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import healthRoutes from './routes/health.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
+import { API } from './constants/index.js';
 
 const app = express();
 
@@ -53,7 +54,7 @@ app.use(rateLimiter);
 
 // Register health check and swagger docs
 setupSwagger(app);
-app.use('/api/v1/health', healthRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/health`, healthRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);
