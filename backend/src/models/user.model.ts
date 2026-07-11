@@ -1,4 +1,5 @@
 import { Schema, model, Document, Types } from 'mongoose';
+import bcrypt from 'bcrypt';
 
 // Address Interface & Sub-Schema
 export interface IAddress {
@@ -112,10 +113,15 @@ export interface IUser extends Document {
     currency: string;
   };
   emailVerified: boolean;
+  emailVerificationToken: string | null;
+  emailVerificationExpires: Date | null;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
   lastLoginAt: Date | null;
   passwordChangedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -192,6 +198,26 @@ const UserSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    emailVerificationToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+    passwordResetToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
     lastLoginAt: {
       type: Date,
       default: null,
@@ -225,5 +251,22 @@ UserSchema.pre<IUser>('save', function (next) {
   }
   next();
 });
+
+// Password Encryption pre-save hook
+UserSchema.pre<IUser>('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password as string, salt);
+    next();
+  } catch (error: unknown) {
+    next(error as Error);
+  }
+});
+
+// Custom comparePassword instance method
+UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password as string);
+};
 
 export const User = model<IUser>('User', UserSchema);

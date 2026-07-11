@@ -13,6 +13,7 @@ import { rateLimiter } from './middlewares/rateLimiter.middleware.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import healthRoutes from './routes/health.routes.js';
 import userRoutes from './routes/user.routes.js';
+import authRoutes from './routes/auth.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
 import { API } from './constants/index.js';
@@ -57,6 +58,7 @@ app.use(rateLimiter);
 // Register health check and swagger docs
 setupSwagger(app);
 app.use(`${API.PREFIX}/${API.VERSION}/health`, healthRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/auth`, authRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/users`, userRoutes);
 
 // Unhandled route triggers

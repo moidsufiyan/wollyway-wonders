@@ -9,12 +9,12 @@ import {
 } from '../controllers/user.controller.js';
 import { validate } from '../middlewares/validate.js';
 import { updateProfileSchema, addressSchema } from '../validators/user.validator.js';
-import { mockAuth } from '../middlewares/mockAuth.middleware.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Apply mock authentication to all User routes during Phase 2.1
-router.use(mockAuth);
+// Apply authentication guard to all User routes
+router.use(protect);
 
 /**
  * @openapi

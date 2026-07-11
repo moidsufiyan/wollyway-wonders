@@ -23,7 +23,7 @@ export const USER_ROLES = {
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
 export const COOKIE_KEYS = {
-  REFRESH_TOKEN: 'refreshToken',
+  REFRESH_TOKEN: 'wollyway_refresh',
 } as const;
 
 export const REDIS_KEYS = {
@@ -43,4 +43,8 @@ export const MESSAGES = {
 export const API = {
   PREFIX: '/api',
   VERSION: 'v1',
+} as const;
+
+export const COOKIES = {
+  REFRESH_TOKEN: 'wollyway_refresh',
 } as const;
