@@ -48,3 +48,5 @@ export const API = {
 export const COOKIES = {
   REFRESH_TOKEN: 'wollyway_refresh',
 } as const;
+
+export const MAX_FEATURED_CATEGORIES = 6;

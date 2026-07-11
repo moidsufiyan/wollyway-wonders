@@ -95,3 +95,32 @@ export const restrictTo = (...roles: ('customer' | 'admin')[]) => {
     next();
   };
 };
+
+// Optional protect middleware for public routes that optionally parse authentication context
+export const optionalProtect = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    let token: string | null = null;
+    if (req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) {
+      return next();
+    }
+    try {
+      const decoded = verifyAccessToken(token);
+      const user = await User.findById(decoded.sub);
+      if (user && user.status === 'active') {
+        req.user = user;
+      }
+    } catch {
+      // Gracefully ignore error in optional middleware
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

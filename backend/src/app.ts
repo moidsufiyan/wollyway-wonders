@@ -14,6 +14,7 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import healthRoutes from './routes/health.routes.js';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import categoryRoutes from './routes/category.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
 import { API } from './constants/index.js';
@@ -60,6 +61,7 @@ setupSwagger(app);
 app.use(`${API.PREFIX}/${API.VERSION}/health`, healthRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/auth`, authRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/users`, userRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/categories`, categoryRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);
