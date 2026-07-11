@@ -1,19 +1,59 @@
 import express from 'express';
-import { env } from './config/env.config';
-import { connectDatabase } from './config/db.config';
-import { initRedis } from './config/redis.config';
-import { configureCloudinary } from './config/cloudinary.config';
-import { HTTP_STATUS } from './constants';
+import helmet from 'helmet';
+import cors from 'cors';
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import pinoHttp from 'pino-http';
+
+import { env } from './config/env.config.js';
+import { logger } from './utils/logger.js';
+import { requestId } from './middlewares/requestId.middleware.js';
+import { rateLimiter } from './middlewares/rateLimiter.middleware.js';
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+
 
 const app = express();
 
-console.log(`Initial boot configured for environment: ${env.NODE_ENV}`);
-console.log(`Port settings: ${env.PORT}`);
-console.log(`HTTP STATUS dictionary OK checks: ${HTTP_STATUS.OK}`);
+// Set up correlation request ID before logging/routing
+app.use(requestId);
 
-// Simple initialization verify
-configureCloudinary();
-initRedis();
-connectDatabase();
+// Setup Pino HTTP log request tracker
+app.use(
+  pinoHttp({
+    logger,
+    genReqId: (req: any) => req.id || 'unknown',
+    customLogLevel: (_req, res, err) => {
+      if (res.statusCode >= 500 || err) return 'error';
+      if (res.statusCode >= 400) return 'warn';
+      return 'info';
+    },
+  })
+);
+
+// Standard security layers
+app.use(helmet());
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+
+// Performance & Parsing
+app.use(compression());
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Apply basic rate limiting
+app.use(rateLimiter);
+
+// TODO: API routes will be registered here (Milestone 2+)
+
+// Unhandled route triggers
+app.use(notFoundHandler);
+
+// Central error boundary
+app.use(errorHandler);
 
 export default app;
