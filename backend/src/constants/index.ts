@@ -50,3 +50,5 @@ export const COOKIES = {
 } as const;
 
 export const MAX_FEATURED_CATEGORIES = 6;
+
+export const RESERVATION_TIMEOUT_MINUTES = 15;
