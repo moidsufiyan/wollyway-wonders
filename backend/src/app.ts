@@ -10,6 +10,9 @@ import { logger } from './utils/logger.js';
 import { requestId } from './middlewares/requestId.middleware.js';
 import { rateLimiter } from './middlewares/rateLimiter.middleware.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+import healthRoutes from './routes/health.routes.js';
+import { setupSwagger } from './config/swagger.config.js';
+
 
 
 const app = express();
@@ -48,12 +51,15 @@ app.use(express.urlencoded({ extended: true }));
 // Apply basic rate limiting
 app.use(rateLimiter);
 
-// TODO: API routes will be registered here (Milestone 2+)
+// Register health check and swagger docs
+setupSwagger(app);
+app.use('/api/v1/health', healthRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);
 
 // Central error boundary
 app.use(errorHandler);
+
 
 export default app;
