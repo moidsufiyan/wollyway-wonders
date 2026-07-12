@@ -2,6 +2,7 @@ import app from './app.js';
 import { env } from './config/env.config.js';
 import { connectDatabase, disconnectDatabase } from './config/db.config.js';
 import { initRedis, closeRedis } from './config/redis.config.js';
+import { configureCloudinary } from './config/cloudinary.config.js';
 import { logger } from './utils/logger.js';
 import { Server } from 'http';
 
@@ -9,9 +10,10 @@ let server: Server;
 
 const bootstrap = async (): Promise<void> => {
   try {
-    // Initialize database and Redis connections
+    // Initialize database, Redis, and Cloudinary connections
     await connectDatabase();
     initRedis();
+    configureCloudinary();
 
     server = app.listen(env.PORT, () => {
       logger.info(`🚀 Foundation Server successfully started on port ${env.PORT}`);
