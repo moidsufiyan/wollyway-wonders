@@ -7,6 +7,17 @@ All notable changes to the WollyWay platform will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Checkout Domain (Phase 4.3):**
+  - Database schema (`CheckoutSession` collection) with compound index `{ userId: 1, status: 1 }` and a 15-minute TTL auto-expiry index.
+  - Multi-step validation pipeline: authentication -> cart validation -> product status checks -> live price comparisons -> address completeness.
+  - Atomic Redis stock lock reservation system (`checkout:reservation:{checkoutSessionId}`) leveraging Lua Dry-Run checks to prevent overselling.
+  - POST `/checkout/extend` allowing users to extend locks by +5 minutes (max 3 times).
+  - GET `/checkout/current` to retrieve active checkout session state details.
+  - Boot reconciliation sweep: checks and cancels expired checkout database records on server starts.
+  - Safe idempotency checking for confirmation payments using `Idempotency-Key` headers.
+  - Non-mutating read assertions during price and availability checks.
+  - Contract interface definition (`docs/checkout-order-contract.md`) to integrate with Orders.
+
 - **Cart Domain (Phase 4.2):**
   - Database schema (`Cart` collection) with unique index `{ userId: 1 }` and compound index `{ userId: 1, "items.productId": 1 }`.
   - Atomic upsert creation (`upsertCart`) and updates (`updateQuantity` with positional array filters).

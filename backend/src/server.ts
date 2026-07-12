@@ -6,6 +6,8 @@ import { configureCloudinary } from './config/cloudinary.config.js';
 import { logger } from './utils/logger.js';
 import { Server } from 'http';
 
+import { checkoutService } from './services/checkout.service.js';
+
 let server: Server;
 
 const bootstrap = async (): Promise<void> => {
@@ -14,6 +16,14 @@ const bootstrap = async (): Promise<void> => {
     await connectDatabase();
     initRedis();
     configureCloudinary();
+
+    // Reconcile stale/expired checkout stock locks on startup
+    try {
+      await checkoutService.reconcileStaleSessions();
+      logger.info('🧹 Expired checkout sessions successfully reconciled.');
+    } catch (reconcileError) {
+      logger.error(reconcileError, '⚠️ Failed to reconcile stale checkouts on bootstrap:');
+    }
 
     server = app.listen(env.PORT, () => {
       logger.info(`🚀 Foundation Server successfully started on port ${env.PORT}`);
