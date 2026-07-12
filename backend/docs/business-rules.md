@@ -37,4 +37,13 @@ This document outlines the strict business logic rules, constraints, and validat
 * **Sold Counter Lock**: The `sold` count is read-only for admins and is only updated automatically upon Checkout -> Payment Success confirmation.
 * **Reservations Expiry**: Locked checkout stock reservations expire after `RESERVATION_TIMEOUT_MINUTES` and are automatically released back to the available pool.
 
+---
 
+## 4. Product Domain Rules
+* **Publishing Guard**: A product cannot transition from `draft` to `published` unless all required fields (`price`, `categoryId`) are populated, and exactly ONE image is flagged as `isPrimary: true`.
+* **Slug Immutability**: Once a product is `published`, the slug cannot be modified by standard update endpoints to preserve external SEO links and bookmarks.
+* **Discount Validation**: The `salePrice` must be strictly less than the `price`. Neither can be negative.
+* **Tag Normalization**: Product search tags must be aggressively normalized on save: all lowercase, trimmed, and deduplicated (unique array elements only). Max 15 tags per product.
+* **Image Constraints**: Maximum 10 images per product, with exactly 1 primary image required for published items. Maximum upload file size per image is bounded at 5MB.
+* **Archive Cascade Safeguard**: A product cannot transition to `archived` visibility if it has active, unsettled orders pending.
+* **Archive Restoration**: Once a product is marked `archived`, it cannot transition back to `hidden` or `published` without explicit administrative override.

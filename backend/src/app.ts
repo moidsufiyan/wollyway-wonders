@@ -16,6 +16,7 @@ import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import inventoryRoutes from './routes/inventory.routes.js';
+import productRoutes from './routes/product.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
 import { API } from './constants/index.js';
@@ -64,6 +65,7 @@ app.use(`${API.PREFIX}/${API.VERSION}/auth`, authRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/users`, userRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/categories`, categoryRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/inventory`, inventoryRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/products`, productRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);
