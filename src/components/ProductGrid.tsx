@@ -1,6 +1,7 @@
+"use client";
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Eye, BookmarkPlus, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ export type ProductGridProps = {
   products: Product[];
   onAddToCart: (product: Product) => void;
   onSaveForLater?: (product: Product) => void;
-  onRemoveFromWishlist?: (productId: number) => void;
+  onRemoveFromWishlist?: (productId: string) => void;
   showRemoveButton?: boolean;
 };
 
@@ -143,7 +144,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
               )}
             </div>
             
-            <Link to={`/product/${product.id}`} className="block relative">
+            <Link href={`/product/${product.id}`} className="block relative">
               <div className="aspect-square overflow-hidden">
                 <img 
                   src={product.image} 
@@ -208,8 +209,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 </span>
               </div>
               
-              <Link 
-                to={`/product/${product.id}`}
+              <Link href={`/product/${product.id}`}
                 className="block font-medium text-sm line-clamp-1 hover:text-wolly-magenta transition-colors mb-1"
               >
                 {product.name}

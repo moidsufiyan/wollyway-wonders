@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wollyway-backend-app
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGO_URI=mongodb://db:27017/wollyway
+      - REDIS_URI=redis://cache:6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      - db
+      - cache
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  db:
+    image: mongo:6.0
+    container_name: wollyway-backend-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - wollyway_db_data:/data/db
+
+  cache:
+    image: redis:7.0-alpine
+    container_name: wollyway-backend-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - wollyway_cache_data:/data
+
+volumes:
+  wollyway_db_data:
+  wollyway_cache_data:

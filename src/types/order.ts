@@ -34,6 +34,7 @@ export interface Order {
   paidAt?: string;
   isDelivered: boolean;
   deliveredAt?: string;
+  estimatedDelivery?: string;
   createdAt: string;
   updatedAt: string;
 }

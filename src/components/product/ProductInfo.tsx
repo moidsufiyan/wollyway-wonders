@@ -1,9 +1,10 @@
+"use client";
 
 import React, { useState } from 'react';
 import { Heart, Star, Minus, Plus, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Product } from '@/types/Product';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
@@ -150,14 +151,14 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
           variant="outline" 
           size="lg" 
           className={`border-wolly-pink button-hover ${
-            isInWishlist(product.id || 0) 
+            isInWishlist(String(product.id)) 
               ? 'bg-wolly-pink/20 text-wolly-magenta' 
               : 'text-wolly-magenta'
           }`}
           onClick={handleToggleWishlist}
         >
-          <Heart size={18} className={`mr-2 ${isInWishlist(product.id || 0) ? 'fill-wolly-magenta' : ''}`} />
-          {isInWishlist(product.id || 0) ? 'In Wishlist' : 'Add to Wishlist'}
+          <Heart size={18} className={`mr-2 ${isInWishlist(String(product.id)) ? 'fill-wolly-magenta' : ''}`} />
+          {isInWishlist(String(product.id)) ? 'In Wishlist' : 'Add to Wishlist'}
         </Button>
       </div>
       
@@ -168,7 +169,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
         </div>
         <div className="flex items-center text-sm mb-2">
           <span className="text-muted-foreground w-20">Category:</span>
-          <Link to={`/shop/${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
+          <Link href={`/shop/${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
             {product.category}
           </Link>
         </div>
@@ -178,7 +179,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
             {product.tags?.map(tag => (
               <Link 
                 key={tag} 
-                to={`/shop/tag/${tag}`}
+                href={`/shop/tag/${tag}`}
                 className="hover:text-wolly-magenta"
               >
                 #{tag}

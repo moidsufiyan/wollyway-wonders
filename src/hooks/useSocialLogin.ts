@@ -1,3 +1,4 @@
+"use client";
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +15,8 @@ export const useSocialLogin = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const login = async ({ provider, redirectUrl = window.location.href }: SocialLoginOptions) => {
+  const login = async ({ provider, redirectUrl }: SocialLoginOptions) => {
+    const targetRedirectUrl = redirectUrl || (typeof window !== "undefined" ? window.location.href : "");
     if (user) {
       toast({
         title: "Already logged in",

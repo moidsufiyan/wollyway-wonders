@@ -1,8 +1,9 @@
+"use client";
 
 import { useQuery } from '@tanstack/react-query';
 import { productService } from '@/services/api';
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 export type ProductFilters = {
   search?: string;
@@ -60,20 +61,22 @@ export const parseQueryFilters = (search: string): ProductFilters => {
 };
 
 export const useProducts = (initialFilters: ProductFilters = {}) => {
-  const location = useLocation();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams ? searchParams.toString() : '';
+  
   const [filters, setFilters] = useState<ProductFilters>({
     ...initialFilters,
-    ...parseQueryFilters(location.search)
+    ...parseQueryFilters(searchParamsString)
   });
   
   // Update filters when URL changes
   useEffect(() => {
-    const queryFilters = parseQueryFilters(location.search);
+    const queryFilters = parseQueryFilters(searchParamsString);
     setFilters(prev => ({
       ...prev,
       ...queryFilters
     }));
-  }, [location.search]);
+  }, [searchParamsString]);
   
   return useQuery({
     queryKey: ['products', filters],

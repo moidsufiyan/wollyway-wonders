@@ -1,3 +1,4 @@
+"use client";
 
 import React from 'react';
 import { Clock, Hash, Truck } from 'lucide-react';

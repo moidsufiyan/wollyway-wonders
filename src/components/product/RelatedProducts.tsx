@@ -1,6 +1,7 @@
+"use client";
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Product } from '@/types/Product';
 
 interface RelatedProductsProps {
@@ -16,7 +17,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         {products.map(product => (
           <div key={product.id} className="group">
-            <Link to={`/product/${product.id}`} className="block relative aspect-square rounded-xl overflow-hidden mb-3">
+            <Link href={`/product/${product.id}`} className="block relative aspect-square rounded-xl overflow-hidden mb-3">
               <img 
                 src={product.image} 
                 alt={product.name} 
@@ -24,7 +25,7 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products }) => {
               />
             </Link>
             <h3 className="font-medium group-hover:text-wolly-magenta transition-colors">
-              <Link to={`/product/${product.id}`}>{product.name}</Link>
+              <Link href={`/product/${product.id}`}>{product.name}</Link>
             </h3>
                             <span className="font-bold text-wolly-magenta">₹{product.price.toFixed(2)}</span>
           </div>

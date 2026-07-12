@@ -1,3 +1,4 @@
+"use client";
 
 import React, { useState } from 'react';
 import { MessageSquare, ThumbsUp, ThumbsDown, Calendar } from 'lucide-react';
@@ -26,7 +27,7 @@ interface Answer {
 }
 
 interface ProductQAProps {
-  productId: number;
+  productId: string;
 }
 
 // Initial store Q&A dataset

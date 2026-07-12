@@ -1,6 +1,7 @@
+"use client";
 
 import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useProductSearch } from '@/hooks/useProductSearch';
 import ProductGrid from '@/components/ProductGrid';
 import { Input } from '@/components/ui/input';
@@ -13,9 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import ProductBreadcrumb from './product/ProductBreadcrumb';
 
 const SearchPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const searchParams = new URLSearchParams(location.search);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const initialQuery = searchParams.get('search') || searchParams.get('keyword') || '';
   
   const { 
@@ -40,7 +41,7 @@ const SearchPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (keyword.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(keyword.trim())}`);
+      router.push(`/shop?search=${encodeURIComponent(keyword.trim())}`);
     }
   };
 
@@ -50,7 +51,7 @@ const SearchPage = () => {
     if (searchParam && searchParam !== keyword) {
       setKeyword(searchParam);
     }
-  }, [location.search, searchParams, setKeyword, keyword]);
+  }, [searchParams, setKeyword, keyword]);
 
   return (
     <div className="py-8">
@@ -104,7 +105,7 @@ const SearchPage = () => {
                       We couldn't find any products matching "{keyword}"
                     </p>
                     <Button 
-                      onClick={() => navigate('/shop')}
+                      onClick={() => router.push('/shop')}
                       variant="outline"
                     >
                       <ArrowLeft size={16} className="mr-2" />

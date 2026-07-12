@@ -1,8 +1,9 @@
+"use client";
 
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Package, ShoppingCart, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import type { Product } from '@/types/Product';
@@ -51,7 +52,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
   const handleAddBundleToCart = () => {
     // Add each product in the bundle to the cart
     bundle.products.forEach(product => {
-      addItem(product as Product, 1);
+      addItem({ ...product, id: String(product.id) } as Product, 1);
     });
   };
   
@@ -95,7 +96,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
                   />
                 </div>
                 <div className="ml-3 flex-1">
-                  <Link to={`/product/${product.id}`} className="font-medium hover:text-wolly-magenta text-sm">
+                  <Link href={`/product/${product.id}`} className="font-medium hover:text-wolly-magenta text-sm">
                     {product.name}
                   </Link>
                   <p className="text-xs text-muted-foreground">
@@ -137,7 +138,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
             variant="outline"
             asChild
           >
-            <Link to={`/bundle/${bundle.id}`}>View Details</Link>
+            <Link href={`/bundle/${bundle.id}`}>View Details</Link>
           </Button>
         </div>
       </div>

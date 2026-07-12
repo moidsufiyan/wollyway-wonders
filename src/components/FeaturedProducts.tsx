@@ -1,8 +1,10 @@
+"use client";
+
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import ProductDataService from "@/services/ProductDataService";
 
 // Get featured products from our data service
@@ -47,7 +49,7 @@ const ProductCard = ({
           />
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <div className="space-y-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-              <Link to={`/product/${product.id}`}>
+              <Link href={`/product/${product.id}`}>
                 <Button className="bg-white hover:bg-white/90 text-wolly-magenta rounded-full shadow-md button-hover">
                   View Product
                 </Button>
@@ -145,7 +147,7 @@ const FeaturedProducts = () => {
           size="lg"
           className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white button-hover"
         >
-          <Link to="/shop">
+          <Link href="/shop">
             View All Knitted Products <ArrowRight size={16} className="ml-2" />
           </Link>
         </Button>

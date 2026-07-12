@@ -1,3 +1,4 @@
+"use client";
 
 import React from 'react';
 import { Share2 } from 'lucide-react';
@@ -18,9 +19,16 @@ interface SocialShareButtonsProps {
 const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ product }) => {
   const { toast } = useToast();
 
+  const [shareableUrl, setShareableUrl] = React.useState("");
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && product) {
+      setShareableUrl(`${window.location.origin}/product/${product.id}`);
+    }
+  }, [product?.id, product?.name]);
+
   if (!product) return null;
 
-  const shareableUrl = `${window.location.origin}/product/${product.id}`;
   const shareText = `Check out this ${product.name} at Wolly Handcrafts!`;
 
   const shareToTwitter = () => {

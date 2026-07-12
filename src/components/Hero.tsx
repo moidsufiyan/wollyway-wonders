@@ -1,8 +1,10 @@
+"use client";
+
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -101,7 +103,7 @@ const Hero = () => {
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
               <Button asChild size="lg" className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300">
-                <Link to="/shop">
+                <Link href="/shop">
                   Shop Collection <ArrowRight size={16} className="ml-2" />
                 </Link>
               </Button>

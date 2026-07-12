@@ -1,6 +1,6 @@
 // Centralized Product type definition
 export type Product = {
-  id: string | number;
+  id: string;
   name: string;
   price: number;
   image: string;

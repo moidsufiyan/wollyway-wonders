@@ -1,6 +1,7 @@
+"use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,8 +17,8 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   
   const { 
     setKeyword, 
@@ -30,12 +31,12 @@ const SearchBar = () => {
   useEffect(() => {
     setSearchTerm('');
     setIsOpen(false);
-  }, [location.pathname]);
+  }, [pathname]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/shop?keyword=${encodeURIComponent(searchTerm.trim())}`);
+      router.push(`/shop?keyword=${encodeURIComponent(searchTerm.trim())}`);
       setIsOpen(false);
     }
   };
@@ -114,7 +115,7 @@ const SearchBar = () => {
                   key={product.id}
                   className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-muted"
                   onClick={() => {
-                    navigate(`/product/${product.id}`);
+                    router.push(`/product/${product.id}`);
                     setIsOpen(false);
                   }}
                 >
@@ -138,7 +139,7 @@ const SearchBar = () => {
                 <div 
                   className="cursor-pointer px-4 py-2 text-center text-xs text-primary hover:underline"
                   onClick={() => {
-                    navigate(`/shop?keyword=${encodeURIComponent(searchTerm.trim())}`);
+                    router.push(`/shop?keyword=${encodeURIComponent(searchTerm.trim())}`);
                     setIsOpen(false);
                   }}
                 >
