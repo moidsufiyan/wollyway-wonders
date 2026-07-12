@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { productService } from '../services/product.service.js';
 import { HTTP_STATUS } from '../constants/index.js';
+import { AppError } from '../utils/AppError.js';
 
 export const getFeaturedProducts = async (
   _req: Request,
@@ -29,38 +30,14 @@ export const getProductBySlug = async (
   }
 };
 
-export const getAllProducts = async (
+export const discoverProducts = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const isAdmin = req.user?.role === 'admin' && req.query.adminView === 'true';
-    const options = {
-      page: req.query.page ? parseInt(req.query.page as string, 10) : 1,
-      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 20,
-      categoryId: req.query.categoryId as string,
-      tags: req.query.tags as string,
-      sort: req.query.sort as string,
-      isAdmin,
-    };
-
-    const result = await productService.getAllProducts(options);
-    res.status(HTTP_STATUS.OK).json({ success: true, ...result });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const searchProducts = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { q } = req.query;
-    const products = await productService.searchProducts(q as string);
-    res.status(HTTP_STATUS.OK).json({ success: true, data: products });
+    const result = await productService.discoverProducts(req.query);
+    res.status(HTTP_STATUS.OK).json(result);
   } catch (error) {
     next(error);
   }
@@ -117,6 +94,85 @@ export const archiveProduct = async (
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: 'Product archived successfully',
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadProductImages = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      throw new AppError('No image files provided for upload', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const adminUserId = req.user?._id ? req.user._id.toString() : undefined;
+    const product = await productService.uploadProductImages(
+      req.params.id as string,
+      files,
+      adminUserId
+    );
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Images uploaded successfully',
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const replaceProductImage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.file) {
+      throw new AppError('No image file provided for replacement', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const adminUserId = req.user?._id ? req.user._id.toString() : undefined;
+    const product = await productService.replaceProductImage(
+      req.params.id as string,
+      req.params.publicId as string,
+      req.file,
+      adminUserId
+    );
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Image replaced successfully',
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteProductImage = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const adminUserId = req.user?._id ? req.user._id.toString() : undefined;
+    const product = await productService.deleteProductImage(
+      req.params.id as string,
+      req.params.publicId as string,
+      adminUserId
+    );
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Image deleted successfully',
       data: product,
     });
   } catch (error) {

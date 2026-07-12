@@ -191,22 +191,30 @@ ProductSchema.index({ tags: 1 });
 ProductSchema.index({ _id: 1, visibility: 1 });
 
 // Text Index for native search
+// Weights are configuration-driven — tune here without touching business logic.
+// NOTE: If weights are changed, drop and recreate the index:
+//   db.products.dropIndex('product_text_index')
+// MongoDB will rebuild from the schema definition on the next connection.
 ProductSchema.index(
   {
     name: 'text',
+    tags: 'text',
     materials: 'text',
     shortDescription: 'text',
-    tags: 'text',
   },
   {
     weights: {
       name: 10,
-      tags: 5,
+      tags: 7,
       materials: 5,
       shortDescription: 1,
     },
     name: 'product_text_index',
   }
 );
+
+// Core discovery index: supports status filter + price sort + newest sort.
+// Covers the most common browsing query: published products by category/price/date.
+ProductSchema.index({ visibility: 1, price: 1, createdAt: -1 }, { name: 'product_discovery_core' });
 
 export const Product = model<IProduct>('Product', ProductSchema);

@@ -128,3 +128,21 @@ export const addImageSchema = z.object({
       .max(10, 'Cannot add more than 10 images in one batch'),
   }),
 });
+
+/**
+ * Discovery query parameter schema.
+ * NOTE: This schema is consumed directly by the ProductQueryBuilder (via Zod .safeParse),
+ * not by the validate() body middleware, since it targets req.query not req.body.
+ * Exported here as the authoritative contract for all discovery parameters.
+ */
+export const DISCOVERY_SORT_OPTIONS = [
+  'relevance',
+  'newest',
+  'price_asc',
+  'price_desc',
+  'name_asc',
+  'name_desc',
+  'featured',
+] as const;
+
+export type DiscoverySortOption = (typeof DISCOVERY_SORT_OPTIONS)[number];
