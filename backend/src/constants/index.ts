@@ -52,3 +52,5 @@ export const COOKIES = {
 export const MAX_FEATURED_CATEGORIES = 6;
 
 export const RESERVATION_TIMEOUT_MINUTES = 15;
+
+export const MAX_CART_ITEM_QUANTITY = 10;

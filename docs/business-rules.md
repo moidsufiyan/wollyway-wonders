@@ -33,6 +33,18 @@ This document lists the authoritative business constraints and validation rules 
 
 ---
 
-## 3. Media Management Rules
+## 3. Cart Domain Rules
+- **Authentication:** Carts are strictly authenticated-only in V1.
+- **Cap Constraints:** Maximum of **50 unique products** per user cart.
+- **Item Limit (`MAX_CART_ITEM_QUANTITY`):** Quantity per item must not exceed **10 units** or available stock, whichever is lower.
+- **Duplicate Adds:** Adding an existing item validates `existing + new <= stock` and `existing + new <= MAX_CART_ITEM_QUANTITY`. Overflows throw a `400 Bad Request`.
+- **Subtotal Cap:** Maximum derived subtotal of **₹2,00,000** (20000000 cents) per cart.
+- **Visibility Boundaries:** Only `visibility: 'published'` products can be added.
+- **Price Snapshots:** Product price is snapshotted at addition. Mismatches are flagged to the client during query. Checkout revalidates live prices directly.
+- **Non-mutating Reads:** Retrieval (`GET`) does not delete invalid database items. Items are flagged `isValid: false` in the DTO, and the user must explicitly remove them.
+
+---
+
+## 4. Media Management Rules
 - **Allowed Formats:** Only `image/jpeg`, `image/png`, `image/webp` are permitted.
 - **Signature Check:** Verified via magic numbers (file signature headers) to prevent execution scripts disguised as images.

@@ -7,6 +7,18 @@ All notable changes to the WollyWay platform will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Cart Domain (Phase 4.2):**
+  - Database schema (`Cart` collection) with unique index `{ userId: 1 }` and compound index `{ userId: 1, "items.productId": 1 }`.
+  - Atomic upsert creation (`upsertCart`) and updates (`updateQuantity` with positional array filters).
+  - Derived subtotal mapping dynamically on read rather than caching.
+  - Verification of quantity limits (`MAX_CART_ITEM_QUANTITY` default: 10) and stock availability.
+  - Concurrency retry strategy with exponential backoff (50ms, 100ms, 200ms) for version error conflicts.
+  - Transaction-session execution for moving items from wishlist to cart, with non-transaction fallback support.
+  - Flagging invalid cart items dynamically on GET queries without silent document deletion.
+  - Structured invalidation reason enums (`UNPUBLISHED`, `ARCHIVED`, `OUT_OF_STOCK`, `PRICE_CHANGED`) and `hasInvalidItems` flag.
+  - Swagger endpoint specifications and request examples.
+  - Implementation contracts (`docs/cart-checkout-contract.md`) and state lifecycles.
+
 - **Wishlist Domain (Phase 4.1):**
   - Unique `Wishlist` schema storing user-linked bookmark references array.
   - Dedicated `WishlistRepository` supporting atomic array modifications (`$addToSet`, `$pull`, `$set`).

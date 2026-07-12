@@ -18,6 +18,7 @@ import categoryRoutes from './routes/category.routes.js';
 import inventoryRoutes from './routes/inventory.routes.js';
 import productRoutes from './routes/product.routes.js';
 import wishlistRoutes from './routes/wishlist.routes.js';
+import cartRoutes from './routes/cart.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
 import { API } from './constants/index.js';
@@ -68,6 +69,7 @@ app.use(`${API.PREFIX}/${API.VERSION}/categories`, categoryRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/inventory`, inventoryRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/products`, productRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/wishlist`, wishlistRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/cart`, cartRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);

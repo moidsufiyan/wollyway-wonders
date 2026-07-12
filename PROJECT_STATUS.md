@@ -17,7 +17,7 @@
 
 ### Phase 4: Customer Loop
 - [x] Wishlist Domain (v1 Core, cap constraints, idempotent APIs, Check status)
-- [ ] Cart Domain (Decoupled lifecycle, move-to-cart orchestration)
+- [x] Cart Domain (Decoupled lifecycle, move-to-cart orchestration, derived subtotal, atomic updates)
 - [ ] Checkout Domain (Price locking, tax calculations)
 - [ ] Order Domain (History, transaction logs, receipts)
 - [ ] Payment Integration (Stripe signed webhooks, verification states)
