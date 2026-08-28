@@ -19,7 +19,7 @@
 
 import mongoose, { Types } from 'mongoose';
 import { connectDatabase, disconnectDatabase } from '../src/config/db.config.js';
-import { getRedisClient, disconnectRedis } from '../src/config/redis.config.js';
+import { getRedisClient, closeRedis } from '../src/config/redis.config.js';
 import { User } from '../src/models/user.model.js';
 import { Category } from '../src/models/category.model.js';
 import { Product } from '../src/models/product.model.js';
@@ -479,7 +479,7 @@ async function runVerification() {
     await Cart.deleteMany({});
 
     await disconnectDatabase();
-    await disconnectRedis();
+    await closeRedis();
   }
 }
 

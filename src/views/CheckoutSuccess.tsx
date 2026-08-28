@@ -153,7 +153,7 @@ const CheckoutSuccess = () => {
             <CardContent>
               <div className="text-sm">
                 <p className="font-medium">Customer</p>
-                <p>{order.shippingAddress.streetAddress}{order.shippingAddress.apartmentSuite ? `, ${order.shippingAddress.apartmentSuite}` : ''}</p>
+                <p>{order.shippingAddress.street}</p>
                 <p>
                   {order.shippingAddress.city}, {order.shippingAddress.postalCode}
                 </p>

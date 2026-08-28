@@ -3,7 +3,7 @@
 import React from 'react';
 import { Package, Truck, Home, Clock } from 'lucide-react';
 
-export type OrderStatus = 'processing' | 'shipped' | 'delivered';
+export type OrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 interface OrderStatusStepsProps {
   orderStatus: OrderStatus;
@@ -43,7 +43,8 @@ const OrderStatusSteps: React.FC<OrderStatusStepsProps> = ({
           style={{ 
             width: orderStatus === 'processing' ? '25%' : 
                    orderStatus === 'shipped' ? '65%' : 
-                   orderStatus === 'delivered' ? '100%' : '0%' 
+                   orderStatus === 'delivered' ? '100%' : '0%',
+            backgroundColor: orderStatus === 'cancelled' ? '#ef4444' : undefined
           }}
         />
       </div>

@@ -5,10 +5,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { ChevronRight, Package, Truck, AlertCircle, CheckCircle } from 'lucide-react';
-import { Order } from '@/types/order';
+import { OrderSummaryDTO } from '@/services/order.service';
 
 interface OrderCardProps {
-  order: Order;
+  order: OrderSummaryDTO;
   onViewDetails: (orderId: string) => void;
 }
 
@@ -19,15 +19,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
   // Status icon based on order status
   const getStatusIcon = () => {
     switch (order.status) {
-      case 'pending':
+      case 'CONFIRMED':
         return <AlertCircle size={18} className="text-amber-500" />;
-      case 'processing':
+      case 'PROCESSING':
         return <Package size={18} className="text-blue-500" />;
-      case 'shipped':
+      case 'SHIPPED':
         return <Truck size={18} className="text-purple-500" />;
-      case 'delivered':
+      case 'DELIVERED':
         return <CheckCircle size={18} className="text-green-500" />;
-      case 'cancelled':
+      case 'CANCELLED':
+      case 'REFUNDED':
         return <AlertCircle size={18} className="text-red-500" />;
       default:
         return <Package size={18} className="text-gray-500" />;
@@ -37,16 +38,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
   // Status label with appropriate color
   const getStatusLabel = () => {
     const statusClasses = {
-      pending: 'bg-amber-100 text-amber-800',
-      processing: 'bg-blue-100 text-blue-800',
-      shipped: 'bg-purple-100 text-purple-800',
-      delivered: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800',
+      CONFIRMED: 'bg-amber-100 text-amber-800',
+      PROCESSING: 'bg-blue-100 text-blue-800',
+      SHIPPED: 'bg-purple-100 text-purple-800',
+      DELIVERED: 'bg-green-100 text-green-800',
+      CANCELLED: 'bg-red-100 text-red-800',
+      REFUNDED: 'bg-red-100 text-red-800',
     };
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs ${statusClasses[order.status]}`}>
-        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+      <span className={`px-2 py-1 rounded-full text-xs ${statusClasses[order.status as keyof typeof statusClasses] || statusClasses['PROCESSING']}`}>
+        {order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
       </span>
     );
   };
@@ -73,11 +75,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
         
         <div className="space-y-3">
           {/* Show up to 2 items + count of remaining items */}
-          {order.items.slice(0, 2).map((item, index) => (
-            <div key={item.id} className="flex items-center">
+          {order.itemsPreview.slice(0, 2).map((item, index) => (
+            <div key={index} className="flex items-center">
               <div className="h-12 w-12 rounded-md overflow-hidden border mr-3">
                 <img
-                  src={item.image}
+                  src={item.image || '/placeholder.png'}
                   alt={item.name}
                   className="h-full w-full object-cover"
                 />
@@ -85,15 +87,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
               <div className="flex-1">
                 <p className="font-medium text-sm line-clamp-1">{item.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Qty: {item.quantity} · ₹{item.price.toFixed(2)}
+                  Qty: {item.quantity}
                 </p>
               </div>
             </div>
           ))}
           
-          {order.items.length > 2 && (
+          {order.itemCount > 2 && (
             <p className="text-sm text-muted-foreground">
-              +{order.items.length - 2} more {order.items.length - 2 === 1 ? 'item' : 'items'}
+              +{order.itemCount - 2} more {order.itemCount - 2 === 1 ? 'item' : 'items'}
             </p>
           )}
         </div>
@@ -101,9 +103,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
       
       <CardFooter className="flex justify-between pt-3 border-t px-5 py-3">
         <div>
-                          <p className="font-medium">₹{order.totalPrice.toFixed(2)}</p>
+          <p className="font-medium">₹{order.orderTotal.toFixed(2)}</p>
           <p className="text-xs text-muted-foreground">
-            {order.items.reduce((total, item) => total + item.quantity, 0)} items
+            {order.itemCount} items
           </p>
         </div>
         
