@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { ClientSession, Types } from 'mongoose';
 import { CheckoutSession, ICheckoutSession } from '../models/checkout-session.model.js';
 import { CheckoutStatus } from '../types/checkout.types.js';
 
@@ -17,8 +17,18 @@ export class CheckoutRepository {
   async findActiveSession(userId: Types.ObjectId): Promise<ICheckoutSession | null> {
     return CheckoutSession.findOne({
       userId,
-      status: { $in: ['CREATED', 'VALIDATING', 'READY', 'PAYMENT_PENDING'] },
+      status: { $in: ['CREATED', 'VALIDATING', 'READY', 'RESERVED', 'PAYMENT_PENDING'] },
     });
+  }
+
+  /**
+   * Finds a checkout session by payment provider and gateway order/intent ID.
+   */
+  async findByPaymentIntent(
+    paymentProvider: string,
+    paymentIntentId: string
+  ): Promise<ICheckoutSession | null> {
+    return CheckoutSession.findOne({ paymentProvider, paymentIntentId });
   }
 
   /**
@@ -34,12 +44,13 @@ export class CheckoutRepository {
   async updateStatus(
     sessionId: Types.ObjectId,
     status: CheckoutStatus,
-    extraUpdates: Partial<ICheckoutSession> = {}
+    extraUpdates: Partial<ICheckoutSession> = {},
+    session?: ClientSession
   ): Promise<ICheckoutSession | null> {
     return CheckoutSession.findByIdAndUpdate(
       sessionId,
       { $set: { status, ...extraUpdates } },
-      { new: true }
+      { new: true, session }
     );
   }
 

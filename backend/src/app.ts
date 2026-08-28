@@ -20,6 +20,8 @@ import productRoutes from './routes/product.routes.js';
 import wishlistRoutes from './routes/wishlist.routes.js';
 import cartRoutes from './routes/cart.routes.js';
 import checkoutRoutes from './routes/checkout.routes.js';
+import orderRoutes from './routes/order.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
 import { API } from './constants/index.js';
@@ -55,7 +57,13 @@ app.use(
 // Performance & Parsing
 app.use(compression());
 app.use(cookieParser());
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req: IncomingMessage & { rawBody?: Buffer }, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 
 // Apply basic rate limiting
@@ -72,6 +80,8 @@ app.use(`${API.PREFIX}/${API.VERSION}/products`, productRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/wishlist`, wishlistRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/cart`, cartRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/checkout`, checkoutRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/orders`, orderRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/payments`, paymentRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);

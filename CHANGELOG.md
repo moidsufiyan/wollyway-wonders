@@ -7,6 +7,30 @@ All notable changes to the WollyWay platform will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Payment Integration: Razorpay (Phase 4.5A):**
+  - Provider-agnostic payment architecture (`IPaymentProvider`, `PaymentProviderFactory`) allowing seamless multi-gateway expansion.
+  - Razorpay adapter (`RazorpayAdapter`) managing Order creation in integer paisa, receipt generation, and cryptographic HMAC SHA256 webhook signature verification (`timingSafeEqual`).
+  - Client untrusted security boundary: only server-verified gateway webhooks invoke `OrderService.createOrderFromCheckout`.
+  - Customer endpoint `POST /api/v1/payments/create-intent` with intent reuse idempotency on active checkout sessions.
+  - Public webhook receiver `POST /api/v1/payments/webhook/razorpay` with raw byte buffer capture (`req.rawBody`).
+  - Race-safe atomic event claiming using `payment_webhook_events` collection with unique compound index `{ eventId: 1, provider: 1 }` absorbing concurrent duplicate deliveries.
+  - Multi-factor pre-order reconciliation: provider, gateway order ID, customer session binding, frozen snapshot amount, and currency (`INR`).
+  - Webhook event lifecycle (`RECEIVED` -> `PROCESSING` -> `PROCESSED` | `FAILED` | `IGNORED`) marking `PROCESSED` only after order commit.
+  - Comprehensive documentation (`docs/database/payment-domain.md`, `docs/api/payment-api.md`, `docs/architecture/payment-lifecycle.md`) and automated behavioral test suite (`scripts/verify-payment-domain.ts`).
+
+- **Order Domain (Phase 4.4):**
+  - Database schema (`Order` collection) with unique index on `orderNumber`, unique index on `checkoutSessionId`, unique sparse index on `paymentInfo.transactionId`, and compound index on `{ userId: 1, createdAt: -1 }`.
+  - Multi-Document ACID Replica Set Transaction orchestration (`session.withTransaction`) uniting Order creation, permanent stock deductions, `InventoryTransaction` creation, `CheckoutSession` completion, and `Cart` clearing.
+  - Frozen immutable historical snapshots for product lines (`name`, `price`, `slug`, `image`, `quantity`), customer contacts, shipping destination, and integer paisa financials.
+  - Handcrafted inventory rule: `trackInventory: false` items increment `sold` without decrementing `available`.
+  - Dual-index race-condition idempotency protection with Mongo `E11000` duplicate key handling.
+  - Strict customer IDOR ownership verification returning `404 Not Found` for unauthorized lookups.
+  - Explicit administrative fulfillment state machine (`CONFIRMED` -> `PROCESSING` -> `SHIPPED` -> `DELIVERED`).
+  - Idempotent order cancellation and automatic inventory restocking with `reason: 'return'` audit logs.
+  - Active order product archival prevention guard in `ProductService.archiveProduct`.
+  - Lean DTO projections for customer summaries, receipts, and administrative oversight.
+  - Comprehensive documentation (`docs/database/order-domain.md`, `docs/api/order-api.md`, `docs/architecture/order-lifecycle.md`) and automated behavioral test suite (`scripts/verify-order-domain.ts`).
+
 - **Checkout Domain (Phase 4.3):**
   - Database schema (`CheckoutSession` collection) with compound index `{ userId: 1, status: 1 }` and a 15-minute TTL auto-expiry index.
   - Multi-step validation pipeline: authentication -> cart validation -> product status checks -> live price comparisons -> address completeness.

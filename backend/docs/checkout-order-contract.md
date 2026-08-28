@@ -1,21 +1,28 @@
 # Checkout to Order — Integration Contract
 
-This document defines the strict parameter mappings handed to the Order service upon a successful checkout transaction.
+This document defines the strict parameter mappings and transactional invariants handed to the Order service upon a verified payment capture confirmation.
 
 ---
 
-## 1. Trigger Hook (Handshake Action)
+## 1. Trigger Hook & Transaction Scope
 
-Upon receiving a payment gateway capture confirmation:
-1. `checkoutService` transitions status to `COMPLETED`.
-2. It triggers `orderService.createOrder(payload)` using the verified snapshots.
-3. It calls `cartService.clearCart(userId)` to empty the user's shopping cart list.
+Upon receiving a verified server-side payment capture confirmation (`stripe` or `razorpay`):
+1. `orderService.createOrderFromCheckout(checkoutSessionId, paymentPayload)` is invoked within a **MongoDB Multi-Document ACID Transaction**.
+2. **Inside Transaction:**
+   - Validates session eligibility (must be active and non-terminal).
+   - Generates unique order number (`WW-YYYYMMDD-XXXX`).
+   - Creates the permanent `Order` document with frozen item and customer snapshots.
+   - Calls `inventoryRepository.deductStock(productId, quantity, orderId, checkoutSessionId, session)`:
+     - Tracked items: decrements `available`, increments `sold`, appends `reason: 'purchase'` transaction.
+     - Untracked items: leaves `available` untouched, increments `sold`, appends `reason: 'purchase'` transaction.
+   - Updates `CheckoutSession` status to `COMPLETED`.
+   - Empties the user's shopping cart via `cartRepository.clear(userId, session)`.
+3. **Post-Commit Action:**
+   - Calls `checkoutService.releaseSessionLocks(checkoutSessionId, items)` to purge Redis reservation locks.
 
 ---
 
 ## 2. Parameter Mapping Interface
-
-The parameters sent to the Order creation service are fully projected from the `CheckoutSession` snapshot records to prevent future profile mutations from altering completed legal receipts.
 
 | CheckoutSession Source Field | Order Target Field | Type | Description |
 |---|---|---|---|
@@ -23,23 +30,23 @@ The parameters sent to the Order creation service are fully projected from the `
 | `cartSnapshot.items` | `items` | `Array` | Snapshot list of items bought |
 | `cartSnapshot.items[i].productId` | `items[i].productId`| `ObjectId` | Product reference |
 | `cartSnapshot.items[i].name` | `items[i].name` | `String` | Frozen product name on receipt |
-| `cartSnapshot.items[i].price` | `items[i].price` | `Number` | Price charged per unit (cents) |
+| `cartSnapshot.items[i].slug` | `items[i].slug` | `String` | Frozen product slug |
+| `cartSnapshot.items[i].image` | `items[i].image` | `String` | Primary image thumbnail URL |
+| `cartSnapshot.items[i].price` | `items[i].price` | `Number` | Price charged per unit (paisa) |
 | `cartSnapshot.items[i].quantity` | `items[i].quantity` | `Number` | Quantity purchased |
 | `shippingAddressSnapshot` | `shippingAddress` | `Object` | Frozen shipping address |
-| `paymentProvider` | `paymentInfo.provider`| `String` | Gateway provider used (e.g. `stripe`) |
-| `paymentIntentId` | `paymentInfo.transactionId`| `String` | Transaction Reference |
-| `totals.subtotal` | `subtotal` | `Number` | Invoiced item subtotal |
-| `totals.shippingFee` | `shippingFee` | `Number` | Shipping fee charged |
-| `totals.taxTotal` | `taxTotal` | `Number` | Invoiced tax fee |
-| `totals.orderTotal` | `orderTotal` | `Number` | Total payment amount captured |
+| `paymentPayload.provider` | `paymentInfo.provider`| `String` | Gateway provider (`'stripe' \| 'razorpay'`) |
+| `paymentPayload.transactionId` | `paymentInfo.transactionId`| `String` | Gateway capture/charge ID |
+| `paymentPayload.paidAt` | `paymentInfo.paidAt` | `Date` | Timestamp of payment capture |
+| Calculated `subtotal` | `financials.subtotal` | `Number` | Sum of item lines (paisa) |
+| Calculated `shippingFee` | `financials.shippingFee` | `Number` | Delivery fee charged (paisa) |
+| Calculated `taxTotal` | `financials.taxTotal` | `Number` | Invoiced tax fee (paisa) |
+| Calculated `orderTotal` | `financials.orderTotal` | `Number` | Total payment amount captured (paisa) |
+| Fixed `'INR'` | `financials.currency` | `String` | Base currency code |
 
 ---
 
-## 3. Post-Condition Stock Deductions
+## 3. Idempotency Invariants
 
-Once `orderService.createOrder` successfully completes:
-- The Checkout coordinator issues a database inventory reduction to the `InventoryRepository`:
-  ```typescript
-  await inventoryRepository.deductInventory(productId, quantity);
-  ```
-- This permanently decrements MongoDB stock pool counters and clears the session's short-term Redis lock allocations.
+- Dual unique database indexes on `checkoutSessionId` and `paymentInfo.transactionId` guarantee that duplicate webhook deliveries or retry storms execute exactly once.
+- Pre-flight lookup returns the existing Order DTO immediately on duplicate invocation.

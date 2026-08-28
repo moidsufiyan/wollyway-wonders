@@ -45,5 +45,25 @@ This document outlines the strict business logic rules, constraints, and validat
 * **Discount Validation**: The `salePrice` must be strictly less than the `price`. Neither can be negative.
 * **Tag Normalization**: Product search tags must be aggressively normalized on save: all lowercase, trimmed, and deduplicated (unique array elements only). Max 15 tags per product.
 * **Image Constraints**: Maximum 10 images per product, with exactly 1 primary image required for published items. Maximum upload file size per image is bounded at 5MB.
-* **Archive Cascade Safeguard**: A product cannot transition to `archived` visibility if it has active, unsettled orders pending.
+* **Archive Cascade Safeguard**: A product cannot transition to `archived` visibility if it has active, unsettled orders (`CONFIRMED`, `PROCESSING`, `SHIPPED`) pending fulfillment.
 * **Archive Restoration**: Once a product is marked `archived`, it cannot transition back to `hidden` or `published` without explicit administrative override.
+
+---
+
+## 5. Order Domain Rules
+* **Prepaid Only Policy (Phase 4.4)**: Orders are strictly created upon verified server-side payment confirmation (`stripe`, `razorpay`). Cash on Delivery (`COD`) is deferred.
+* **Immediate Confirmation**: An order is never created in an unpaid `PENDING` state; it immediately transitions to `CONFIRMED` upon verified capture.
+* **Historical Snapshot Immutability**: Line item prices, names, thumbnails, customer contact info, shipping address, and financial totals are frozen permanently at creation.
+* **Controlled Operational Mutability**: Fulfillment fields (`carrier`, `trackingNumber`, `shippedAt`, `deliveredAt`) and `status` mutate exclusively through validated state machine transitions.
+* **Idempotent Restocking**: Order cancellation or refund transitions automatically restore inventory (`available += qty`, `sold -= qty`) and log an `InventoryTransaction` (`reason: 'return'`) exactly once.
+* **Customer Ownership (IDOR)**: Customers can only query their own orders; querying an unauthorized order returns `404 Not Found` without disclosing existence.
+
+---
+
+## 6. Payment Domain Rules
+* **Client Untrusted Boundary**: Frontend callbacks, query parameters, or client POST requests are strictly prohibited from creating or confirming orders. Only verified server-side gateway webhooks can confirm payments.
+* **Cryptographic Verification**: Webhook payloads must be verified using HMAC SHA256 against the provider's webhook secret using constant-time string comparison (`timingSafeEqual`).
+* **Frozen Snapshot Financial Authority**: Captured amounts must match the authoritative frozen `CheckoutSession` total (`subtotal + shippingFee + taxTotal`). Live Product or Cart data is never used for payment reconciliation.
+* **Intent Idempotency**: If an active `CheckoutSession` already has an active gateway order ID for the selected provider, `create-intent` returns the existing intent rather than creating duplicate gateway orders.
+* **Payment Failure Semantics**: Webhook failure events (`payment.failed`) keep the session in `PAYMENT_PENDING` / `RESERVED` to permit customer retry within the remaining 15-minute reservation window.
+* **Operational Housekeeping**: Webhook events in `payment_webhook_events` expire after 90 days via a MongoDB TTL index as an operational cleanup policy.

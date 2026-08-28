@@ -6,6 +6,8 @@ export interface IInventoryTransaction extends Document {
   quantity: number;
   before: number;
   after: number;
+  orderId?: Types.ObjectId | null;
+  checkoutSessionId?: Types.ObjectId | null;
   notes: string | null;
   createdBy: Types.ObjectId | null;
   createdAt: Date;
@@ -35,6 +37,18 @@ const CategoryInventoryTransactionSchema = new Schema<IInventoryTransaction>(
     after: {
       type: Number,
       required: [true, 'Target stock count is required.'],
+    },
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Order',
+      default: null,
+      index: true,
+    },
+    checkoutSessionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'CheckoutSession',
+      default: null,
+      index: true,
     },
     notes: {
       type: String,

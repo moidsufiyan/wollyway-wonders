@@ -66,6 +66,7 @@ const CheckoutSessionSchema = new Schema<ICheckoutSession>(
         'CREATED',
         'VALIDATING',
         'READY',
+        'RESERVED',
         'PAYMENT_PENDING',
         'EXPIRED',
         'CANCELLED',

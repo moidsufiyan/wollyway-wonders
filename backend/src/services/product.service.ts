@@ -9,6 +9,7 @@ import { ParsedQs } from 'qs';
 import { ProductQueryBuilder } from '../builders/product.query-builder.js';
 import { productRepository } from '../repositories/product.repository.js';
 import { inventoryRepository } from '../repositories/inventory.repository.js';
+import { orderRepository } from '../repositories/order.repository.js';
 import { ProductMapper } from '../mappers/product.mapper.js';
 import type { DiscoveryResult } from '../types/discovery.types.js';
 
@@ -265,9 +266,16 @@ export class ProductService {
     const product = await Product.findById(id);
     if (!product) throw new AppError('Product not found', HTTP_STATUS.NOT_FOUND);
 
-    // 1. Check unsettled orders (Mock placeholder for future Order Domain logic)
-    // const activeOrders = await Orders.count({ productId: id, status: 'pending' });
-    // if (activeOrders > 0) throw new AppError('Cannot archive product with active orders pending.', 400);
+    // 1. Guard against archiving products with active fulfillment orders (CONFIRMED, PROCESSING, SHIPPED)
+    const hasActiveOrders = await orderRepository.hasActiveOrdersForProduct(
+      product._id as Types.ObjectId
+    );
+    if (hasActiveOrders) {
+      throw new AppError(
+        'Cannot archive product with active orders pending fulfillment.',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
 
     // 2. Cascade Archive
     product.visibility = 'archived';

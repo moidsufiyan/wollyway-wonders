@@ -1,20 +1,17 @@
 /**
  * @file inventory.repository.ts
- * @description Repository abstraction for Inventory domain queries.
+ * @description Repository abstraction for Inventory domain queries and transactional mutations.
  *
- * Domain Boundary Rule: The Product Discovery service must never import the
- * Inventory model directly. All inventory-related data access flows through
- * this repository, keeping domain concerns separated.
- *
- * Future Path: When the catalog grows significantly, replace the
- * getProductIdsInStock() pre-fetch + $in filter pattern with a MongoDB
- * $lookup aggregation pipeline joining Inventory inline within the Product
- * Repository. This repository's interface remains unchanged — zero
- * service-layer changes required.
+ * Domain Boundary Rule: External services (Product Discovery, Order, Checkout)
+ * must never import the Inventory or InventoryTransaction models directly.
+ * All inventory-related data access and atomic mutations flow through this repository.
  */
 
-import { Types } from 'mongoose';
-import { Inventory } from '../models/inventory.model.js';
+import { ClientSession, Types } from 'mongoose';
+import { Inventory, IInventory } from '../models/inventory.model.js';
+import { InventoryTransaction } from '../models/inventory-transaction.model.js';
+import { AppError } from '../utils/AppError.js';
+import { HTTP_STATUS } from '../constants/index.js';
 
 export class InventoryRepository {
   /**
@@ -55,6 +52,163 @@ export class InventoryRepository {
       stockMap.set(key, val);
     }
     return stockMap;
+  }
+
+  /**
+   * Atomically commits inventory deduction during Order creation.
+   *
+   * Invariants:
+   * - trackInventory: true  -> Checks available >= quantity, decrements available, increments sold.
+   * - trackInventory: false -> Does NOT decrement available, increments sold only.
+   * - Appends an InventoryTransaction audit log with reason: 'purchase'.
+   */
+  async deductStock(
+    productId: Types.ObjectId,
+    quantity: number,
+    orderId?: Types.ObjectId,
+    checkoutSessionId?: Types.ObjectId,
+    session?: ClientSession
+  ): Promise<IInventory> {
+    const currentInv = await Inventory.findOne({ productId }).session(session || null);
+    if (!currentInv) {
+      throw new AppError(
+        `Inventory record not found for product ${productId}`,
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+
+    if (currentInv.isDiscontinued) {
+      throw new AppError(`Cannot purchase discontinued product ${productId}`, HTTP_STATUS.CONFLICT);
+    }
+
+    let updatedInventory: IInventory | null;
+
+    if (currentInv.trackInventory) {
+      updatedInventory = await Inventory.findOneAndUpdate(
+        {
+          productId,
+          isDiscontinued: false,
+          available: { $gte: quantity },
+        },
+        {
+          $inc: {
+            available: -quantity,
+            sold: quantity,
+          },
+        },
+        { new: true, session }
+      );
+    } else {
+      updatedInventory = await Inventory.findOneAndUpdate(
+        {
+          productId,
+          isDiscontinued: false,
+        },
+        {
+          $inc: {
+            sold: quantity,
+          },
+        },
+        { new: true, session }
+      );
+    }
+
+    if (!updatedInventory) {
+      throw new AppError(
+        `Insufficient available inventory to fulfill order line for product ${productId}`,
+        HTTP_STATUS.CONFLICT
+      );
+    }
+
+    await InventoryTransaction.create(
+      [
+        {
+          inventoryId: updatedInventory._id,
+          reason: 'purchase',
+          quantity: currentInv.trackInventory ? -quantity : 0,
+          before: currentInv.available,
+          after: updatedInventory.available,
+          orderId: orderId || null,
+          checkoutSessionId: checkoutSessionId || null,
+          notes: `Order fulfillment stock deduction`,
+        },
+      ],
+      { session }
+    );
+
+    return updatedInventory;
+  }
+
+  /**
+   * Atomically restores inventory upon Order cancellation or refund.
+   *
+   * Invariants:
+   * - trackInventory: true  -> Increments available, decrements sold.
+   * - trackInventory: false -> Decrements sold only.
+   * - Appends an InventoryTransaction audit log with reason: 'return'.
+   */
+  async restockProduct(
+    productId: Types.ObjectId,
+    quantity: number,
+    orderId?: Types.ObjectId,
+    session?: ClientSession
+  ): Promise<IInventory> {
+    const currentInv = await Inventory.findOne({ productId }).session(session || null);
+    if (!currentInv) {
+      throw new AppError(
+        `Inventory record not found for product ${productId}`,
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+
+    let updatedInventory: IInventory | null;
+
+    if (currentInv.trackInventory) {
+      updatedInventory = await Inventory.findOneAndUpdate(
+        { productId },
+        {
+          $inc: {
+            available: quantity,
+            sold: -quantity,
+          },
+        },
+        { new: true, session }
+      );
+    } else {
+      updatedInventory = await Inventory.findOneAndUpdate(
+        { productId },
+        {
+          $inc: {
+            sold: -quantity,
+          },
+        },
+        { new: true, session }
+      );
+    }
+
+    if (!updatedInventory) {
+      throw new AppError(
+        `Failed to restock inventory for product ${productId}`,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    await InventoryTransaction.create(
+      [
+        {
+          inventoryId: updatedInventory._id,
+          reason: 'return',
+          quantity: currentInv.trackInventory ? quantity : 0,
+          before: currentInv.available,
+          after: updatedInventory.available,
+          orderId: orderId || null,
+          notes: `Order cancellation/refund restocking`,
+        },
+      ],
+      { session }
+    );
+
+    return updatedInventory;
   }
 }
 

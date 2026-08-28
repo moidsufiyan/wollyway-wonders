@@ -233,6 +233,16 @@ export class CheckoutService {
   }
 
   /**
+   * Public interface to release Redis locks after Order creation commits.
+   */
+  public async releaseSessionLocks(
+    sessionId: string,
+    items: CheckoutItemSnapshot[]
+  ): Promise<void> {
+    return this.executeRedisRelease(sessionId, items);
+  }
+
+  /**
    * Initializes a Checkout Session for the user.
    */
   async startCheckout(userId: Types.ObjectId): Promise<CheckoutSummaryDTO> {

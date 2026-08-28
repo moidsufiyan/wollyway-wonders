@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { ClientSession, Types } from 'mongoose';
 import { Cart, ICart } from '../models/cart.model.js';
 import { CartItemModel } from '../types/cart.types.js';
 
@@ -51,10 +51,10 @@ export class CartRepository {
   }
 
   /**
-   * Wipes all items in the cart.
+   * Wipes all items in the cart (supports atomic transactional session).
    */
-  async clear(userId: Types.ObjectId): Promise<ICart | null> {
-    return Cart.findOneAndUpdate({ userId }, { $set: { items: [] } }, { new: true });
+  async clear(userId: Types.ObjectId, session?: ClientSession): Promise<ICart | null> {
+    return Cart.findOneAndUpdate({ userId }, { $set: { items: [] } }, { new: true, session });
   }
 }
 

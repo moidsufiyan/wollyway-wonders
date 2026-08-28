@@ -17,6 +17,8 @@
 
 ### Phase 4: Customer Loop
 - [x] Wishlist Domain (v1 Core, cap constraints, idempotent APIs, Check status)
+- [x] Cart Domain (Atomic upserts, dynamic subtotal, exponential backoff version retry)
 - [x] Checkout Domain (Price locking, tax calculations, stock locks, idempotency)
-- [ ] Order Domain (History, transaction logs, receipts)
-- [ ] Payment Integration (Stripe signed webhooks, verification states)
+- [x] Order Domain (ACID transaction commit, immutable snapshots, fulfillment state machine, IDOR protection, idempotent restocking)
+- [x] Phase 4.5A — Payment Integration: Razorpay (HMAC verified capture webhooks, intent reuse, multi-factor reconciliation)
+- [ ] Phase 4.5B — Payment Integration: Stripe (Deferred plugin)

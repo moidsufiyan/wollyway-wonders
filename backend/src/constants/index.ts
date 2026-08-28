@@ -45,12 +45,39 @@ export const API = {
   VERSION: 'v1',
 } as const;
 
-export const COOKIES = {
-  REFRESH_TOKEN: 'wollyway_refresh',
-} as const;
-
 export const MAX_FEATURED_CATEGORIES = 6;
 
 export const RESERVATION_TIMEOUT_MINUTES = 15;
 
 export const MAX_CART_ITEM_QUANTITY = 10;
+
+export const ORDER_STATUS = {
+  CONFIRMED: 'CONFIRMED',
+  PROCESSING: 'PROCESSING',
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED',
+} as const;
+
+export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
+
+export const ORDER_CONSTANTS = {
+  ORDER_NUMBER_PREFIX: 'WW',
+  ORDER_NUMBER_MAX_RETRY: 3,
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 10,
+  MAX_LIMIT_CUSTOMER: 50,
+  MAX_LIMIT_ADMIN: 100,
+} as const;
+
+export const PAYMENT_WEBHOOK_STATUS = {
+  RECEIVED: 'RECEIVED',
+  PROCESSING: 'PROCESSING',
+  PROCESSED: 'PROCESSED',
+  FAILED: 'FAILED',
+  IGNORED: 'IGNORED',
+} as const;
+
+export type PaymentWebhookStatus =
+  (typeof PAYMENT_WEBHOOK_STATUS)[keyof typeof PAYMENT_WEBHOOK_STATUS];
