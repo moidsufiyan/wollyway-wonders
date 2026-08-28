@@ -63,12 +63,12 @@ const OrderTracking = () => {
   // Map backend status to component status
   const mapStatus = (status: string): OrderStatus => {
     switch(status) {
-      case 'CONFIRMED': return 'processing';
+      case 'CONFIRMED': return 'confirmed';
       case 'PROCESSING': return 'processing';
       case 'SHIPPED': return 'shipped';
       case 'DELIVERED': return 'delivered';
       case 'CANCELLED': return 'cancelled';
-      case 'REFUNDED': return 'cancelled';
+      case 'REFUNDED': return 'refunded';
       default: return 'processing';
     }
   };

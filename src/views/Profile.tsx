@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import AddressCard, { Address } from '@/components/user/AddressCard';
 import AddressForm from '@/components/user/AddressForm';
 import OrderCard from '@/components/user/OrderCard';
-import { Order } from '@/types/order';
+
 import { type Product } from '@/types/Product';
 import { useOrders } from '@/hooks/useOrders';
 
