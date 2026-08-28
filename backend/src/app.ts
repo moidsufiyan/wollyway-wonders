@@ -36,7 +36,12 @@ app.use(
   pinoHttp({
     logger,
     genReqId: (req: IncomingMessage) => (req as IncomingMessage & { id?: string }).id || 'unknown',
-
+    customSuccessMessage: (req, res) => `${req.method} ${req.url} - ${res.statusCode}`,
+    customErrorMessage: (req, res, err) => `${req.method} ${req.url} - ${res.statusCode} - ${err.message}`,
+    serializers: {
+      req: () => undefined,
+      res: () => undefined,
+    },
     customLogLevel: (_req, res, err) => {
       if (res.statusCode >= 500 || err) return 'error';
       if (res.statusCode >= 400) return 'warn';
