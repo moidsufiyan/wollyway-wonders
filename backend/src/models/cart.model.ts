@@ -52,7 +52,7 @@ const CartSchema = new Schema<ICart>(
 );
 
 // Indexes
-CartSchema.index({ userId: 1 }, { unique: true });
+
 CartSchema.index({ userId: 1, 'items.productId': 1 });
 
 export const Cart = model<ICart>('Cart', CartSchema);

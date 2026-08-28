@@ -42,6 +42,6 @@ const WishlistSchema = new Schema<IWishlist>(
 );
 
 // Index to ensure unique wishlists per user
-WishlistSchema.index({ userId: 1 }, { unique: true });
+
 
 export const Wishlist = model<IWishlist>('Wishlist', WishlistSchema);
