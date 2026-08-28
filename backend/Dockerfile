@@ -26,7 +26,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy build artifacts from compilation phase
 COPY --from=builder /app/dist ./dist
