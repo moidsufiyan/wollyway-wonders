@@ -5,12 +5,10 @@ import { motion } from "framer-motion";
 import { ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import ProductDataService from "@/services/ProductDataService";
-
-// Get featured products from our data service
-const featuredProducts = ProductDataService.allProducts
-  .filter((p) => p.isFeatured || p.isNew)
-  .slice(0, 3);
+import { useFeaturedProducts } from "@/hooks/useProducts";
+import { mapProductDetailToUI, type Product } from "@/types/Product";
+import { formatMoney } from "@/utils/currency";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const container = {
   hidden: { opacity: 0 },
@@ -31,7 +29,7 @@ const item = {
 const ProductCard = ({
   product,
 }: {
-  product: (typeof ProductDataService.allProducts)[0];
+  product: Product;
 }) => {
   return (
     <motion.div
@@ -70,7 +68,7 @@ const ProductCard = ({
               {product.name}
             </h3>
             <p className="font-black text-2xl text-wolly-magenta mt-2">
-              ₹{product.price.toFixed(2)}
+              {formatMoney(product.price)}
             </p>
 
           {/* Add to cart button */}
@@ -90,6 +88,9 @@ const ProductCard = ({
 };
 
 const FeaturedProducts = () => {
+  const { data: featuredDTOs, isLoading } = useFeaturedProducts();
+  const featuredProducts = (featuredDTOs || []).slice(0, 3).map(mapProductDetailToUI);
+  
   return (
     <section className="section-container py-20 section-gradient relative overflow-hidden">
       {/* Background decoration */}
@@ -136,9 +137,17 @@ const FeaturedProducts = () => {
         viewport={{ once: true, amount: 0.2 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
       >
-        {featuredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {isLoading ? (
+          <>
+            <Skeleton className="h-96 w-full rounded-3xl" />
+            <Skeleton className="h-96 w-full rounded-3xl" />
+            <Skeleton className="h-96 w-full rounded-3xl" />
+          </>
+        ) : (
+          featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))
+        )}
       </motion.div>
 
       <div className="mt-16 text-center">

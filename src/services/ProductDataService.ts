@@ -16,8 +16,10 @@ export const getRelatedProducts = (currentId: string | number): Product[] => {
     .slice(0, 3);
 };
 
-export default {
+const ProductDataService = {
   getProductById,
   getRelatedProducts,
   allProducts
 };
+
+export default ProductDataService;

@@ -18,7 +18,7 @@ interface LoyaltyPointsProps {
 
 const LoyaltyPoints: React.FC<LoyaltyPointsProps> = ({ product, quantity }) => {
   // Calculate points - typically 10 points per 100 rupees spent
-  const pointsEarned = Math.floor((product.price * quantity) / 10);
+  const pointsEarned = Math.floor(((product.price / 100) * quantity) / 10);
   
   return (
     <div className="mb-4">
@@ -26,7 +26,7 @@ const LoyaltyPoints: React.FC<LoyaltyPointsProps> = ({ product, quantity }) => {
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Star className="h-4 w-4 text-wolly-magenta mr-2 fill-wolly-magenta" />
+               <Star className="h-4 w-4 text-wolly-magenta mr-2 fill-wolly-magenta" />
               <span className="text-sm font-medium">Earn <span className="text-wolly-magenta font-bold">{pointsEarned} points</span> with this purchase</span>
             </div>
             <TooltipProvider>
@@ -38,7 +38,7 @@ const LoyaltyPoints: React.FC<LoyaltyPointsProps> = ({ product, quantity }) => {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-sm max-w-xs">
-                    Earn 10 points for every $1 spent. 
+                    Earn 10 points for every ₹100 spent. 
                     Redeem points for discounts, free shipping, or exclusive products.
                   </p>
                 </TooltipContent>

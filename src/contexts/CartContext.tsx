@@ -1,8 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product } from '@/types/Product';
+import React, { createContext, useContext, useEffect } from 'react';
+import { Product, mapCartItemToUI } from '@/types/Product';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { cartService } from '@/services/cart.service';
+import { ApiClientError } from '@/lib/api-client';
+import { useRouter, usePathname } from 'next/navigation';
+import { CartDTO } from '@/types/cart.types';
 
 type CartItem = {
   product: Product;
@@ -17,6 +22,7 @@ type CartContextType = {
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  isLoading: boolean;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -30,58 +36,119 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  // Load cart from localStorage on initial render
+  // Cleanup legacy localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (e) {
-        console.error('Error parsing cart data from localStorage', e);
-      }
+    if (typeof window !== 'undefined' && localStorage.getItem('cart')) {
+      localStorage.removeItem('cart');
+      console.log('Cleaned up legacy localStorage cart');
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
-  }, [items]);
-
-  const addItem = (product: Product, quantity = 1) => {
-    setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.product.id === product.id);
-      
-      if (existingItem) {
-        // Update quantity if product already in cart
-        return prevItems.map(item => 
-          item.product.id === product.id 
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        // Add new item to cart
-        return [...prevItems, { product, quantity }];
+  // Central error handler for auth redirects and toasts
+  const handleError = (error: unknown, fallbackMessage: string) => {
+    if (error instanceof ApiClientError) {
+      if (error.status === 401) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to continue",
+          variant: "destructive",
+        });
+        router.push(`/login?from=${encodeURIComponent(pathname)}`);
+        return;
       }
-    });
-    
+      toast({
+        title: "Cart Error",
+        description: error.message || fallbackMessage,
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart`,
-      duration: 3000,
+      title: "Error",
+      description: fallbackMessage,
+      variant: "destructive",
     });
   };
 
+  const { data: cartDTO, isLoading, error: queryError } = useQuery({
+    queryKey: ['cart'],
+    queryFn: () => cartService.getCart(),
+    retry: false, // Don't aggressively retry on 401s, let it fail fast
+  });
+
+  // If query returns 401, cart is simply unauthenticated. 
+  // We leave items as empty, but we do NOT assume it's a 0-item cart if auth failed.
+  // The UI will see `items: []` but we have `isLoading` to distinguish.
+  const isUnauthenticated = queryError instanceof ApiClientError && queryError.status === 401;
+
+  const items: CartItem[] = (cartDTO?.items || []).map(dto => ({
+    product: mapCartItemToUI(dto),
+    quantity: dto.quantity,
+  }));
+
+  const itemCount = cartDTO?.totals?.itemCount || 0;
+  const subtotal = cartDTO?.totals?.subtotal || 0;
+
+  const addMutation = useMutation({
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => 
+      cartService.addItem(productId, quantity),
+    onSuccess: (updatedCart) => {
+      queryClient.setQueryData(['cart'], updatedCart);
+      toast({
+        title: "Added to cart",
+        description: "Item has been added to your cart",
+        duration: 3000,
+      });
+    },
+    onError: (error) => handleError(error, "Failed to add item to cart"),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (productId: string) => cartService.removeItem(productId),
+    onSuccess: (updatedCart) => {
+      queryClient.setQueryData(['cart'], updatedCart);
+      toast({
+        title: "Removed from cart",
+        description: "Item has been removed from your cart",
+        duration: 3000,
+      });
+    },
+    onError: (error) => handleError(error, "Failed to remove item"),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => 
+      cartService.updateQuantity(productId, quantity),
+    onSuccess: (updatedCart) => {
+      queryClient.setQueryData(['cart'], updatedCart);
+    },
+    onError: (error) => handleError(error, "Failed to update quantity"),
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: () => cartService.clearCart(),
+    onSuccess: (updatedCart) => {
+      queryClient.setQueryData(['cart'], updatedCart);
+      toast({
+        title: "Cart cleared",
+        description: "All items have been removed from your cart",
+        duration: 3000,
+      });
+    },
+    onError: (error) => handleError(error, "Failed to clear cart"),
+  });
+
+  const addItem = (product: Product, quantity = 1) => {
+    addMutation.mutate({ productId: product.id, quantity });
+  };
+
   const removeItem = (productId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.product.id !== productId));
-    
-    toast({
-      title: "Removed from cart",
-      description: "Item has been removed from your cart",
-      duration: 3000,
-    });
+    removeMutation.mutate(productId);
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -89,42 +156,24 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       removeItem(productId);
       return;
     }
-    
-    setItems(prevItems => 
-      prevItems.map(item => 
-        item.product.id === productId 
-          ? { ...item, quantity }
-          : item
-      )
-    );
+    updateMutation.mutate({ productId, quantity });
   };
 
   const clearCart = () => {
-    setItems([]);
-    toast({
-      title: "Cart cleared",
-      description: "All items have been removed from your cart",
-      duration: 3000,
-    });
+    clearMutation.mutate();
   };
-
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-  
-  const subtotal = items.reduce(
-    (total, item) => total + item.product.price * item.quantity, 
-    0
-  );
 
   return (
     <CartContext.Provider
       value={{
-        items,
+        items: isUnauthenticated ? [] : items,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
-        itemCount,
-        subtotal,
+        itemCount: isUnauthenticated ? 0 : itemCount,
+        subtotal: isUnauthenticated ? 0 : subtotal,
+        isLoading,
       }}
     >
       {children}

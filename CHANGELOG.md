@@ -7,6 +7,35 @@ All notable changes to the WollyWay platform will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Phase 5.5: Final User Profile & Orders Integration:**
+  - Integrated `authService` for live profile and address management, fetching and mutating addresses via `TanStack Query`.
+  - Updated Address form UI to match backend requirements, capturing label, phone, and standardizing address fields.
+  - Rewrote `OrderTracking.tsx` to read the `id` search param and consume the real `useOrder` hook instead of static mocks.
+  - Updated `CheckoutSuccess.tsx` to correctly map integer-paisa derived order `financials` (subtotal, shippingFee, taxTotal, orderTotal) from backend.
+  - Purged legacy `api.ts` mock `orderService` completely as all remaining views now communicate directly with the live server.
+  - Addressed caching logic to immediately invalidate and refresh addresses list upon addition, modification, or deletion.
+
+- **Phase 5.4: Checkout & Orders Migration:**
+  - Integrated `useCheckout` and `useCheckoutSession` via `TanStack Query` to replace local storage checkout sequences.
+  - Mapped Razorpay intent generation directly to backend `POST /api/v1/payments/create-intent` endpoint.
+  - Implemented the actual checkout sequence workflow involving cart verification, intent generation, and the `Razorpay.open` modal trigger.
+  - Reconciled order state properly by deferring payment fulfillment polling to the `/checkout/:sessionId/status` endpoint to handle webhook concurrency.
+  - Enforced a secure checkout state polling loop to capture order transition from `PAYMENT_PENDING` to `COMPLETED` without relying on insecure client-side order IDs.
+- **Phase 5.3: Cart & Wishlist Integration:**
+  - Migrated `CartContext` and `WishlistContext` to utilize `TanStack Query` as the server-state ownership layer, dropping legacy `localStorage` usage.
+  - Safely caught `401 Unauthorized` responses via `ApiClientError` interceptors, cleanly redirecting unauthenticated cart actions to `/login?from=` without silently zeroing out cached items.
+  - Centralized frontend DTOs (`CartItemDTO`, `WishlistCardDTO`) and mapped them back into the unified `ProductViewModel` through `mapCartItemToUI` and `mapWishlistCardToUI` utility functions.
+  - Implemented single-item fallback resolution in `useWishlistCheck` to avoid N+1 full-wishlist queries on isolated product views while maintaining seamless optimistic heart-toggle UI.
+  - Used explicit `setQueryData` rather than network invalidations on Cart mutations to maintain optimistic UI performance and immediately reflect server-validated stock constraints, preventing UI desyncs.
+
+- **Phase 5.2: Product Discovery & Catalog Integration:**
+  - Migrated `useProducts` and `useProductSearch` hooks to fetch from real backend `GET /api/v1/products` discovery endpoint via `apiClient`.
+  - Converted frontend `Product` type into a `ProductViewModel` utilizing a mapper/adapter pattern for seamless UI consumption of `ProductCardDTO` and `ProductDetailDTO`.
+  - Refactored `Shop.tsx` to use URL Search Parameters as the absolute source of truth for all filters, sorting, and pagination (preserving native browser back/forward capabilities).
+  - Gracefully omitted dummy business fields (colors, sizes, reviews, ratings) in UI where backend support does not yet exist without causing layout breakage.
+  - Formatted integer paisa prices centrally using new `formatMoney` utility (`src/utils/currency.ts`) and completely eliminated client-side product list array filtering.
+  - Integrated real `GET /api/v1/products/featured` endpoint in `FeaturedProducts` section and integrated `GET /api/v1/products/:slug` in `ProductDetail` view.
+
 - **Payment Integration: Razorpay (Phase 4.5A):**
   - Provider-agnostic payment architecture (`IPaymentProvider`, `PaymentProviderFactory`) allowing seamless multi-gateway expansion.
   - Razorpay adapter (`RazorpayAdapter`) managing Order creation in integer paisa, receipt generation, and cryptographic HMAC SHA256 webhook signature verification (`timingSafeEqual`).

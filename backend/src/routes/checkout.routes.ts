@@ -5,6 +5,7 @@ import {
   extendCheckout,
   confirmCheckout,
   cancelCheckout,
+  getCheckoutStatus,
 } from '../controllers/checkout.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
@@ -113,5 +114,26 @@ router.post('/confirm', validate(confirmCheckoutSchema), confirmCheckout);
  *         description: Session marked CANCELLED and Redis stock locks purged
  */
 router.post('/cancel', cancelCheckout);
+
+/**
+ * @swagger
+ * /api/v1/checkout/{sessionId}/status:
+ *   get:
+ *     summary: Retrieve deterministic reconciliation status of a checkout session
+ *     tags: [Checkout]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Status of checkout. If COMPLETED, returns orderId and orderNumber.
+ *       404:
+ *         description: Checkout session not found or does not belong to user
+ */
+router.get('/:sessionId/status', getCheckoutStatus);
 
 export default router;

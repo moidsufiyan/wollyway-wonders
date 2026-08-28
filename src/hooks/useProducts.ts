@@ -1,100 +1,101 @@
 "use client";
 
 import { useQuery } from '@tanstack/react-query';
-import { productService } from '@/services/api';
-import { useEffect, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { productService } from '@/services/product.service';
+import { useSearchParams } from 'next/navigation';
+import { DiscoveryQueryParams, SortOption, AvailabilityFilter } from '@/types/discovery.types';
 
-export type ProductFilters = {
-  search?: string;
-  category?: string | string[];
-  priceRange?: [number, number];
-  ratingRange?: [number, number];
-  inStock?: boolean;
-  sortBy?: string;
+export const parseQueryFilters = (searchParams: URLSearchParams): DiscoveryQueryParams => {
+  const params: DiscoveryQueryParams = {};
+  
+  // Search
+  const q = searchParams.get('q') || searchParams.get('keyword') || searchParams.get('search');
+  if (q) params.q = q;
+  
+  // Category
+  const categorySlug = searchParams.get('category'); // the URL uses 'category', we map to 'categorySlug'
+  if (categorySlug) {
+    // If it's a comma separated list in the legacy URL, take the first one (since backend expects a single string slug)
+    params.categorySlug = categorySlug.split(',')[0];
+  }
+  
+  // Price
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
+  if (minPrice !== null) params.minPrice = Number(minPrice);
+  if (maxPrice !== null) params.maxPrice = Number(maxPrice);
+  
+  // Availability
+  const inStock = searchParams.get('inStock');
+  if (inStock === 'true') {
+    params.availability = 'in_stock';
+  } else {
+    // Default or explicitly all
+    params.availability = 'all'; 
+  }
+  
+  // Sort
+  const sortBy = searchParams.get('sortBy');
+  if (sortBy) {
+    // Map legacy frontend sorts to backend SortOptions if needed, 
+    // assuming they match or doing simple conversion here.
+    // 'relevance' | 'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'featured'
+    const sortMap: Record<string, SortOption> = {
+      'newest': 'newest',
+      'price-low': 'price_asc',
+      'price-high': 'price_desc',
+      'rating': 'relevance', // We don't have rating sort on backend, fallback to relevance/featured
+      'bestsellers': 'featured',
+      'trending': 'featured'
+    };
+    params.sort = sortMap[sortBy] || (sortBy as SortOption);
+  } else {
+    params.sort = 'newest';
+  }
+
+  // Pagination
+  const page = searchParams.get('page');
+  if (page) params.page = Number(page);
+  else params.page = 1;
+
+  const limit = searchParams.get('limit');
+  if (limit) params.limit = Number(limit);
+  else params.limit = 12;
+  
+  return params;
 };
 
-export const parseQueryFilters = (search: string): ProductFilters => {
-  const params = new URLSearchParams(search);
-  
-  const filters: ProductFilters = {};
-  
-  // Handle search term
-  const searchTerm = params.get('search') || params.get('keyword');
-  if (searchTerm) filters.search = searchTerm;
-  
-  // Handle category - could be single or multiple
-  const category = params.get('category');
-  if (category) {
-    filters.category = category.includes(',') 
-      ? category.split(',') 
-      : category;
-  }
-  
-  // Handle price range
-  const minPrice = params.get('minPrice');
-  const maxPrice = params.get('maxPrice');
-  if (minPrice !== null && maxPrice !== null) {
-    filters.priceRange = [Number(minPrice), Number(maxPrice)];
-  }
-  
-
-  
-  // Handle rating range
-  const minRating = params.get('minRating');
-  const maxRating = params.get('maxRating');
-  if (minRating !== null && maxRating !== null) {
-    filters.ratingRange = [Number(minRating), Number(maxRating)];
-  }
-  
-  // Handle in stock flag
-  const inStock = params.get('inStock');
-  if (inStock !== null) {
-    filters.inStock = inStock === 'true';
-  }
-  
-  // Handle sort option
-  const sortBy = params.get('sortBy');
-  if (sortBy) filters.sortBy = sortBy;
-  
-  return filters;
-};
-
-export const useProducts = (initialFilters: ProductFilters = {}) => {
+export const useProducts = () => {
   const searchParams = useSearchParams();
-  const searchParamsString = searchParams ? searchParams.toString() : '';
   
-  const [filters, setFilters] = useState<ProductFilters>({
-    ...initialFilters,
-    ...parseQueryFilters(searchParamsString)
-  });
-  
-  // Update filters when URL changes
-  useEffect(() => {
-    const queryFilters = parseQueryFilters(searchParamsString);
-    setFilters(prev => ({
-      ...prev,
-      ...queryFilters
-    }));
-  }, [searchParamsString]);
+  // Derive completely from URL - no useState to drift
+  const queryParams = searchParams ? parseQueryFilters(searchParams) : { page: 1, limit: 12, availability: 'all' as AvailabilityFilter, sort: 'newest' as SortOption };
   
   return useQuery({
-    queryKey: ['products', filters],
-    queryFn: () => productService.getProducts(filters),
+    queryKey: ['products', queryParams],
+    queryFn: () => productService.discoverProducts(queryParams),
   });
 };
 
-export const useProductDetails = (id: string) => {
+export const useProductDetails = (slug: string) => {
   return useQuery({
-    queryKey: ['product', id],
-    queryFn: () => productService.getProductById(id),
-    enabled: !!id,
+    queryKey: ['product', slug],
+    queryFn: () => productService.getProductBySlug(slug),
+    enabled: !!slug,
   });
 };
 
-export const useTopProducts = () => {
+export const useFeaturedProducts = () => {
   return useQuery({
-    queryKey: ['topProducts'],
-    queryFn: () => productService.getTopProducts(),
+    queryKey: ['featuredProducts'],
+    queryFn: () => productService.getFeaturedProducts(),
+  });
+};
+
+// Also adding a hook for categories
+export const useCategories = (featuredOnly?: boolean) => {
+  return useQuery({
+    queryKey: ['categories', { featured: featuredOnly }],
+    queryFn: () => productService.getCategories(featuredOnly),
   });
 };

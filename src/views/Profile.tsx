@@ -25,107 +25,8 @@ import { Order } from '@/types/order';
 import { type Product } from '@/types/Product';
 import { useOrders } from '@/hooks/useOrders';
 
-// Mock data for addresses
-const initialAddresses: Address[] = [
-  {
-    id: '1',
-    street: '123 Main Street, Apt 4B',
-    city: 'New York',
-    state: 'NY',
-    zipCode: '10001',
-    country: 'United States',
-    isDefault: true,
-  },
-  {
-    id: '2',
-    street: '456 Oak Avenue',
-    city: 'San Francisco',
-    state: 'CA',
-    zipCode: '94103',
-    country: 'United States',
-    isDefault: false,
-  },
-];
-
-// Mock data for orders
-const initialOrders: Order[] = [
-  {
-    id: '1',
-    userId: '123',
-    orderNumber: 'WW10001',
-    items: [
-      {
-        id: '101',
-        productId: 'p1',
-        name: 'Wolly Pink Band',
-        image: 'https://i.pravatar.cc/150?img=1',
-        price: 19.99,
-        quantity: 2,
-        color: 'Pink',
-      },
-      {
-        id: '102',
-        productId: 'p2',
-        name: 'Wolly Blue Keychain',
-        image: 'https://i.pravatar.cc/150?img=2',
-        price: 9.99,
-        quantity: 1,
-      }
-    ],
-    shippingAddress: {
-      street: '123 Main Street, Apt 4B',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'United States',
-    },
-    paymentMethod: 'Credit Card',
-    itemsPrice: 49.97,
-    shippingPrice: 5.99,
-    taxPrice: 4.50,
-    totalPrice: 60.46,
-    status: 'delivered',
-    isPaid: true,
-    paidAt: '2023-05-15T12:00:00Z',
-    isDelivered: true,
-    deliveredAt: '2023-05-18T14:30:00Z',
-    createdAt: '2023-05-15T10:30:00Z',
-    updatedAt: '2023-05-18T14:30:00Z',
-  },
-  {
-    id: '2',
-    userId: '123',
-    orderNumber: 'WW10002',
-    items: [
-      {
-        id: '201',
-        productId: 'p3',
-        name: 'Wolly Custom Gift Set',
-        image: 'https://i.pravatar.cc/150?img=3',
-        price: 49.99,
-        quantity: 1,
-      }
-    ],
-    shippingAddress: {
-      street: '123 Main Street, Apt 4B',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'United States',
-    },
-    paymentMethod: 'PayPal',
-    itemsPrice: 49.99,
-    shippingPrice: 5.99,
-    taxPrice: 4.50,
-    totalPrice: 60.48,
-    status: 'shipped',
-    isPaid: true,
-    paidAt: '2023-06-10T09:15:00Z',
-    isDelivered: false,
-    createdAt: '2023-06-10T08:45:00Z',
-    updatedAt: '2023-06-11T10:20:00Z',
-  },
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { authService } from '@/services/auth.service';
 
 const Profile = () => {
   const router = useRouter();
@@ -133,8 +34,8 @@ const Profile = () => {
   const { items, removeItem: removeWishlistItem } = useWishlist();
   const { toast } = useToast();
   
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -143,20 +44,18 @@ const Profile = () => {
   });
   
   // State for addresses
-  const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
+  const { data: addresses = [], isLoading: isAddressesLoading } = useQuery({
+    queryKey: ['addresses'],
+    queryFn: () => authService.getAddresses(),
+    enabled: isAuthenticated,
+  });
+
   const [isAddressFormOpen, setIsAddressFormOpen] = useState(false);
   const [currentAddress, setCurrentAddress] = useState<Address | undefined>(undefined);
   
   // State for orders
-  const { data: userOrders = [], isLoading: isOrdersLoading } = useOrders();
-  const orders = userOrders.length > 0 ? userOrders : initialOrders;
-  
-  // State for password change
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  const { data: orderData, isLoading: isOrdersLoading } = useOrders();
+  const orders = orderData?.orders || [];
 
   // Redirect if not logged in
   useEffect(() => {
@@ -168,14 +67,6 @@ const Profile = () => {
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordForm(prev => ({
       ...prev,
       [name]: value
     }));
@@ -210,45 +101,41 @@ const Profile = () => {
     }
   };
 
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Passwords do not match",
-        description: "Your new password and confirmation password must match",
-      });
-      return;
+  // Address mutations
+  const addAddressMutation = useMutation({
+    mutationFn: (data: Omit<Address, '_id'>) => authService.addAddress(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      toast({ title: 'Address added', description: 'Your new address has been added successfully' });
+      closeAddressForm();
+    },
+    onError: (error: any) => {
+      toast({ variant: 'destructive', title: 'Failed to add address', description: error.message });
     }
-    
-    setIsSaving(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Password updated",
-        description: "Your password has been successfully changed",
-      });
-      
-      // Reset password form
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Update failed",
-        description: "There was a problem updating your password",
-      });
-    } finally {
-      setIsSaving(false);
+  });
+
+  const updateAddressMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Omit<Address, '_id'> }) => authService.updateAddress(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      toast({ title: 'Address updated', description: 'Your address has been successfully updated' });
+      closeAddressForm();
+    },
+    onError: (error: any) => {
+      toast({ variant: 'destructive', title: 'Failed to update address', description: error.message });
     }
-  };
+  });
+
+  const deleteAddressMutation = useMutation({
+    mutationFn: (id: string) => authService.deleteAddress(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      toast({ title: 'Address removed', description: 'Your address has been successfully removed' });
+    },
+    onError: (error: any) => {
+      toast({ variant: 'destructive', title: 'Failed to delete address', description: error.message });
+    }
+  });
 
   const handleAddToCart = (product: Product) => {
     toast({
@@ -285,58 +172,24 @@ const Profile = () => {
     setIsAddressFormOpen(false);
   };
 
-  const handleSaveAddress = (addressData: Omit<Address, 'id'>) => {
+  const handleSaveAddress = (addressData: Omit<Address, '_id'>) => {
     if (currentAddress) {
-      // Update existing address
-      setAddresses(addresses.map(addr => 
-        addr.id === currentAddress.id ? { ...addressData, id: currentAddress.id } : addr
-      ));
-      
-      // If setting a new default, update other addresses
-      if (addressData.isDefault) {
-        setAddresses(prev => prev.map(addr => 
-          addr.id !== currentAddress.id ? { ...addr, isDefault: false } : addr
-        ));
-      }
-      
-      toast({
-        title: "Address updated",
-        description: "Your address has been successfully updated",
-      });
+      updateAddressMutation.mutate({ id: currentAddress._id, data: addressData });
     } else {
-      // Add new address with a generated ID
-      const newAddress = { ...addressData, id: Date.now().toString() };
-      
-      // If setting as default, update other addresses
-      if (newAddress.isDefault) {
-        setAddresses(prev => prev.map(addr => ({ ...addr, isDefault: false })));
-      }
-      
-      setAddresses([...addresses, newAddress]);
-      
-      toast({
-        title: "Address added",
-        description: "Your new address has been added successfully",
-      });
+      addAddressMutation.mutate(addressData);
     }
-    
-    closeAddressForm();
   };
 
   const handleDeleteAddress = (id: string) => {
-    setAddresses(addresses.filter(addr => addr.id !== id));
-    
-    toast({
-      title: "Address removed",
-      description: "Your address has been successfully removed",
-    });
+    deleteAddressMutation.mutate(id);
   };
 
   const handleSetDefaultAddress = (id: string) => {
-    setAddresses(addresses.map(addr => ({
-      ...addr,
-      isDefault: addr.id === id,
-    })));
+    const address = addresses.find(a => a._id === id);
+    if (address) {
+      const { _id, ...data } = address;
+      updateAddressMutation.mutate({ id: _id, data: { ...data, isDefault: true } });
+    }
   };
   
   const handleViewOrderDetails = (orderId: string) => {
@@ -543,7 +396,7 @@ const Profile = () => {
                   <div className="p-6">
                     <h2 className="text-xl font-bold mb-6">My Wishlist</h2>
                     
-                    {isLoading ? (
+                    {isOrdersLoading ? (
                       <div className="flex justify-center py-12">
                         <Loader2 className="animate-spin h-8 w-8 text-wolly-magenta" />
                       </div>
@@ -586,15 +439,15 @@ const Profile = () => {
                       </Button>
                     </div>
                     
-                    {isLoading ? (
+                    {isAddressesLoading ? (
                       <div className="flex justify-center py-12">
                         <Loader2 className="animate-spin h-8 w-8 text-wolly-magenta" />
                       </div>
                     ) : addresses.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {addresses.map(address => (
+                        {addresses.map((address: Address) => (
                           <AddressCard
-                            key={address.id}
+                            key={address._id}
                             address={address}
                             onEdit={openAddressForm}
                             onDelete={handleDeleteAddress}
@@ -630,7 +483,7 @@ const Profile = () => {
                           onSubmit={handleSaveAddress}
                           onCancel={closeAddressForm}
                           initialData={currentAddress}
-                          isSubmitting={isSaving}
+                          isSubmitting={addAddressMutation.isPending || updateAddressMutation.isPending}
                         />
                       </DialogContent>
                     </Dialog>
@@ -701,58 +554,16 @@ const Profile = () => {
                     <div className="p-6">
                       <h2 className="text-xl font-bold mb-6">Security Settings</h2>
                       
-                      <form onSubmit={handleUpdatePassword} className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Current Password</Label>
-                            <Input
-                              id="currentPassword"
-                              name="currentPassword"
-                              type="password"
-                              value={passwordForm.currentPassword}
-                              onChange={handlePasswordChange}
-                              required
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="newPassword">New Password</Label>
-                            <Input
-                              id="newPassword"
-                              name="newPassword"
-                              type="password"
-                              value={passwordForm.newPassword}
-                              onChange={handlePasswordChange}
-                              required
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              Password must be at least 8 characters long and include a mix of letters, numbers, and symbols.
-                            </p>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                            <Input
-                              id="confirmPassword"
-                              name="confirmPassword"
-                              type="password"
-                              value={passwordForm.confirmPassword}
-                              onChange={handlePasswordChange}
-                              required
-                            />
+                      <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4">
+                        <div className="flex items-start">
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium">Password updates currently disabled</h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                              <p>Password change functionality is not currently available in this environment.</p>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex justify-end pt-4">
-                          <Button
-                            type="submit"
-                            className="bg-wolly-magenta hover:bg-wolly-magenta/90"
-                            disabled={isSaving}
-                          >
-                            {isSaving ? 'Updating...' : 'Update Password'}
-                          </Button>
-                        </div>
-                      </form>
+                      </div>
                     </div>
                   </div>
                 </div>

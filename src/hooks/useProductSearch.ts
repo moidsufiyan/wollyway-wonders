@@ -1,44 +1,29 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useProducts } from '@/hooks/useProducts';
-import { type Product } from '@/types/Product';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { productService } from '@/services/product.service';
+import { mapProductCardToUI } from '@/types/Product';
 
 export const useProductSearch = (initialKeyword: string = '') => {
   const [keyword, setKeyword] = useState(initialKeyword);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const { data: productData, isLoading } = useProducts();
-  const products = productData?.products;
 
-  useEffect(() => {
-    const productsList = products || [];
-    if (!keyword.trim() || !productsList.length) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
+  // We hit the real backend discovery API using the 'q' parameter.
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ['products', 'search', keyword],
+    queryFn: () => productService.discoverProducts({ q: keyword, limit: 12, page: 1, availability: 'all', sort: 'relevance' }),
+    enabled: keyword.trim().length > 0,
+    staleTime: 1000 * 60 * 5, // Cache for 5 mins
+  });
 
-    setIsSearching(true);
-    const lowerKeyword = keyword.toLowerCase();
-    
-    // Simple search implementation - can be expanded for more sophisticated searching
-    const results = productsList.filter(product => 
-      product.name.toLowerCase().includes(lowerKeyword) || 
-      product.description?.toLowerCase().includes(lowerKeyword) ||
-      product.category.toLowerCase().includes(lowerKeyword) ||
-      product.tags.some(tag => tag.toLowerCase().includes(lowerKeyword))
-    );
-    
-    setSearchResults(results);
-    setIsSearching(false);
-  }, [keyword, products]);
+  // Map backend DTOs to frontend UI view models
+  const searchResults = (data?.products || []).map(mapProductCardToUI);
 
   return {
     keyword,
     setKeyword,
     searchResults,
-    isSearching,
+    isSearching: isFetching,
     isLoading,
   };
 };

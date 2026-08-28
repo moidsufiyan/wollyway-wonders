@@ -7,12 +7,16 @@ import { useToast } from '@/hooks/use-toast';
 import { MapPin, Heart, Edit2, Trash2 } from 'lucide-react';
 
 export interface Address {
-  id: string;
-  street: string;
+  _id: string;
+  label: 'Home' | 'Work' | 'Office' | 'Other';
+  customLabel?: string;
+  streetAddress: string;
+  apartmentSuite?: string;
   city: string;
   state: string;
-  zipCode: string;
+  postalCode: string;
   country: string;
+  phone: string;
   isDefault: boolean;
 }
 
@@ -33,7 +37,7 @@ const AddressCard: React.FC<AddressCardProps> = ({
 
   const handleSetDefault = () => {
     if (onSetDefault) {
-      onSetDefault(address.id);
+      onSetDefault(address._id);
       toast({
         title: "Default address updated",
         description: "Your default shipping address has been updated",
@@ -43,7 +47,7 @@ const AddressCard: React.FC<AddressCardProps> = ({
   
   const handleDelete = () => {
     if (onDelete) {
-      onDelete(address.id);
+      onDelete(address._id);
     }
   };
   
@@ -65,10 +69,13 @@ const AddressCard: React.FC<AddressCardProps> = ({
         <div className="flex items-start">
           <MapPin className="text-muted-foreground shrink-0 mt-1 mr-2" size={18} />
           <div>
-            <p className="font-medium">Shipping Address</p>
-            <p className="text-sm">{address.street}</p>
-            <p className="text-sm">{address.city}, {address.state} {address.zipCode}</p>
+            <p className="font-medium flex items-center gap-2">
+              {address.label} {address.customLabel && <span className="text-xs text-muted-foreground">({address.customLabel})</span>}
+            </p>
+            <p className="text-sm">{address.streetAddress}{address.apartmentSuite ? `, ${address.apartmentSuite}` : ''}</p>
+            <p className="text-sm">{address.city}, {address.state} {address.postalCode}</p>
             <p className="text-sm">{address.country}</p>
+            <p className="text-sm text-muted-foreground mt-1">{address.phone}</p>
           </div>
         </div>
       </CardContent>

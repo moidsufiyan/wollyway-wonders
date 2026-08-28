@@ -9,38 +9,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { OrderItem, Order } from '@/types/order';
-import { orderService } from '@/services/api';
+import { useOrder } from '@/hooks/useOrders';
 
 const CheckoutSuccess = () => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
-
-  const [order, setOrder] = React.useState<Order | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const { data: order, isLoading, error } = useOrder(orderId || '');
 
   React.useEffect(() => {
     if (!orderId) {
       router.push('/');
-      return;
+    } else if (error) {
+      console.error('Error fetching order', error);
+      router.push('/');
     }
-
-    const fetchOrder = async () => {
-      try {
-        const orderData = await orderService.getOrderById(orderId);
-        setOrder(orderData);
-      } catch (err) {
-        console.error('Error fetching order', err);
-        router.push('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOrder();
-  }, [orderId, router]);
+  }, [orderId, error, router]);
 
   if (isLoading) {
     return (
@@ -104,7 +89,7 @@ const CheckoutSuccess = () => {
                   <Truck className="w-4 h-4" />
                   <span>Estimated Delivery:</span>
                 </span>
-                <span className="font-medium">{order.estimatedDelivery}</span>
+                <span className="font-medium">3-5 Business Days</span>
               </div>
             </CardContent>
           </Card>
@@ -116,10 +101,10 @@ const CheckoutSuccess = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {order.items.map((item: OrderItem, index: number) => (
+                {order.items.map((item, index: number) => (
                   <div key={index} className="flex items-center space-x-4">
                     <img
-                      src={item.image}
+                      src={item.image || '/placeholder.png'}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded"
                     />
@@ -141,20 +126,20 @@ const CheckoutSuccess = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>₹{Number(order.itemsPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{order.financials.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>₹{Number(order.shippingPrice ?? 0).toFixed(2)}</span>
+                  <span>{order.financials.shippingFee === 0 ? 'Free' : `₹${order.financials.shippingFee.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>₹{Number(order.taxPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{order.financials.taxTotal.toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>₹{Number(order.totalPrice ?? 0).toFixed(2)}</span>
+                  <span>₹{order.financials.orderTotal.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -168,9 +153,9 @@ const CheckoutSuccess = () => {
             <CardContent>
               <div className="text-sm">
                 <p className="font-medium">Customer</p>
-                <p>{order.shippingAddress.street}</p>
+                <p>{order.shippingAddress.streetAddress}{order.shippingAddress.apartmentSuite ? `, ${order.shippingAddress.apartmentSuite}` : ''}</p>
                 <p>
-                  {order.shippingAddress.city}, {order.shippingAddress.zipCode}
+                  {order.shippingAddress.city}, {order.shippingAddress.postalCode}
                 </p>
                 <p>{order.shippingAddress.country}</p>
               </div>

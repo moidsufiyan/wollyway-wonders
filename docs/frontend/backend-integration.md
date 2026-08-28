@@ -86,18 +86,11 @@ All endpoints require `credentials: 'include'` on the frontend.
 
 ---
 
-## Mock Domains (Still Active — Not Integrated Yet)
+## Mock Domains (Integration Complete)
 
-The following domains remain mock-backed and will be integrated in future phases:
+All frontend domains (Auth, Products, Cart, Wishlist, Checkout, Orders) have now been successfully migrated to consume live backend APIs via `TanStack Query` and `apiClient`.
 
-| Domain | Location | Phase |
-|--------|----------|-------|
-| Products | `src/services/api.ts` | 5.2 |
-| Cart | `src/contexts/CartContext.tsx` | 5.3 |
-| Wishlist | `src/contexts/WishlistContext.tsx` | 5.3 |
-| Orders | `src/hooks/useOrders.ts` | 5.5 |
-
-Do NOT delete `src/services/api.ts` until Products, Cart, Wishlist, and Orders are migrated.
+Legacy mock services such as `src/services/api.ts` have been fully purged from the codebase.
 
 ---
 

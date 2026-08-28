@@ -12,21 +12,21 @@ const collections = [
     name: "Hand Bands",
     description: "Colorful knotted bands for your wrist",
     image: "https://images.unsplash.com/photo-1603974372039-adc49044b6bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    link: "/shop?category=Bands",
+    link: "/shop?category=bands",
   },
   {
     id: 2,
     name: "Keychains",
     description: "Unique keychains for your everyday carry",
     image: "https://images.unsplash.com/photo-1541778956252-457ec49a7e7d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    link: "/shop?category=Keychains",
+    link: "/shop?category=keychains",
   },
   {
     id: 3,
     name: "Accessories",
     description: "Handcrafted accessories for any occasion",
     image: "https://images.unsplash.com/photo-1576053139778-7e32f2ae3cfd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    link: "/shop?category=Accessories",
+    link: "/shop?category=accessories",
   }
 ];
 

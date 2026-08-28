@@ -144,4 +144,36 @@ export const authService = {
     const response = await apiClient.patch<ProfileResponse>('/users/profile', data);
     return response.data;
   },
+
+  /**
+   * Fetch all saved addresses for the authenticated user.
+   */
+  async getAddresses(): Promise<any[]> {
+    const response = await apiClient.get<{ success: boolean; data: any[] }>('/users/addresses');
+    return response.data;
+  },
+
+  /**
+   * Add a new address to the user's saved list.
+   */
+  async addAddress(address: any): Promise<any[]> {
+    const response = await apiClient.post<{ success: boolean; data: any[] }>('/users/addresses', address);
+    return response.data;
+  },
+
+  /**
+   * Update an existing address.
+   */
+  async updateAddress(id: string, address: any): Promise<any[]> {
+    const response = await apiClient.put<{ success: boolean; data: any[] }>(`/users/addresses/${id}`, address);
+    return response.data;
+  },
+
+  /**
+   * Delete an existing address.
+   */
+  async deleteAddress(id: string): Promise<any[]> {
+    const response = await apiClient.delete<{ success: boolean; data: any[] }>(`/users/addresses/${id}`);
+    return response.data;
+  },
 };

@@ -22,3 +22,10 @@
 - [x] Order Domain (ACID transaction commit, immutable snapshots, fulfillment state machine, IDOR protection, idempotent restocking)
 - [x] Phase 4.5A — Payment Integration: Razorpay (HMAC verified capture webhooks, intent reuse, multi-factor reconciliation)
 - [ ] Phase 4.5B — Payment Integration: Stripe (Deferred plugin)
+
+### Phase 5: UI & Integration Migration
+- [x] Phase 5.1: Auth Integration & JWT Token Sync
+- [x] Phase 5.2: Product Discovery & Catalog Integration
+- [x] Phase 5.3: Cart & Wishlist Integration
+- [x] Phase 5.4: Checkout & Orders Migration
+- [x] Phase 5.5: Final User Profile & Orders Integration

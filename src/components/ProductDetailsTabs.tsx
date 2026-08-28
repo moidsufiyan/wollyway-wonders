@@ -117,10 +117,12 @@ const ProductDetailsTabs: React.FC<ProductDetailsTabsProps> = ({ product }) => {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold">Customer Reviews</h3>
-            <span className="flex items-center bg-wolly-pink/10 text-wolly-magenta px-3 py-1 rounded-full">
-              <Star className="fill-wolly-magenta text-wolly-magenta mr-1 h-4 w-4" />
-              {product.rating} / 5
-            </span>
+            {product.rating !== undefined && (
+              <span className="flex items-center bg-wolly-pink/10 text-wolly-magenta px-3 py-1 rounded-full">
+                <Star className="fill-wolly-magenta text-wolly-magenta mr-1 h-4 w-4" />
+                {product.rating} / 5
+              </span>
+            )}
           </div>
 
           {reviews.length > 0 ? (

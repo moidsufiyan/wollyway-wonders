@@ -1,43 +1,17 @@
-"use client";
+import { useQuery } from '@tanstack/react-query';
+import { orderService } from '@/services/order.service';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orderService } from '@/services/api';
-import { useToast } from '@/hooks/use-toast';
-
-export const useOrders = () => {
+export const useOrders = (page = 1, limit = 10) => {
   return useQuery({
-    queryKey: ['orders'],
-    queryFn: () => orderService.getMyOrders(),
+    queryKey: ['orders', page, limit],
+    queryFn: () => orderService.getMyOrders(page, limit),
   });
 };
 
-export const useOrderDetails = (id: string) => {
+export const useOrder = (id: string) => {
   return useQuery({
     queryKey: ['order', id],
     queryFn: () => orderService.getOrderById(id),
     enabled: !!id,
-  });
-};
-
-export const useCreateOrder = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: orderService.createOrder,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast({
-        title: "Order placed successfully",
-        description: "Your order has been placed and is being processed.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to place order",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    }
   });
 };

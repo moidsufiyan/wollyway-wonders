@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/contexts/CartContext';
+import Script from 'next/script';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,272 +11,399 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { useCreateOrder } from '@/hooks/useOrders';
+import { authService } from '@/services/auth.service';
+import { checkoutService, CheckoutSummaryDTO } from '@/services/checkout.service';
+import { paymentService } from '@/services/payment.service';
 
-interface CheckoutForm {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  zipCode: string;
-  country: string;
-}
+type CheckoutState = 
+  | 'INITIALIZING' 
+  | 'ADDRESS_REQUIRED' 
+  | 'READY' 
+  | 'CREATING_INTENT' 
+  | 'OPENING_GATEWAY' 
+  | 'PAYMENT_PROCESSING' 
+  | 'CONFIRMING_ORDER' 
+  | 'EXPIRED' 
+  | 'FAILURE';
 
-const Checkout = () => {
+export default function Checkout() {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCart();
   const { toast } = useToast();
-  const createOrderMutation = useCreateOrder();
-  const isSubmitting = createOrderMutation.isPending;
   
-  const [form, setForm] = useState<CheckoutForm>({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
+  const [checkoutState, setCheckoutState] = useState<CheckoutState>('INITIALIZING');
+  const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummaryDTO | null>(null);
+  const [defaultAddress, setDefaultAddress] = useState<any | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  
+  // Address form state
+  const [form, setForm] = useState({
+    label: 'Home',
+    streetAddress: '',
     city: '',
-    zipCode: '',
-    country: 'United States'
+    state: '',
+    postalCode: '',
+    country: 'United States',
+    phone: '',
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingCountRef = useRef(0);
+
+  useEffect(() => {
+    initCheckoutFlow();
+    return () => {
+      if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (checkoutSummary?.reservationExpiresAt) {
+      const interval = setInterval(() => {
+        const remaining = new Date(checkoutSummary.reservationExpiresAt).getTime() - Date.now();
+        if (remaining <= 0) {
+          setTimeLeft(0);
+          setCheckoutState('EXPIRED');
+          clearInterval(interval);
+        } else {
+          setTimeLeft(Math.floor(remaining / 1000));
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [checkoutSummary?.reservationExpiresAt]);
+
+  const initCheckoutFlow = async () => {
+    try {
+      // 1. Fetch Addresses
+      const addresses = await authService.getAddresses();
+      const defaultAddr = addresses.find(a => a.isDefault) || addresses[0];
+      
+      if (!defaultAddr) {
+        setCheckoutState('ADDRESS_REQUIRED');
+        return;
+      }
+      
+      setDefaultAddress(defaultAddr);
+      await loadCheckoutSession();
+    } catch (error: any) {
+      toast({ title: 'Error initializing checkout', description: error.message, variant: 'destructive' });
+      setCheckoutState('FAILURE');
+    }
+  };
+
+  const loadCheckoutSession = async () => {
+    try {
+      let summary: CheckoutSummaryDTO;
+      try {
+        summary = await checkoutService.getCurrentCheckout();
+      } catch (err: any) {
+        if (err.message?.includes('No active checkout session found')) {
+          summary = await checkoutService.startCheckout();
+        } else {
+          throw err;
+        }
+      }
+      setCheckoutSummary(summary);
+      setCheckoutState('READY');
+    } catch (error: any) {
+      if (error.message?.includes('empty cart')) {
+        toast({ title: 'Cart empty', description: 'Your cart is empty', variant: 'destructive' });
+        router.push('/cart');
+      } else {
+        toast({ title: 'Checkout Error', description: error.message, variant: 'destructive' });
+        setCheckoutState('FAILURE');
+      }
+    }
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const validateForm = () => {
-    return Object.entries(form).every(([key, value]) => {
-      if (key === 'phone') return true; // Phone is optional
-      return value.trim() !== '';
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      toast({
-        title: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
+    try {
+      setCheckoutState('INITIALIZING');
+      await authService.addAddress(form);
+      // Re-initialize flow to pick up the new address
+      await initCheckoutFlow();
+    } catch (error: any) {
+      toast({ title: 'Failed to add address', description: error.message, variant: 'destructive' });
+      setCheckoutState('ADDRESS_REQUIRED');
     }
-
-    if (items.length === 0) {
-      toast({
-        title: "Your cart is empty",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const shipping = 9.99;
-    const tax = subtotal * 0.08;
-    const total = subtotal + shipping + tax;
-
-    const orderData = {
-      items: items.map(item => ({
-        id: String(item.product.id),
-        productId: String(item.product.id),
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.image
-      })),
-      shippingAddress: {
-        street: form.address,
-        city: form.city,
-        state: '',
-        zipCode: form.zipCode,
-        country: form.country,
-      },
-      paymentMethod: 'Credit Card',
-      itemsPrice: subtotal,
-      shippingPrice: shipping,
-      taxPrice: tax,
-      totalPrice: total,
-    };
-
-    createOrderMutation.mutate(orderData, {
-      onSuccess: (order) => {
-        clearCart();
-        router.push(`/checkout-success?orderId=${order.id}`);
-      }
-    });
   };
 
-  const shipping = 9.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const handlePayment = async () => {
+    if (!checkoutSummary) return;
+    
+    try {
+      setCheckoutState('CREATING_INTENT');
+      const intent = await paymentService.createPaymentIntent('razorpay');
+      
+      setCheckoutState('OPENING_GATEWAY');
+      
+      const options = {
+        key: intent.keyId,
+        amount: intent.amount * 100, // Razorpay expects paise
+        currency: intent.currency,
+        name: 'WollyWay',
+        description: 'Order Payment',
+        order_id: intent.clientReference,
+        handler: function (response: any) {
+          // Browser callback -> start backend polling
+          startPollingReconciliation();
+        },
+        prefill: {
+          name: '', // could pull from profile
+          email: '',
+          contact: ''
+        },
+        theme: {
+          color: '#000000'
+        },
+        modal: {
+          ondismiss: function() {
+            setCheckoutState('READY');
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        toast({ title: 'Payment Failed', description: response.error.description, variant: 'destructive' });
+        setCheckoutState('READY');
+      });
+      
+      rzp.open();
+      setCheckoutState('PAYMENT_PROCESSING');
+      
+    } catch (error: any) {
+      toast({ title: 'Payment Initialization Failed', description: error.message, variant: 'destructive' });
+      setCheckoutState('READY');
+    }
+  };
+
+  const startPollingReconciliation = () => {
+    setCheckoutState('CONFIRMING_ORDER');
+    pollingCountRef.current = 0;
+    
+    pollingTimerRef.current = setInterval(async () => {
+      pollingCountRef.current += 1;
+      
+      // Hard timeout at 60 seconds (assuming 3s interval -> 20 attempts)
+      if (pollingCountRef.current > 20) {
+        if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+        toast({ 
+          title: 'Confirmation Delayed', 
+          description: 'Payment received, but order confirmation is delayed. Please check your order history in a few minutes.' 
+        });
+        router.push('/orders');
+        return;
+      }
+      
+      if (!checkoutSummary?.sessionId) return;
+      
+      try {
+        const statusData = await checkoutService.getCheckoutStatus(checkoutSummary.sessionId);
+        
+        if (statusData.status === 'COMPLETED' && statusData.orderId) {
+          if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+          router.push(`/checkout-success?orderId=${statusData.orderId}`);
+        } else if (statusData.status === 'EXPIRED') {
+          if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+          toast({ title: 'Session Expired', description: 'Your checkout session expired.', variant: 'destructive' });
+          setCheckoutState('EXPIRED');
+        } else if (statusData.status === 'CANCELLED') {
+          if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+          toast({ title: 'Session Cancelled', description: 'Your checkout session was cancelled.', variant: 'destructive' });
+          setCheckoutState('FAILURE');
+        }
+        // If still PAYMENT_PENDING, keep polling
+      } catch (err) {
+        // Ignore network errors during polling and try again
+      }
+    }, 3000);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold mb-8">Checkout</h1>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Checkout Form */}
-            <Card>
+          {checkoutState === 'INITIALIZING' && (
+            <div className="text-center py-12">Loading checkout session...</div>
+          )}
+
+          {checkoutState === 'EXPIRED' && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold mb-4">Checkout Session Expired</h2>
+              <p className="mb-4">Your reservation has expired. Please return to the cart to try again.</p>
+              <Button onClick={() => router.push('/cart')}>Return to Cart</Button>
+            </div>
+          )}
+
+          {checkoutState === 'FAILURE' && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold mb-4 text-destructive">Checkout Failed</h2>
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+            </div>
+          )}
+
+          {checkoutState === 'CONFIRMING_ORDER' && (
+            <div className="text-center py-12 space-y-4">
+              <h2 className="text-2xl font-semibold">Payment received. Confirming your order...</h2>
+              <p className="text-muted-foreground">Please wait while we verify the payment with our servers. Do not close this window.</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            </div>
+          )}
+
+          {checkoutState === 'ADDRESS_REQUIRED' && (
+            <Card className="max-w-xl mx-auto">
               <CardHeader>
-                <CardTitle>Shipping Information</CardTitle>
+                <CardTitle>Add Shipping Address</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleAddressSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={form.name}
-                      onChange={handleInputChange}
-                      required
-                    />
+                    <Label htmlFor="streetAddress">Street Address *</Label>
+                    <Input id="streetAddress" name="streetAddress" value={form.streetAddress} onChange={handleAddressChange} required />
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="address">Address *</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      value={form.address}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="city">City *</Label>
-                      <Input
-                        id="city"
-                        name="city"
-                        value={form.city}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Input id="city" name="city" value={form.city} onChange={handleAddressChange} required />
                     </div>
-                    
                     <div>
-                      <Label htmlFor="zipCode">Zip Code *</Label>
-                      <Input
-                        id="zipCode"
-                        name="zipCode"
-                        value={form.zipCode}
-                        onChange={handleInputChange}
-                        required
-                      />
+                      <Label htmlFor="state">State *</Label>
+                      <Input id="state" name="state" value={form.state} onChange={handleAddressChange} required />
                     </div>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="country">Country *</Label>
-                    <Input
-                      id="country"
-                      name="country"
-                      value={form.country}
-                      onChange={handleInputChange}
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="postalCode">Zip/Postal Code *</Label>
+                      <Input id="postalCode" name="postalCode" value={form.postalCode} onChange={handleAddressChange} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone *</Label>
+                      <Input id="phone" name="phone" value={form.phone} onChange={handleAddressChange} required />
+                    </div>
                   </div>
+                  <Button type="submit" className="w-full">Save Address & Continue</Button>
                 </form>
               </CardContent>
             </Card>
+          )}
 
-            {/* Order Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.product.id} className="flex items-center space-x-4">
-                    <img
-                      src={item.product.image}
-                      alt={item.product.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.product.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Qty: {item.quantity}
+          {(checkoutState === 'READY' || checkoutState === 'CREATING_INTENT' || checkoutState === 'OPENING_GATEWAY' || checkoutState === 'PAYMENT_PROCESSING') && checkoutSummary && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Shipping Information */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Shipping Address</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {defaultAddress ? (
+                      <div className="space-y-1">
+                        <p className="font-medium">{defaultAddress.label}</p>
+                        <p>{defaultAddress.streetAddress}</p>
+                        <p>{defaultAddress.city}, {defaultAddress.state} {defaultAddress.postalCode}</p>
+                        <p>{defaultAddress.country}</p>
+                        <p className="text-muted-foreground mt-2">Phone: {defaultAddress.phone}</p>
+                      </div>
+                    ) : (
+                      <p>Loading address...</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {timeLeft > 0 && (
+                  <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+                    <CardContent className="pt-6">
+                      <p className="text-center font-medium text-orange-600 dark:text-orange-400">
+                        Items reserved for {formatTime(timeLeft)}
                       </p>
-                    </div>
-                    <p className="font-medium">
-                      ₹{(item.product.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
 
-                <Separator />
+              {/* Order Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="max-h-[300px] overflow-y-auto space-y-4 pr-2">
+                    {checkoutSummary.items.map((item) => (
+                      <div key={item.productId} className="flex items-center space-x-4">
+                        <img
+                          src={item.image || '/placeholder.png'}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-medium">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>₹{shipping.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax</span>
-                    <span>₹{tax.toFixed(2)}</span>
-                  </div>
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>₹{total.toFixed(2)}</span>
-                  </div>
-                </div>
 
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || items.length === 0}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isSubmitting ? 'Processing...' : 'Place Order (Demo)'}
-                </Button>
-                
-                <p className="text-xs text-muted-foreground text-center">
-                  This is a demo checkout. No actual payment will be processed.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>₹{checkoutSummary.totals.subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Shipping</span>
+                      <span>{checkoutSummary.totals.shippingFee === 0 ? 'Free' : `₹${checkoutSummary.totals.shippingFee.toFixed(2)}`}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tax (8%)</span>
+                      <span>₹{checkoutSummary.totals.taxTotal.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span>₹{checkoutSummary.totals.orderTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handlePayment}
+                    disabled={checkoutState !== 'READY'}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {checkoutState === 'READY' ? 'Pay Now' :
+                     checkoutState === 'CREATING_INTENT' ? 'Initializing...' :
+                     checkoutState === 'OPENING_GATEWAY' ? 'Opening Payment...' :
+                     checkoutState === 'PAYMENT_PROCESSING' ? 'Processing...' : 'Please Wait...'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </main>
       
       <Footer />
     </div>
   );
-};
-
-export default Checkout;
+}

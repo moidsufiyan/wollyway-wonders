@@ -9,6 +9,7 @@ import { User } from '../models/user.model.js';
 import { ICheckoutSession } from '../models/checkout-session.model.js';
 import { AppError } from '../utils/AppError.js';
 import { HTTP_STATUS } from '../constants/index.js';
+import { orderRepository } from '../repositories/order.repository.js';
 import {
   CheckoutSummaryDTO,
   ValidationIssue,
@@ -491,6 +492,37 @@ export class CheckoutService {
     for (const session of stale) {
       await this.expireSession(session._id as Types.ObjectId);
     }
+  }
+
+  /**
+   * Retrieves safe status of a session, and related order details if completed.
+   */
+  async getSessionStatus(
+    userId: Types.ObjectId,
+    sessionId: Types.ObjectId
+  ): Promise<{ status: string; orderId?: string; orderNumber?: string }> {
+    const session = await checkoutRepository.findById(sessionId);
+    
+    if (!session) {
+      throw new AppError('Checkout session not found', HTTP_STATUS.NOT_FOUND);
+    }
+    
+    if (session.userId.toString() !== userId.toString()) {
+      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (session.status === 'COMPLETED') {
+      const order = await orderRepository.findByCheckoutSessionId(sessionId);
+      if (order) {
+        return {
+          status: session.status,
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+        };
+      }
+    }
+
+    return { status: session.status };
   }
 
   private mapToDTO(

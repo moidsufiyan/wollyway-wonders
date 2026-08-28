@@ -8,7 +8,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Product } from '@/types/Product';
+import { mapProductDetailToUI, Product } from '@/types/Product';
 import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductQA from '@/components/ProductQA';
 import ReferralProgram from '@/components/ReferralProgram';
@@ -18,30 +18,27 @@ import FeatureCards from '@/components/product/FeatureCards';
 import RelatedProducts from '@/components/product/RelatedProducts';
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb';
 import PromoBanner from '@/components/product/PromoBanner';
+import { useProductDetails } from '@/hooks/useProducts';
+
+// TODO: Replace with real related products fetching later
 import ProductDataService from '@/services/ProductDataService';
 
 const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const { id } = useParams<{ id: string }>(); // 'id' from route param is actually the slug 
+  const { data: productDetailDTO, isLoading: loading, error } = useProductDetails(id);
+  
   const [showReferral, setShowReferral] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
+  // Map to UI model
+  const product = productDetailDTO ? mapProductDetailToUI(productDetailDTO) : null;
   
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (id) {
-        const foundProduct = ProductDataService.getProductById(id);
-        setProduct(foundProduct);
-        
-        if (foundProduct) {
-          setRelatedProducts(ProductDataService.getRelatedProducts(foundProduct.id));
-        }
-      }
-      setLoading(false);
-    }, 800);
-    
-    return () => clearTimeout(timer);
-  }, [id]);
+    // Keep mock related products temporarily until Phase 5.3 or whenever related products are supported
+    if (product) {
+      setRelatedProducts(ProductDataService.getRelatedProducts(product.id));
+    }
+  }, [product]);
   
   if (loading) {
     return (
@@ -64,7 +61,7 @@ const ProductDetail = () => {
     );
   }
   
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="min-h-screen">
         <Navbar />

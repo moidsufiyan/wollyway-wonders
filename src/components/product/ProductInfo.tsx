@@ -6,11 +6,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Product } from '@/types/Product';
-import { useWishlist } from '@/contexts/WishlistContext';
+import { useWishlist, useWishlistCheck } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import SocialShareButtons from '@/components/SocialShareButtons';
 import LoyaltyPoints from '@/components/LoyaltyPoints';
+import { formatMoney } from '@/utils/currency';
 
 interface ProductInfoProps {
   product: Product;
@@ -24,11 +25,18 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
   );
   
   const { addItem } = useCart();
-  const { toggleItem, isInWishlist } = useWishlist();
+  const { toggleItem } = useWishlist();
+  const isWishlisted = useWishlistCheck(String(product.id));
   const { toast } = useToast();
   
+  // Stock limit checking
+  const maxStock = product.stockStatus === 'OUT_OF_STOCK' ? 0 : 
+                   product.stockStatus === 'LOW_STOCK' ? 3 : 10;
+  
+  const isOutOfStock = product.stockStatus === 'OUT_OF_STOCK';
+
   const incrementQuantity = () => {
-    if (quantity < (product.stockCount || 10)) {
+    if (quantity < maxStock) {
       setQuantity(prev => prev + 1);
     }
   };
@@ -40,10 +48,12 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
   };
   
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     addItem(product, quantity);
+    // Note: loyalty points calculation assumes raw numbers, adjusting here slightly
     toast({
       title: "Added to cart!",
-      description: `You'll earn ${Math.floor(product.price * quantity * 10)} loyalty points with this purchase!`,
+      description: `You'll earn ${Math.floor((product.price / 100) * quantity * 10)} loyalty points with this purchase!`,
     });
   };
   
@@ -66,25 +76,27 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
       
       <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
       
-      <div className="flex items-center mb-4">
-        <div className="flex items-center">
-          {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i} 
-              size={16} 
-              className={`${i < Math.floor(product.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} mr-0.5`} 
-            />
-          ))}
+      {product.rating !== undefined && (
+        <div className="flex items-center mb-4">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                size={16} 
+                className={`${i < Math.floor(product.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} mr-0.5`} 
+              />
+            ))}
+          </div>
+          <span className="text-sm ml-2">{product.rating} ({product.numReviews ? `${product.numReviews} reviews` : ''})</span>
         </div>
-        <span className="text-sm ml-2">{product.rating} ({Math.floor((product.rating || 0) * 10)} reviews)</span>
-      </div>
+      )}
       
-              <span className="text-2xl font-bold text-wolly-magenta mb-4">₹{product.price?.toFixed(2)}</span>
+      <span className="text-2xl font-bold text-wolly-magenta mb-4">{formatMoney(product.price)}</span>
       
       <LoyaltyPoints product={product} quantity={quantity} />
       
       <p className="text-muted-foreground mb-6">
-        {product.description}
+        {product.description || product.shortDescription}
       </p>
       
       {product.colors && product.colors.length > 0 && (
@@ -115,27 +127,29 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
             variant="outline" 
             size="icon" 
             onClick={decrementQuantity}
-            disabled={quantity <= 1}
+            disabled={quantity <= 1 || isOutOfStock}
             className="h-9 w-9"
           >
             <Minus size={16} />
           </Button>
-          <span className="w-12 text-center font-medium">{quantity}</span>
+          <span className="w-12 text-center font-medium">{isOutOfStock ? 0 : quantity}</span>
           <Button 
             variant="outline" 
             size="icon" 
             onClick={incrementQuantity}
-            disabled={quantity >= (product.stockCount || 10)}
+            disabled={quantity >= maxStock || isOutOfStock}
             className="h-9 w-9"
           >
             <Plus size={16} />
           </Button>
         </div>
         
-        {product.stockCount && product.stockCount < 10 && (
-          <span className="ml-4 text-sm text-orange-600">
-            Only {product.stockCount} left
-          </span>
+        {isOutOfStock ? (
+          <span className="ml-4 text-sm text-red-500 font-medium">Out of stock</span>
+        ) : product.stockStatus === 'LOW_STOCK' ? (
+          <span className="ml-4 text-sm text-amber-600 font-medium">Low stock available</span>
+        ) : (
+          <span className="ml-4 text-sm text-green-600">In stock</span>
         )}
       </div>
       
@@ -144,6 +158,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
           size="lg" 
           className="bg-wolly-magenta hover:bg-wolly-magenta/90 text-white flex-1"
           onClick={handleAddToCart}
+          disabled={isOutOfStock}
         >
           Add to Cart
         </Button>
@@ -151,42 +166,46 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
           variant="outline" 
           size="lg" 
           className={`border-wolly-pink button-hover ${
-            isInWishlist(String(product.id)) 
+            isWishlisted 
               ? 'bg-wolly-pink/20 text-wolly-magenta' 
               : 'text-wolly-magenta'
           }`}
           onClick={handleToggleWishlist}
         >
-          <Heart size={18} className={`mr-2 ${isInWishlist(String(product.id)) ? 'fill-wolly-magenta' : ''}`} />
-          {isInWishlist(String(product.id)) ? 'In Wishlist' : 'Add to Wishlist'}
+          <Heart size={18} className={`mr-2 ${isWishlisted ? 'fill-wolly-magenta' : ''}`} />
+          {isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}
         </Button>
       </div>
       
       <div className="border-t border-border pt-4 mb-6">
         <div className="flex items-center text-sm mb-2">
           <span className="text-muted-foreground w-20">SKU:</span>
-          <span>WW-{product.id?.toString().padStart(4, '0')}</span>
+          <span>WW-{product.id?.toString().substring(0, 6).toUpperCase()}</span>
         </div>
-        <div className="flex items-center text-sm mb-2">
-          <span className="text-muted-foreground w-20">Category:</span>
-          <Link href={`/shop/${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
-            {product.category}
-          </Link>
-        </div>
-        <div className="flex items-center text-sm">
-          <span className="text-muted-foreground w-20">Tags:</span>
-          <div className="flex flex-wrap gap-1">
-            {product.tags?.map(tag => (
-              <Link 
-                key={tag} 
-                href={`/shop/tag/${tag}`}
-                className="hover:text-wolly-magenta"
-              >
-                #{tag}
-              </Link>
-            ))}
+        {product.category && (
+          <div className="flex items-center text-sm mb-2">
+            <span className="text-muted-foreground w-20">Category:</span>
+            <Link href={`/shop?category=${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
+              {product.category}
+            </Link>
           </div>
-        </div>
+        )}
+        {product.tags && product.tags.length > 0 && (
+          <div className="flex items-center text-sm">
+            <span className="text-muted-foreground w-20">Tags:</span>
+            <div className="flex flex-wrap gap-1">
+              {product.tags.map(tag => (
+                <Link 
+                  key={tag} 
+                  href={`/shop?tags=${tag}`}
+                  className="hover:text-wolly-magenta"
+                >
+                  #{tag}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="flex items-center justify-between">

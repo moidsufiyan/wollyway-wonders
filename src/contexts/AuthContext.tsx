@@ -46,6 +46,7 @@ import { authService } from '@/services/auth.service';
 import { authToken } from '@/lib/auth-token';
 import { ApiClientError } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import type { UserDTO, AuthStatus } from '@/types/auth';
 
 // ─── User Shape ───────────────────────────────────────────────────────────────
@@ -136,6 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('idle');
   const { toast } = useToast();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Derived convenience flags (backward compatible with existing components)
   const isAuthenticated = authStatus === 'authenticated';
@@ -150,13 +152,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     authToken.clear();
     setAuthStatus('unauthenticated');
+    queryClient.clear(); // Clear cart/wishlist cache
     toast({
       title: 'Session expired',
       description: 'Your session has expired. Please log in again.',
       variant: 'destructive',
     });
     router.push('/login');
-  }, [toast, router]);
+  }, [toast, router, queryClient]);
 
   // ─── Boot: Silent Refresh ─────────────────────────────────────────────────
   // On every page load/tab activation:
@@ -220,6 +223,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const profile = await authService.getProfile();
       setUser(mapDTOToUser(profile));
       setAuthStatus('authenticated');
+      queryClient.invalidateQueries(); // Force refresh of cart/wishlist
       toast({
         title: 'Login successful',
         description: `Welcome back, ${response.data.name}!`,
@@ -249,6 +253,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const profile = await authService.getProfile();
       setUser(mapDTOToUser(profile));
       setAuthStatus('authenticated');
+      queryClient.invalidateQueries(); // Force refresh of cart/wishlist
       toast({
         title: 'Account created',
         description: `Welcome to WollyWay, ${response.data.name}!`,
@@ -281,6 +286,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       authToken.clear();
       setAuthStatus('unauthenticated');
+      queryClient.clear(); // Clear all cached user data (cart, wishlist, etc)
       toast({
         title: 'Logged out',
         description: 'You have been successfully logged out.',

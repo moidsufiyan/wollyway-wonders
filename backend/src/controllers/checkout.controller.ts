@@ -116,3 +116,33 @@ export const cancelCheckout = async (
     next(error);
   }
 };
+
+export const getCheckoutStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const sessionId = req.params.sessionId as string;
+    if (!Types.ObjectId.isValid(sessionId)) {
+      throw new AppError('Invalid checkout session ID', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const statusData = await checkoutService.getSessionStatus(
+      userId as unknown as Types.ObjectId,
+      new Types.ObjectId(sessionId)
+    );
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: statusData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

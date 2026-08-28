@@ -7,101 +7,34 @@ import Footer from "@/components/Footer";
 import ProductFilters from "@/components/ProductFilters";
 import ProductGrid from "@/components/ProductGrid";
 import { useProducts, parseQueryFilters } from "@/hooks/useProducts";
-
 import SearchPage from "@/components/SearchPage";
 import { Button } from "@/components/ui/button";
 import { Filter, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
-
 import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
-
-import { type Product } from "@/types/Product";
+import { type Product, mapProductCardToUI } from "@/types/Product";
 
 const Shop = () => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isSearchMode =
-    searchParams.has("search") || searchParams.has("keyword");
+  const isSearchMode = searchParams ? searchParams.has("search") || searchParams.has("keyword") || searchParams.has("q") : false;
 
   const [showFilters, setShowFilters] = useState(false);
-
   const [savedCart, setSavedCart] = useState<Product[]>([]);
 
-  // Get filters from URL
-  const queryFilters = parseQueryFilters(searchParams.toString());
-  const activeCategory = queryFilters.category as string | undefined;
+  // Get filters strictly from URL (Source of truth)
+  const queryFilters = searchParams ? parseQueryFilters(searchParams) : {};
+  const activeCategory = queryFilters.categorySlug;
 
-  // Define default filter values
-  const defaultFilters = {
-    categories: Array.isArray(queryFilters.category)
-      ? queryFilters.category
-      : queryFilters.category
-      ? [queryFilters.category]
-      : [],
-    priceRange: queryFilters.priceRange || ([0, 5000] as [number, number]),
-    ratingRange: queryFilters.ratingRange || ([1, 5] as [number, number]),
-    inStock: queryFilters.inStock || false,
-    sortBy: queryFilters.sortBy || "newest",
-  };
-
-  const [filters, setFilters] = useState(defaultFilters);
-
-  // Use enhanced products hook
-  const { data: products, isLoading } = useProducts(queryFilters);
+  // Use enhanced products hook which strictly reads from URL internally
+  const { data: discoveryResult, isLoading } = useProducts();
+  const products = (discoveryResult?.products || []).map(mapProductCardToUI);
+  const totalItems = discoveryResult?.pagination?.totalItems || 0;
 
   const { addItem } = useCart();
   const { toast } = useToast();
-
-  // Handle URL updates when filters change
-  useEffect(() => {
-    const currentParams = new URLSearchParams(searchParams.toString());
-
-    // Preserve search term if it exists
-    const searchTerm =
-      currentParams.get("search") || currentParams.get("keyword");
-
-    const newParams = new URLSearchParams();
-
-    // Add search term if it exists
-    if (searchTerm) {
-      newParams.set("search", searchTerm);
-    }
-
-    // Add categories
-    if (filters.categories.length > 0) {
-      newParams.set("category", filters.categories.join(","));
-    }
-
-    // Add price range if not default
-    if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 5000) {
-      newParams.set("minPrice", filters.priceRange[0].toString());
-      newParams.set("maxPrice", filters.priceRange[1].toString());
-    }
-
-    // Add rating range if not default
-    if (filters.ratingRange[0] !== 1 || filters.ratingRange[1] !== 5) {
-      newParams.set("minRating", filters.ratingRange[0].toString());
-      newParams.set("maxRating", filters.ratingRange[1].toString());
-    }
-
-    // Add in stock flag if true
-    if (filters.inStock) {
-      newParams.set("inStock", "true");
-    }
-
-    // Add sort option if not default
-    if (filters.sortBy !== "newest") {
-      newParams.set("sortBy", filters.sortBy);
-    }
-
-    // Update URL if params have changed
-    const newSearch = newParams.toString();
-    if (newSearch !== searchParams.toString()) {
-      router.replace(`/shop${newSearch ? `?${newSearch}` : ""}`);
-    }
-  }, [filters, router, searchParams]);
 
   const handleAddToCart = (product: Product) => {
     addItem(product, 1);
@@ -138,74 +71,78 @@ const Shop = () => {
     });
   };
 
-  // Reset filters and get back to default state
-  const resetFilters = () => {
-    setFilters({
-      categories: [],
-      priceRange: [0, 5000],
-      ratingRange: [1, 5],
-      inStock: false,
-      sortBy: "newest",
+  // Handle URL updates when filters change
+  const applyFilterUpdate = (newParamsObj: Record<string, string | null>) => {
+    const currentParams = new URLSearchParams(searchParams?.toString() || "");
+    
+    Object.entries(newParamsObj).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        currentParams.delete(key);
+      } else {
+        currentParams.set(key, value);
+      }
     });
+
+    // Reset to page 1 on filter change
+    if (!newParamsObj.page && currentParams.has('page')) {
+      currentParams.set('page', '1');
+    }
+
+    const newSearch = currentParams.toString();
+    router.replace(`/shop${newSearch ? `?${newSearch}` : ""}`);
   };
 
-  // Handle filter changes coming from the ProductFilters component
+  const resetFilters = () => {
+    router.replace('/shop');
+  };
+
   const handleFilterChange = (
     newFilters: Partial<{
       categories: string[];
       priceRange: [number, number];
-      ratingRange: [number, number];
+      ratingRange: [number, number]; // legacy
       inStock: boolean;
       sortBy: string;
     }>
   ) => {
-    setFilters((prev) => ({
-      ...prev,
-      ...newFilters,
-    }));
+    const updates: Record<string, string | null> = {};
+
+    if (newFilters.categories !== undefined) {
+      updates.category = newFilters.categories.length > 0 ? newFilters.categories.join(",") : null;
+    }
+    
+    if (newFilters.priceRange !== undefined) {
+      if (newFilters.priceRange[0] > 0) updates.minPrice = newFilters.priceRange[0].toString();
+      else updates.minPrice = null;
+      
+      if (newFilters.priceRange[1] < 5000) updates.maxPrice = newFilters.priceRange[1].toString();
+      else updates.maxPrice = null;
+    }
+
+    // ratingRange skipped for backend API (we don't pass it to discovery params)
+    
+    if (newFilters.inStock !== undefined) {
+      updates.inStock = newFilters.inStock ? "true" : null;
+    }
+
+    if (newFilters.sortBy !== undefined) {
+      updates.sortBy = newFilters.sortBy !== 'newest' ? newFilters.sortBy : null;
+    }
+
+    applyFilterUpdate(updates);
   };
 
-  // Apply filters to products
-  const filteredProducts =
-    products?.products?.filter((product) => {
-      const matchesCategory =
-        filters.categories.length === 0 ||
-        filters.categories.includes(product.category);
-      const matchesPrice =
-        product.price >= filters.priceRange[0] &&
-        product.price <= filters.priceRange[1];
-      const matchesRating =
-        product.rating >= filters.ratingRange[0] &&
-        product.rating <= filters.ratingRange[1];
-      const matchesStock =
-        !filters.inStock || (product.countInStock && product.countInStock > 0);
-
-      return matchesCategory && matchesPrice && matchesRating && matchesStock;
-    }) || [];
-
-  // Sort filtered products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (filters.sortBy) {
-      case "price-low":
-        return a.price - b.price;
-      case "price-high":
-        return b.price - a.price;
-      case "rating":
-        return b.rating - a.rating;
-      case "bestsellers":
-        return (b.numReviews || 0) - (a.numReviews || 0);
-      case "trending":
-        return (b.numReviews || 0) * b.rating - (a.numReviews || 0) * a.rating;
-      default: // newest
-        return Number(b.id) - Number(a.id);
-    }
-  });
+  // Convert DiscoveryQueryParams back to the shape ProductFilters component expects
+  const currentFilterProps = {
+    categories: queryFilters.categorySlug ? [queryFilters.categorySlug] : [],
+    priceRange: [queryFilters.minPrice || 0, queryFilters.maxPrice || 5000] as [number, number],
+    ratingRange: [1, 5] as [number, number], // Stubbed out for UI component compat
+    inStock: queryFilters.availability === 'in_stock',
+    sortBy: searchParams?.get('sortBy') || 'newest' // keep raw string for UI toggle group matching
+  };
 
   useEffect(() => {
-    // Scroll to top when page loads
     window.scrollTo(0, 0);
-
-    // Load saved cart from localStorage
     const savedCartItems = localStorage.getItem("savedCart");
     if (savedCartItems) {
       try {
@@ -216,7 +153,6 @@ const Shop = () => {
     }
   }, []);
 
-  // Save cart to localStorage when it changes
   useEffect(() => {
     localStorage.setItem("savedCart", JSON.stringify(savedCart));
   }, [savedCart]);
@@ -227,7 +163,6 @@ const Shop = () => {
 
       <div className="pt-24 pb-12">
         <div className="container mx-auto px-4">
-          {/* If search param is present, show search page instead */}
           {isSearchMode ? (
             <SearchPage />
           ) : (
@@ -243,25 +178,24 @@ const Shop = () => {
                 </div>
               </div>
 
-              {/* Category Breadcrumb for filtered views */}
               {activeCategory && (
                 <div className="mb-6">
+                  {/* Dummy product passed just to satisfy component props for category path display */}
                   <ProductBreadcrumb
                     categoryPath={activeCategory}
-                    product={{} as Product}
+                    product={{ category: activeCategory } as any}
                   />
                 </div>
               )}
 
               <div className="flex flex-col md:flex-row gap-8">
-                {/* Filters - show on larger screens or when toggled */}
                 <div
                   className={`md:w-1/4 ${
                     showFilters ? "block" : "hidden md:block"
                   }`}
                 >
                   <ProductFilters
-                    filters={filters}
+                    filters={currentFilterProps}
                     onFilterChange={handleFilterChange}
                     resetFilters={resetFilters}
                     onClose={() => setShowFilters(false)}
@@ -281,7 +215,7 @@ const Shop = () => {
 
                     <div className="flex items-center">
                       <span className="text-sm text-muted-foreground dark:text-gray-400 mr-3 hidden md:inline">
-                        {sortedProducts.length} Products
+                        {totalItems} Products
                       </span>
                     </div>
                   </div>
@@ -292,7 +226,7 @@ const Shop = () => {
                     </div>
                   ) : (
                     <>
-                      {sortedProducts.length === 0 ? (
+                      {products.length === 0 ? (
                         <div className="text-center py-12">
                           <h2 className="text-xl font-medium mb-4">
                             No products found
@@ -306,11 +240,36 @@ const Shop = () => {
                           </Button>
                         </div>
                       ) : (
-                        <ProductGrid
-                          products={sortedProducts}
-                          onAddToCart={handleAddToCart}
-                          onSaveForLater={saveForLater}
-                        />
+                        <>
+                          <ProductGrid
+                            products={products}
+                            onAddToCart={handleAddToCart}
+                            onSaveForLater={saveForLater}
+                          />
+                          
+                          {/* Pagination Controls */}
+                          {discoveryResult?.pagination && discoveryResult.pagination.totalPages > 1 && (
+                            <div className="flex justify-center mt-12 space-x-2">
+                              <Button
+                                variant="outline"
+                                disabled={discoveryResult.pagination.page === 1}
+                                onClick={() => applyFilterUpdate({ page: String(discoveryResult.pagination.page - 1) })}
+                              >
+                                Previous
+                              </Button>
+                              <span className="flex items-center px-4">
+                                Page {discoveryResult.pagination.page} of {discoveryResult.pagination.totalPages}
+                              </span>
+                              <Button
+                                variant="outline"
+                                disabled={discoveryResult.pagination.page === discoveryResult.pagination.totalPages}
+                                onClick={() => applyFilterUpdate({ page: String(discoveryResult.pagination.page + 1) })}
+                              >
+                                Next
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
                   )}
@@ -319,9 +278,6 @@ const Shop = () => {
             </>
           )}
 
-          {/* Recently Viewed Products */}
-
-          {/* Saved for Later Products */}
           {savedCart.length > 0 && !isSearchMode && (
             <div className="mt-16">
               <div className="container mx-auto px-4">
@@ -342,7 +298,8 @@ const Shop = () => {
                           {product.name}
                         </h3>
                         <p className="text-wolly-magenta font-bold">
-                          ₹{product.price.toFixed(2)}
+                          {/* This is a legacy render, if formatting is needed we format, but saved items shouldn't crash */}
+                          ₹{(product.price / 100).toFixed(2)}
                         </p>
                         <Button
                           size="sm"

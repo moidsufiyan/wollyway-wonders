@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } fr
 import { Badge } from '@/components/ui/badge';
 import SizeGuide from '@/components/SizeGuide';
 import { useCart } from '@/contexts/CartContext';
+import { formatMoney } from '@/utils/currency';
 
 
 export type ProductGridProps = {
@@ -108,6 +109,14 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
   };
 
   const getStockLabel = (product: Product) => {
+    if (product.stockStatus === 'OUT_OF_STOCK') {
+      return <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge>;
+    } else if (product.stockStatus === 'LOW_STOCK') {
+      return <Badge variant="outline" className="absolute top-2 right-2 bg-amber-50 text-amber-600 border-amber-200">Low Stock</Badge>;
+    } else if (product.stockStatus === 'IN_STOCK') {
+      return <Badge variant="outline" className="absolute top-2 right-2 bg-green-50 text-green-600 border-green-200">In Stock</Badge>;
+    }
+    // Fallback for legacy items without stockStatus
     if (!product.stockCount && product.stockCount !== 0) return null;
     
     if (product.stockCount === 0) {
@@ -118,6 +127,8 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
       return <Badge variant="outline" className="absolute top-2 right-2 bg-green-50 text-green-600 border-green-200">In Stock</Badge>;
     }
   };
+
+  const isOutOfStock = (product: Product) => product.stockStatus === 'OUT_OF_STOCK' || product.stockCount === 0;
 
   return (
     <>
@@ -139,12 +150,12 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
               {product.isNew && (
                 <Badge className="bg-wolly-magenta">New</Badge>
               )}
-              {product.isFeatured && (
+              {product.featured && (
                 <Badge className="bg-purple-600">Featured</Badge>
               )}
             </div>
             
-            <Link href={`/product/${product.id}`} className="block relative">
+            <Link href={`/product/${product.slug || product.id}`} className="block relative">
               <div className="aspect-square overflow-hidden">
                 <img 
                   src={product.image} 
@@ -201,15 +212,23 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
             
             <div className="p-4">
               <div className="flex items-center mb-1">
-                <div className="flex items-center text-yellow-400 mr-1">
-                  <Star size={14} className="fill-yellow-400" />
-                </div>
-                <span className="text-xs text-muted-foreground dark:text-gray-400">
-                  {product.rating.toFixed(1)} {product.reviews && `(${product.reviews})`}
-                </span>
+                {product.rating !== undefined ? (
+                  <>
+                    <div className="flex items-center text-yellow-400 mr-1">
+                      <Star size={14} className="fill-yellow-400" />
+                    </div>
+                    <span className="text-xs text-muted-foreground dark:text-gray-400">
+                      {product.rating.toFixed(1)} {product.numReviews ? `(${product.numReviews})` : ''}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs text-muted-foreground dark:text-gray-400 invisible">
+                    Placeholder
+                  </span>
+                )}
               </div>
               
-              <Link href={`/product/${product.id}`}
+              <Link href={`/product/${product.slug || product.id}`}
                 className="block font-medium text-sm line-clamp-1 hover:text-wolly-magenta transition-colors mb-1"
               >
                 {product.name}
@@ -217,14 +236,14 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
               
               <div className="flex items-center justify-between">
                 <p className="text-wolly-magenta font-bold">
-                  ₹{product.price.toFixed(2)}
+                  {formatMoney(product.price)}
                 </p>
                 
                 <button
                   onClick={(e) => handleQuickAddToCart(product, e)}
                   className="text-gray-600 dark:text-gray-300 hover:text-wolly-magenta transition-colors"
                   aria-label="Add to cart"
-                  disabled={product.stockCount === 0}
+                  disabled={isOutOfStock(product)}
                 >
                   <ShoppingCart size={18} />
                 </button>
@@ -252,27 +271,29 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                   {quickViewProduct.name}
                 </DialogTitle>
                 
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center text-yellow-400 mr-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        size={16} 
-                        className={i < Math.round(quickViewProduct.rating) ? "fill-yellow-400" : "text-gray-300"}
-                      />
-                    ))}
+                {quickViewProduct.rating !== undefined && (
+                  <div className="flex items-center mb-4">
+                    <div className="flex items-center text-yellow-400 mr-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          size={16} 
+                          className={i < Math.round(quickViewProduct.rating!) ? "fill-yellow-400" : "text-gray-300"}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {quickViewProduct.numReviews && `(${quickViewProduct.numReviews} reviews)`}
+                    </span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {quickViewProduct.reviews && `(${quickViewProduct.reviews} reviews)`}
-                  </span>
-                </div>
+                )}
                 
                 <DialogDescription className="mb-4 line-clamp-3">
-                  {quickViewProduct.description || "No description available."}
+                  {quickViewProduct.description || quickViewProduct.shortDescription || "No description available."}
                 </DialogDescription>
                 
                 <div className="text-xl font-bold text-wolly-magenta mb-4">
-                  ₹{quickViewProduct.price.toFixed(2)}
+                  {formatMoney(quickViewProduct.price)}
                 </div>
                 
                 {quickViewProduct.colors && quickViewProduct.colors.length > 0 && (
@@ -328,7 +349,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 <div className="space-y-2 mt-6">
                   <Button
                     className="w-full bg-wolly-magenta hover:bg-wolly-magenta/90"
-                    disabled={quickViewProduct.stockCount === 0}
+                    disabled={isOutOfStock(quickViewProduct)}
                     onClick={() => {
                       onAddToCart(quickViewProduct);
                       setQuickViewProduct(null);
@@ -342,7 +363,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                     className="w-full"
                     variant="outline"
                     onClick={() => oneClickCheckout(quickViewProduct)}
-                    disabled={quickViewProduct.stockCount === 0}
+                    disabled={isOutOfStock(quickViewProduct)}
                   >
                     <Zap size={16} className="mr-2" />
                     One-Click Checkout
@@ -398,10 +419,10 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 </div>
                 
                 <div className="text-xs text-muted-foreground mt-4">
-                  {quickViewProduct.stockCount === 0 ? (
+                  {isOutOfStock(quickViewProduct) ? (
                     <span className="text-red-500">Out of stock</span>
-                  ) : quickViewProduct.stockCount && quickViewProduct.stockCount < 5 ? (
-                    <span className="text-amber-600">Only {quickViewProduct.stockCount} left in stock</span>
+                  ) : quickViewProduct.stockStatus === 'LOW_STOCK' || (quickViewProduct.stockCount && quickViewProduct.stockCount < 5) ? (
+                    <span className="text-amber-600">Low stock available</span>
                   ) : (
                     <span className="text-green-600">In stock</span>
                   )}

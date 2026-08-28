@@ -1,8 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product } from '@/types/Product';
+import React, { createContext, useContext, useEffect } from 'react';
+import { Product, mapWishlistCardToUI } from '@/types/Product';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { wishlistService } from '@/services/wishlist.service';
+import { ApiClientError } from '@/lib/api-client';
+import { useRouter, usePathname } from 'next/navigation';
+import { WishlistResponse } from '@/types/wishlist.types';
 
 type WishlistContextType = {
   items: Product[];
@@ -10,7 +15,7 @@ type WishlistContextType = {
   removeItem: (productId: string) => void;
   toggleItem: (product: Product) => void;
   clearWishlist: () => void;
-  isInWishlist: (productId: string) => boolean;
+  isInWishlist: (productId: string) => boolean; // Legacy synchronous check, relies on main wishlist cache
 };
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -23,69 +28,172 @@ export const useWishlist = () => {
   return context;
 };
 
-export const WishlistProvider = ({ children }: { children: React.ReactNode }) => {
-  const [items, setItems] = useState<Product[]>([]);
-  const { toast } = useToast();
+// Hook for isolated pages to check membership without fetching the whole wishlist
+export const useWishlistCheck = (productId: string) => {
+  const queryClient = useQueryClient();
+  
+  // Try to derive from full wishlist cache first
+  const fullWishlist = queryClient.getQueryData<WishlistResponse>(['wishlist', { page: 1 }]);
+  const derivedStatus = fullWishlist?.products?.some(p => p.productId === productId);
 
-  // Load wishlist from localStorage on initial render
+  const { data: isWishlisted } = useQuery({
+    queryKey: ['wishlist', 'check', productId],
+    queryFn: () => wishlistService.checkWishlistStatus(productId),
+    enabled: derivedStatus === undefined, // Only fetch if we couldn't derive it
+    initialData: derivedStatus,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: false,
+  });
+
+  return isWishlisted ?? false;
+};
+
+export const WishlistProvider = ({ children }: { children: React.ReactNode }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Cleanup legacy localStorage on mount
   useEffect(() => {
-    const savedWishlist = localStorage.getItem('wishlist');
-    if (savedWishlist) {
-      try {
-        setItems(JSON.parse(savedWishlist));
-      } catch (e) {
-        console.error('Error parsing wishlist data from localStorage', e);
-      }
+    if (typeof window !== 'undefined' && localStorage.getItem('wishlist')) {
+      localStorage.removeItem('wishlist');
+      console.log('Cleaned up legacy localStorage wishlist');
     }
   }, []);
 
-  // Save wishlist to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(items));
-  }, [items]);
-
-  const addItem = (product: Product) => {
-    if (!isInWishlist(product.id)) {
-      setItems(prevItems => [...prevItems, product]);
-      
+  const handleError = (error: unknown, fallbackMessage: string) => {
+    if (error instanceof ApiClientError) {
+      if (error.status === 401) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to continue",
+          variant: "destructive",
+        });
+        router.push(`/login?from=${encodeURIComponent(pathname)}`);
+        return;
+      }
       toast({
-        title: "Added to wishlist",
-        description: `${product.name} has been added to your wishlist`,
-        duration: 3000,
+        title: "Wishlist Error",
+        description: error.message || fallbackMessage,
+        variant: "destructive",
       });
+      return;
     }
-  };
-
-  const removeItem = (productId: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== productId));
-    
     toast({
-      title: "Removed from wishlist",
-      description: "Item has been removed from your wishlist",
-      duration: 3000,
+      title: "Error",
+      description: fallbackMessage,
+      variant: "destructive",
     });
   };
 
+  const { data: wishlistDTO } = useQuery({
+    queryKey: ['wishlist', { page: 1 }],
+    queryFn: () => wishlistService.getWishlist(1, 50),
+    retry: false, // Don't retry on 401s
+  });
+
+  const items: Product[] = (wishlistDTO?.products || []).map(mapWishlistCardToUI);
+
+  const addMutation = useMutation({
+    mutationFn: (productId: string) => wishlistService.addToWishlist(productId),
+    onMutate: async (productId) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['wishlist'] });
+      const previousWishlist = queryClient.getQueryData<WishlistResponse>(['wishlist', { page: 1 }]);
+      
+      // We don't have the full Product info to optimistically add to the array perfectly,
+      // but we MUST update the 'check' cache so heart icons flip instantly.
+      queryClient.setQueryData(['wishlist', 'check', productId], true);
+      
+      return { previousWishlist };
+    },
+    onSuccess: (data, productId) => {
+      queryClient.setQueryData(['wishlist', { page: 1 }], data);
+      queryClient.setQueryData(['wishlist', 'check', productId], true);
+      toast({
+        title: "Added to wishlist",
+        description: "Item has been added to your wishlist",
+        duration: 3000,
+      });
+    },
+    onError: (err, productId, context) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(['wishlist', { page: 1 }], context.previousWishlist);
+      }
+      queryClient.setQueryData(['wishlist', 'check', productId], false);
+      handleError(err, "Failed to add to wishlist");
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (productId: string) => wishlistService.removeFromWishlist(productId),
+    onMutate: async (productId) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['wishlist'] });
+      const previousWishlist = queryClient.getQueryData<WishlistResponse>(['wishlist', { page: 1 }]);
+      
+      if (previousWishlist) {
+        queryClient.setQueryData<WishlistResponse>(['wishlist', { page: 1 }], {
+          ...previousWishlist,
+          products: previousWishlist.products.filter(p => p.productId !== productId)
+        });
+      }
+      queryClient.setQueryData(['wishlist', 'check', productId], false);
+      
+      return { previousWishlist };
+    },
+    onSuccess: (data, productId) => {
+      queryClient.setQueryData(['wishlist', { page: 1 }], data);
+      queryClient.setQueryData(['wishlist', 'check', productId], false);
+      toast({
+        title: "Removed from wishlist",
+        description: "Item has been removed from your wishlist",
+        duration: 3000,
+      });
+    },
+    onError: (err, productId, context) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(['wishlist', { page: 1 }], context.previousWishlist);
+      }
+      queryClient.setQueryData(['wishlist', 'check', productId], true);
+      handleError(err, "Failed to remove from wishlist");
+    },
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: () => wishlistService.clearWishlist(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      toast({
+        title: "Wishlist cleared",
+        description: "All items have been removed from your wishlist",
+        duration: 3000,
+      });
+    },
+    onError: (error) => handleError(error, "Failed to clear wishlist"),
+  });
+
+  const addItem = (product: Product) => addMutation.mutate(String(product.id));
+  const removeItem = (productId: string) => removeMutation.mutate(productId);
   const toggleItem = (product: Product) => {
-    if (isInWishlist(product.id)) {
-      removeItem(product.id);
+    const productId = String(product.id);
+    // Check if it's in the full list OR check cache
+    const inFullList = items.some(p => String(p.id) === productId);
+    const checkCache = queryClient.getQueryData<boolean>(['wishlist', 'check', productId]);
+    
+    if (inFullList || checkCache) {
+      removeItem(productId);
     } else {
       addItem(product);
     }
   };
 
-  const clearWishlist = () => {
-    setItems([]);
-    toast({
-      title: "Wishlist cleared",
-      description: "All items have been removed from your wishlist",
-      duration: 3000,
-    });
-  };
+  const clearWishlist = () => clearMutation.mutate();
 
-  const isInWishlist = (productId: string) => {
-    return items.some(item => item.id === productId);
-  };
+  // Legacy synchronous check: only reliable if the full list is fetched.
+  // Use `useWishlistCheck` in components whenever possible!
+  const isInWishlist = (productId: string) => items.some(item => String(item.id) === productId);
 
   return (
     <WishlistContext.Provider

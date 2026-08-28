@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { type Product } from '@/types/Product';
 import { useCart } from '@/contexts/CartContext';
-import { useWishlist } from '@/contexts/WishlistContext';
+import { useWishlist, useWishlistCheck } from '@/contexts/WishlistContext';
 import Link from 'next/link';
 
 interface ProductQuickViewProps {
@@ -22,7 +22,8 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
   const [selectedSize, setSelectedSize] = React.useState<string | null>(null);
   
   const { addItem } = useCart();
-  const { toggleItem, isInWishlist } = useWishlist();
+  const { toggleItem } = useWishlist();
+  const isWishlisted = useWishlistCheck(product ? String(product.id) : '');
   
   // Reset state when product changes
   React.useEffect(() => {
@@ -192,9 +193,9 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                 variant="outline" 
                 size="icon"
                 onClick={handleToggleWishlist}
-                className={isInWishlist(product.id) ? 'text-wolly-magenta' : ''}
+                className={isWishlisted ? 'text-wolly-magenta' : ''}
               >
-                <Heart size={16} className={isInWishlist(product.id) ? 'fill-wolly-magenta' : ''} />
+                <Heart size={16} className={isWishlisted ? 'fill-wolly-magenta' : ''} />
               </Button>
             </div>
             

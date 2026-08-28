@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form';
 import { Address } from './AddressCard';
 
 interface AddressFormProps {
-  onSubmit: (data: Omit<Address, 'id'>) => void;
+  onSubmit: (data: Omit<Address, '_id'>) => void;
   onCancel: () => void;
   initialData?: Address;
   isSubmitting?: boolean;
@@ -33,16 +33,21 @@ const AddressForm: React.FC<AddressFormProps> = ({
     handleSubmit, 
     formState: { errors },
     setValue,
-  } = useForm<Omit<Address, 'id'>>({
+  } = useForm<Omit<Address, '_id'>>({
     defaultValues: initialData ? {
-      street: initialData.street,
+      label: initialData.label,
+      customLabel: initialData.customLabel,
+      streetAddress: initialData.streetAddress,
+      apartmentSuite: initialData.apartmentSuite,
       city: initialData.city,
       state: initialData.state,
-      zipCode: initialData.zipCode,
+      postalCode: initialData.postalCode,
       country: initialData.country,
+      phone: initialData.phone,
       isDefault: initialData.isDefault,
     } : {
-      country: 'United States',
+      label: 'Home',
+      country: 'India', // Using India as backend default
       isDefault: false,
     }
   });
@@ -57,16 +62,62 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="label">Address Label</Label>
+          <Select 
+            defaultValue={initialData?.label || 'Home'} 
+            onValueChange={(val: any) => setValue('label', val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Label" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Home">Home</SelectItem>
+              <SelectItem value="Work">Work</SelectItem>
+              <SelectItem value="Office">Office</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            {...register('phone', { 
+              required: 'Phone number is required',
+              pattern: {
+                value: /^\+[1-9]\d{1,14}$/,
+                message: 'Phone number must be in E.164 format (e.g. +919876543210)'
+              }
+            })}
+            placeholder="+919876543210"
+          />
+          {errors.phone && (
+            <p className="text-xs text-red-500">{errors.phone.message}</p>
+          )}
+        </div>
+      </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="street">Street Address</Label>
+        <Label htmlFor="streetAddress">Street Address</Label>
         <Input
-          id="street"
-          {...register('street', { required: 'Street address is required' })}
-          placeholder="123 Main Street, Apt 4B"
+          id="streetAddress"
+          {...register('streetAddress', { required: 'Street address is required' })}
+          placeholder="123 Main Street"
         />
-        {errors.street && (
-          <p className="text-xs text-red-500">{errors.street.message}</p>
+        {errors.streetAddress && (
+          <p className="text-xs text-red-500">{errors.streetAddress.message}</p>
         )}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="apartmentSuite">Apartment/Suite (Optional)</Label>
+        <Input
+          id="apartmentSuite"
+          {...register('apartmentSuite')}
+          placeholder="Apt 4B"
+        />
       </div>
       
       <div className="grid grid-cols-2 gap-4">
@@ -97,21 +148,21 @@ const AddressForm: React.FC<AddressFormProps> = ({
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="zipCode">Zip/Postal Code</Label>
+          <Label htmlFor="postalCode">Zip/Postal Code</Label>
           <Input
-            id="zipCode"
-            {...register('zipCode', { required: 'Zip code is required' })}
+            id="postalCode"
+            {...register('postalCode', { required: 'Zip code is required' })}
             placeholder="10001"
           />
-          {errors.zipCode && (
-            <p className="text-xs text-red-500">{errors.zipCode.message}</p>
+          {errors.postalCode && (
+            <p className="text-xs text-red-500">{errors.postalCode.message}</p>
           )}
         </div>
         
         <div className="space-y-2">
           <Label htmlFor="country">Country</Label>
           <Select 
-            defaultValue={initialData?.country || 'United States'} 
+            defaultValue={initialData?.country || 'India'} 
             onValueChange={handleCountryChange}
           >
             <SelectTrigger>
