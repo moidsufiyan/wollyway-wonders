@@ -1,10 +1,19 @@
-import React, { Suspense } from "react";
-import CheckoutSuccess from "@/views/CheckoutSuccess";
+import React, { Suspense } from 'react';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import CheckoutSuccess from '@/views/CheckoutSuccess';
 
 export default function CheckoutSuccessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-muted-foreground animate-pulse">Loading order confirmation...</div>}>
-      <CheckoutSuccess />
-    </Suspense>
+    <AuthGuard>
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center text-muted-foreground animate-pulse">
+            Loading order confirmation...
+          </div>
+        }
+      >
+        <CheckoutSuccess />
+      </Suspense>
+    </AuthGuard>
   );
 }

@@ -1,5 +1,12 @@
 "use client";
 
-import Checkout from "@/views/Checkout";
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import Checkout from '@/views/Checkout';
 
-export default Checkout;
+export default function CheckoutPage() {
+  return (
+    <AuthGuard>
+      <Checkout />
+    </AuthGuard>
+  );
+}

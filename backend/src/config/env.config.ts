@@ -18,7 +18,11 @@ const envSchema = z.object({
   RAZORPAY_KEY_ID: z.string(),
   RAZORPAY_KEY_SECRET: z.string(),
   RAZORPAY_WEBHOOK_SECRET: z.string(),
-  CORS_ORIGIN: z.string().url(),
+  // Comma-separated list of allowed origins.
+  // Local dev: http://localhost:3000
+  // Production: https://wollyway.vercel.app
+  // Both:       http://localhost:3000,https://wollyway.vercel.app
+  CORS_ORIGIN: z.string().min(1),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

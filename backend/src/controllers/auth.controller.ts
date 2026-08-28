@@ -16,7 +16,20 @@ import { env } from '../config/env.config.js';
 const getCookieOptions = () => ({
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  /**
+   * SameSite strategy:
+   *
+   * Development (localhost:3000 → localhost:5000):
+   *   SameSite=Lax — same registrable domain (localhost), cookie is sent.
+   *
+   * Production (wollyway.vercel.app → api.onrender.com):
+   *   SameSite=None + Secure=true — REQUIRED for cross-origin cookies.
+   *   SameSite=Strict would silently block the cookie on cross-site requests,
+   *   making token refresh fail silently with no JavaScript error.
+   *
+   * Reference: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+   */
+  sameSite: (env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 });
@@ -221,7 +234,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
     res.clearCookie(COOKIE_KEYS.REFRESH_TOKEN, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict' as const,
+      sameSite: (env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
       path: '/',
     });
 
@@ -279,7 +292,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       res.clearCookie(COOKIE_KEYS.REFRESH_TOKEN, {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
-        sameSite: 'strict' as const,
+        sameSite: (env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
         path: '/',
       });
 

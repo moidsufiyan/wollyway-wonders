@@ -47,9 +47,41 @@ app.use(
 
 // Standard security layers
 app.use(helmet());
+// Build the allowed-origin allowlist from the comma-separated CORS_ORIGIN env var.
+// Supports multiple origins (e.g. localhost for dev + Vercel URL for production).
+const allowedOrigins = env.CORS_ORIGIN.split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    /**
+     * Dynamic origin validation.
+     *
+     * WHY A FUNCTION INSTEAD OF A STRING?
+     * A static origin string only allows one origin. In a real deployment:
+     *   - Local dev: http://localhost:3000
+     *   - Production: https://wollyway.vercel.app
+     * Both must be able to reach the API.
+     *
+     * WHY NOT origin: '*'?
+     * credentials: true requires an explicit origin — `*` is rejected
+     * by browsers when credentials (cookies) are involved.
+     *
+     * COOKIE BEHAVIOR:
+     * The `credentials: true` option here tells Express to include
+     * Access-Control-Allow-Credentials: true in responses. This is what
+     * allows the browser to send and receive the HTTP-only refresh cookie
+     * on cross-origin requests.
+     */
+    origin: (incomingOrigin, callback) => {
+      // Allow server-to-server requests (no Origin header, e.g. curl, Postman)
+      if (!incomingOrigin) return callback(null, true);
+      if (allowedOrigins.includes(incomingOrigin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin '${incomingOrigin}' is not allowed`));
+    },
     credentials: true,
   })
 );
