@@ -3,6 +3,7 @@ import {
   startCheckout,
   getCurrentCheckout,
   extendCheckout,
+  updateShippingAddress,
   confirmCheckout,
   cancelCheckout,
   cancelPaymentIntent,
@@ -71,6 +72,33 @@ router.get('/current', getCurrentCheckout);
  *         description: Maximum extension limit reached (3 max)
  */
 router.post('/extend', extendCheckout);
+
+/**
+ * @swagger
+ * /api/v1/checkout/address:
+ *   put:
+ *     summary: Update shipping address for active checkout session
+ *     tags: [Checkout]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [addressId]
+ *             properties:
+ *               addressId: { type: string }
+ *     responses:
+ *       200:
+ *         description: Shipping address updated
+ *       400:
+ *         description: Invalid address ID or session state
+ *       404:
+ *         description: Active checkout session or address not found
+ */
+router.put('/address', updateShippingAddress);
 
 /**
  * @swagger

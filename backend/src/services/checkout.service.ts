@@ -483,6 +483,72 @@ export class CheckoutService {
   }
 
   /**
+   * Updates the shipping address for the active checkout session.
+   * Only permits verified addresses owned by the user.
+   * Forbidden if the session is already in PAYMENT_PENDING.
+   */
+  async updateShippingAddress(
+    userId: Types.ObjectId,
+    addressId: string
+  ): Promise<CheckoutSummaryDTO> {
+    const session = await checkoutRepository.findActiveSession(userId);
+    if (!session) {
+      throw new AppError('No active checkout session found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    if (session.status === 'PAYMENT_PENDING') {
+      throw new AppError(
+        'Cannot update shipping address while payment is pending. Please cancel payment intent first.',
+        HTTP_STATUS.CONFLICT
+      );
+    }
+
+    if (session.reservationExpiresAt && session.reservationExpiresAt.getTime() < Date.now()) {
+      await this.expireSession(session._id as Types.ObjectId);
+      throw new AppError('Checkout session expired', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      throw new AppError('User not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const address = user.addresses?.find((addr) => addr._id.toString() === addressId);
+    if (!address) {
+      throw new AppError(
+        'Shipping address not found or does not belong to user',
+        HTTP_STATUS.NOT_FOUND
+      );
+    }
+
+    const shippingAddressSnapshot = {
+      street: address.streetAddress,
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country,
+    };
+
+    const updated = await checkoutRepository.updateStatus(
+      session._id as Types.ObjectId,
+      session.status,
+      { shippingAddressSnapshot }
+    );
+
+    if (!updated) {
+      throw new AppError('Failed to update shipping address', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    }
+
+    const subtotal = updated.cartSnapshot.items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
+
+    return this.mapToDTO(updated, subtotal, shippingFee, taxTotal, orderTotal);
+  }
+
+  /**
    * Confirms payment processing start, setting status to PAYMENT_PENDING.
    */
   async confirmCheckout(

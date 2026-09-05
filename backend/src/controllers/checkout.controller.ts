@@ -67,6 +67,35 @@ export const extendCheckout = async (
   }
 };
 
+export const updateShippingAddress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const { addressId } = req.body;
+    if (!addressId) {
+      throw new AppError('Address ID is required', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const summary = await checkoutService.updateShippingAddress(
+      userId as unknown as Types.ObjectId,
+      addressId
+    );
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      checkout: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const confirmCheckout = async (
   req: Request,
   res: Response,

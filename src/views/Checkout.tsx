@@ -80,7 +80,7 @@ export default function Checkout() {
     try {
       // 1. Fetch Addresses
       const addresses = await authService.getAddresses();
-      const defaultAddr = addresses.find(a => a.isDefault) || addresses[0];
+      const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
       
       if (!defaultAddr) {
         setCheckoutState('ADDRESS_REQUIRED');
@@ -88,7 +88,7 @@ export default function Checkout() {
       }
       
       setDefaultAddress(defaultAddr);
-      await loadCheckoutSession();
+      await loadCheckoutSession(defaultAddr._id);
     } catch (error: any) {
       if (error?.status === 401 || error?.message?.toLowerCase().includes('unauthorized')) {
         router.push(`/login?from=${encodeURIComponent('/checkout')}`);
@@ -99,7 +99,7 @@ export default function Checkout() {
     }
   };
 
-  const loadCheckoutSession = async () => {
+  const loadCheckoutSession = async (addressId?: string) => {
     try {
       let summary: CheckoutSummaryDTO;
       try {
@@ -111,6 +111,11 @@ export default function Checkout() {
           throw err;
         }
       }
+
+      if (!summary.shippingAddressSnapshot && addressId) {
+        summary = await checkoutService.updateShippingAddress(addressId);
+      }
+
       setCheckoutSummary(summary);
       setCheckoutState('READY');
     } catch (error: any) {

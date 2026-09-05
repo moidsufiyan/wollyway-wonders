@@ -52,6 +52,11 @@ export const checkoutService = {
     return response.checkout;
   },
 
+  updateShippingAddress: async (addressId: string): Promise<CheckoutSummaryDTO> => {
+    const response = await apiClient.put<{ success: boolean; checkout: CheckoutSummaryDTO }>('/checkout/address', { addressId });
+    return response.checkout;
+  },
+
   cancelCheckout: async (): Promise<void> => {
     await apiClient.post('/checkout/cancel');
   },
