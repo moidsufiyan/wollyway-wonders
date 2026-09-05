@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, ClientSession } from 'mongoose';
 import { Wishlist, IWishlist } from '../models/wishlist.model.js';
 
 export class WishlistRepository {
@@ -37,7 +37,11 @@ export class WishlistRepository {
    * Removes an item atomically.
    * Returns the updated Wishlist document.
    */
-  async removeItem(userId: Types.ObjectId, productId: Types.ObjectId): Promise<IWishlist | null> {
+  async removeItem(
+    userId: Types.ObjectId,
+    productId: Types.ObjectId,
+    session?: ClientSession
+  ): Promise<IWishlist | null> {
     return Wishlist.findOneAndUpdate(
       { userId },
       {
@@ -45,7 +49,7 @@ export class WishlistRepository {
           items: { productId },
         },
       },
-      { new: true }
+      { new: true, session }
     );
   }
 

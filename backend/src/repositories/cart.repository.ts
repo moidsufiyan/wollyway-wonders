@@ -13,19 +13,23 @@ export class CartRepository {
   /**
    * Atomically find or create the user's cart in a single round-trip.
    */
-  async upsertCart(userId: Types.ObjectId): Promise<ICart> {
+  async upsertCart(userId: Types.ObjectId, session?: ClientSession): Promise<ICart> {
     return Cart.findOneAndUpdate(
       { userId },
       { $setOnInsert: { userId, items: [] } },
-      { new: true, upsert: true }
+      { new: true, upsert: true, session }
     );
   }
 
   /**
    * Appends an item atomically to the cart.
    */
-  async addItem(userId: Types.ObjectId, item: CartItemModel): Promise<ICart | null> {
-    return Cart.findOneAndUpdate({ userId }, { $push: { items: item } }, { new: true });
+  async addItem(
+    userId: Types.ObjectId,
+    item: CartItemModel,
+    session?: ClientSession
+  ): Promise<ICart | null> {
+    return Cart.findOneAndUpdate({ userId }, { $push: { items: item } }, { new: true, session });
   }
 
   /**
@@ -36,7 +40,8 @@ export class CartRepository {
     userId: Types.ObjectId,
     productId: Types.ObjectId,
     quantity: number,
-    priceSnapshot?: number
+    priceSnapshot?: number,
+    session?: ClientSession
   ): Promise<ICart | null> {
     const updateDoc: Record<string, unknown> = { 'items.$.quantity': quantity };
     if (typeof priceSnapshot === 'number') {
@@ -46,7 +51,7 @@ export class CartRepository {
     return Cart.findOneAndUpdate(
       { userId, 'items.productId': productId },
       { $set: updateDoc },
-      { new: true }
+      { new: true, session }
     );
   }
 

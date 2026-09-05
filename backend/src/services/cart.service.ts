@@ -21,9 +21,9 @@ export class CartService {
   /**
    * Retrieves the active user's cart, calculating current prices and stock availability dynamically.
    */
-  async getCart(userId: Types.ObjectId): Promise<CartDTO> {
+  async getCart(userId: Types.ObjectId, session?: mongoose.ClientSession): Promise<CartDTO> {
     // Atomically find or create the cart
-    const cart = await cartRepository.upsertCart(userId);
+    const cart = await cartRepository.upsertCart(userId, session);
 
     if (cart.items.length === 0) {
       return CartMapper.toDTO(cart, []);
@@ -72,7 +72,8 @@ export class CartService {
   async addItem(
     userId: Types.ObjectId,
     productId: Types.ObjectId,
-    quantity: number
+    quantity: number,
+    session?: mongoose.ClientSession
   ): Promise<CartDTO> {
     // 1. Confirm product is valid & published
     const product = await productRepository.findById(productId.toString());
@@ -84,7 +85,7 @@ export class CartService {
     }
 
     // 2. Fetch or create cart
-    const cart = await cartRepository.upsertCart(userId);
+    const cart = await cartRepository.upsertCart(userId, session);
 
     // Check unique items count limit (50 max)
     const existingItem = cart.items.find(
@@ -117,17 +118,21 @@ export class CartService {
 
     // 3. Atomically add or update quantity
     if (existingItem) {
-      await cartRepository.updateQuantity(userId, productId, newQty, product.price);
+      await cartRepository.updateQuantity(userId, productId, newQty, product.price, session);
     } else {
-      await cartRepository.addItem(userId, {
-        productId,
-        quantity,
-        priceSnapshot: product.price,
-        addedAt: new Date(),
-      });
+      await cartRepository.addItem(
+        userId,
+        {
+          productId,
+          quantity,
+          priceSnapshot: product.price,
+          addedAt: new Date(),
+        },
+        session
+      );
     }
 
-    return this.getCart(userId);
+    return this.getCart(userId, session);
   }
 
   /**
@@ -256,8 +261,8 @@ export class CartService {
       try {
         // Run updates atomically inside session transaction block if replica sets are active
         await session.withTransaction(async () => {
-          cartResult = await this.addItem(userId, productId, 1);
-          await wishlistRepository.removeItem(userId, productId);
+          cartResult = await this.addItem(userId, productId, 1, session);
+          await wishlistRepository.removeItem(userId, productId, session);
         });
       } catch (txnError: unknown) {
         const err = txnError as Error & { code?: number };

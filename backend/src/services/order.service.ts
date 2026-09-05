@@ -425,16 +425,19 @@ export class OrderService {
    * Idempotent Order cancellation and automatic inventory restocking.
    */
   public async cancelOrder(
-    orderId: string,
+    orderIdOrNumber: string,
     reason: string,
     userId?: string,
     isAdmin = false
   ): Promise<AdminOrderDetailDTO> {
-    if (!Types.ObjectId.isValid(orderId)) {
-      throw new AppError('Invalid order ID format', HTTP_STATUS.BAD_REQUEST);
+    let order: IOrder | null;
+
+    if (Types.ObjectId.isValid(orderIdOrNumber)) {
+      order = await orderRepository.findById(new Types.ObjectId(orderIdOrNumber));
+    } else {
+      order = await orderRepository.findByOrderNumber(orderIdOrNumber);
     }
 
-    const order = await orderRepository.findById(new Types.ObjectId(orderId));
     if (!order) {
       throw new AppError('Order not found', HTTP_STATUS.NOT_FOUND);
     }
