@@ -9,6 +9,7 @@ import {
 import { protect, restrictTo, optionalProtect } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
 import { createCategorySchema, updateCategorySchema } from '../validators/category.validator.js';
+import { mongoIdParamSchema } from '../validators/common.validator.js';
 
 const router = Router();
 
@@ -103,7 +104,14 @@ router.post('/', protect, restrictTo('admin'), validate(createCategorySchema), c
  *       200:
  *         description: Category updated.
  */
-router.patch('/:id', protect, restrictTo('admin'), validate(updateCategorySchema), updateCategory);
+router.patch(
+  '/:id',
+  protect,
+  restrictTo('admin'),
+  validate(mongoIdParamSchema),
+  validate(updateCategorySchema),
+  updateCategory
+);
 
 /**
  * @openapi
@@ -125,6 +133,6 @@ router.patch('/:id', protect, restrictTo('admin'), validate(updateCategorySchema
  *       400:
  *         description: Cannot delete with linked active products.
  */
-router.delete('/:id', protect, restrictTo('admin'), deleteCategory);
+router.delete('/:id', protect, restrictTo('admin'), validate(mongoIdParamSchema), deleteCategory);
 
 export default router;

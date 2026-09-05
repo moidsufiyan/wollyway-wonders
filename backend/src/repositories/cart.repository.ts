@@ -30,15 +30,37 @@ export class CartRepository {
 
   /**
    * Updates an item's quantity atomically using positional filters.
+   * Optionally updates priceSnapshot when catalog price has changed.
    */
   async updateQuantity(
     userId: Types.ObjectId,
     productId: Types.ObjectId,
-    quantity: number
+    quantity: number,
+    priceSnapshot?: number
+  ): Promise<ICart | null> {
+    const updateDoc: Record<string, unknown> = { 'items.$.quantity': quantity };
+    if (typeof priceSnapshot === 'number') {
+      updateDoc['items.$.priceSnapshot'] = priceSnapshot;
+    }
+
+    return Cart.findOneAndUpdate(
+      { userId, 'items.productId': productId },
+      { $set: updateDoc },
+      { new: true }
+    );
+  }
+
+  /**
+   * Updates an item's priceSnapshot to match live catalog price.
+   */
+  async updateItemPrice(
+    userId: Types.ObjectId,
+    productId: Types.ObjectId,
+    priceSnapshot: number
   ): Promise<ICart | null> {
     return Cart.findOneAndUpdate(
       { userId, 'items.productId': productId },
-      { $set: { 'items.$.quantity': quantity } },
+      { $set: { 'items.$.priceSnapshot': priceSnapshot } },
       { new: true }
     );
   }

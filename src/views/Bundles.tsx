@@ -17,7 +17,7 @@ const sampleBundles: Bundle[] = [
       {
         id: 1,
         name: "Super Hero Keychain",
-        price: 19.99,
+        price: 1999,
         image: "/uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
         category: "Keychains",
         tags: ["superhero", "black", "red", "white"],
@@ -29,7 +29,7 @@ const sampleBundles: Bundle[] = [
       {
         id: 3,
         name: "Batman Inspired Band",
-        price: 22.99,
+        price: 2299,
         image: "/uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
         category: "Bands",
         tags: ["superhero", "batman", "black", "yellow"],
@@ -49,7 +49,7 @@ const sampleBundles: Bundle[] = [
       {
         id: 2,
         name: "Friendship Bracelets Set",
-        price: 24.99,
+        price: 2499,
         image: "/uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
         category: "Bracelets",
         tags: ["friendship", "wristband", "colorful"],
@@ -60,7 +60,7 @@ const sampleBundles: Bundle[] = [
       {
         id: 1,
         name: "Super Hero Keychain",
-        price: 19.99,
+        price: 1999,
         image: "/uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
         category: "Keychains",
         tags: ["superhero", "black", "red", "white"],

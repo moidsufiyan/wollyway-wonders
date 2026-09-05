@@ -117,7 +117,7 @@ export class CartService {
 
     // 3. Atomically add or update quantity
     if (existingItem) {
-      await cartRepository.updateQuantity(userId, productId, newQty);
+      await cartRepository.updateQuantity(userId, productId, newQty, product.price);
     } else {
       await cartRepository.addItem(userId, {
         productId,
@@ -132,6 +132,7 @@ export class CartService {
 
   /**
    * Updates an item's quantity atomically with version retry capabilities.
+   * Updates priceSnapshot to match current catalog price.
    */
   async updateQuantity(
     userId: Types.ObjectId,
@@ -143,6 +144,15 @@ export class CartService {
       throw new AppError(
         `Quantity limit exceeded. Maximum allowed per item is ${MAX_CART_ITEM_QUANTITY} units`,
         HTTP_STATUS.BAD_REQUEST
+      );
+    }
+
+    // Confirm product exists & published to get current price
+    const product = await productRepository.findById(productId.toString());
+    if (!product || product.visibility !== 'published') {
+      throw new AppError(
+        'Product not found or is not available for purchase',
+        HTTP_STATUS.NOT_FOUND
       );
     }
 
@@ -160,7 +170,12 @@ export class CartService {
 
     while (attempts <= 3) {
       try {
-        const cart = await cartRepository.updateQuantity(userId, productId, quantity);
+        const cart = await cartRepository.updateQuantity(
+          userId,
+          productId,
+          quantity,
+          product.price
+        );
         if (!cart) {
           throw new AppError('Cart or item not found', HTTP_STATUS.NOT_FOUND);
         }
@@ -181,6 +196,36 @@ export class CartService {
       'Cart was updated concurrently in another request. Please try again.',
       HTTP_STATUS.CONFLICT
     );
+  }
+
+  /**
+   * Synchronizes all cart item snapshot prices with current live catalog prices.
+   */
+  async syncCartPrices(userId: Types.ObjectId): Promise<CartDTO> {
+    const cart = await cartRepository.upsertCart(userId);
+    if (cart.items.length === 0) {
+      return this.getCart(userId);
+    }
+
+    const productIds = cart.items.map((item) => item.productId);
+    const products = await productRepository.findWithDiscovery(
+      { _id: { $in: productIds } },
+      { _id: 1, price: 1 },
+      {},
+      0,
+      cart.items.length
+    );
+
+    const priceMap = new Map(products.map((p) => [p._id.toString(), p.price]));
+
+    for (const item of cart.items) {
+      const currentPrice = priceMap.get(item.productId.toString());
+      if (typeof currentPrice === 'number' && currentPrice !== item.priceSnapshot) {
+        await cartRepository.updateQuantity(userId, item.productId, item.quantity, currentPrice);
+      }
+    }
+
+    return this.getCart(userId);
   }
 
   /**

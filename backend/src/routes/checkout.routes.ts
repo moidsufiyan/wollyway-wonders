@@ -5,6 +5,7 @@ import {
   extendCheckout,
   confirmCheckout,
   cancelCheckout,
+  cancelPaymentIntent,
   getCheckoutStatus,
 } from '../controllers/checkout.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
@@ -114,6 +115,26 @@ router.post('/confirm', validate(confirmCheckoutSchema), confirmCheckout);
  *         description: Session marked CANCELLED and Redis stock locks purged
  */
 router.post('/cancel', cancelCheckout);
+
+/**
+ * @swagger
+ * /api/v1/checkout/payment-cancel:
+ *   post:
+ *     summary: Cancel payment intent and restore session from PAYMENT_PENDING to RESERVED
+ *     tags: [Checkout]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Session restored to RESERVED and paymentIntent cleared for retry
+ *       400:
+ *         description: Session is not in PAYMENT_PENDING state
+ *       404:
+ *         description: Active checkout session not found
+ *       409:
+ *         description: Reservation window expired
+ */
+router.post('/payment-cancel', cancelPaymentIntent);
 
 /**
  * @swagger

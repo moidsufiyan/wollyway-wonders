@@ -21,6 +21,7 @@ import { type Bundle, type BundleProduct } from '@/components/ProductBundle';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { type Product } from '@/types/Product';
+import { formatMoney } from '@/utils/currency';
 
 // Sample bundles data - in a real app, fetch from API
 const sampleBundles: Bundle[] = [
@@ -184,7 +185,7 @@ const BundleDetail = () => {
                     </div>
                     <div className="p-4 sm:w-2/3 flex flex-col justify-between">
                       <div>
-                        <Link href={`/product/${product.id}`} className="text-lg font-medium hover:text-wolly-magenta">
+                        <Link href={`/product/${product.slug || product.id}`} className="text-lg font-medium hover:text-wolly-magenta">
                           {product.name}
                         </Link>
                         <p className="text-sm text-muted-foreground mb-2">
@@ -195,13 +196,13 @@ const BundleDetail = () => {
                         )}
                       </div>
                       <div className="flex justify-between items-end">
-                        <span className="font-bold">₹{product.price.toFixed(2)}</span>
+                        <span className="font-bold">₹{(product.price / 100).toFixed(2)}</span>
                         <Button
                           size="sm"
                           variant="outline"
                           asChild
                         >
-                          <Link href={`/product/${product.id}`}>View Details</Link>
+                          <Link href={`/product/${product.slug || product.id}`}>View Details</Link>
                         </Button>
                       </div>
                     </div>
@@ -220,7 +221,7 @@ const BundleDetail = () => {
                       <Check size={16} className="text-green-500 mr-2" />
                       {product.name}
                     </span>
-                    <span>₹{product.price.toFixed(2)}</span>
+                    <span>₹{(product.price / 100).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -230,15 +231,15 @@ const BundleDetail = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Total Value:</span>
-                  <span className="line-through">${originalTotal.toFixed(2)}</span>
+                  <span className="line-through">{formatMoney(originalTotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Bundle Discount ({bundle.discountPercentage}%):</span>
-                  <span className="text-green-600">-${savings.toFixed(2)}</span>
+                  <span className="text-green-600">-{formatMoney(savings)}</span>
                 </div>
                 <div className="flex justify-between font-bold">
                   <span>Bundle Price:</span>
-                  <span className="text-wolly-magenta text-xl">${discountedTotal.toFixed(2)}</span>
+                  <span className="text-wolly-magenta text-xl">{formatMoney(discountedTotal)}</span>
                 </div>
               </div>
             </div>

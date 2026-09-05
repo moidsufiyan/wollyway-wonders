@@ -20,6 +20,7 @@ export interface ICheckoutSession extends Document {
   idempotencyKey: string;
   paymentProvider: PaymentProvider | null;
   paymentIntentId: string | null;
+  paymentAttemptReceipt: string | null;
   extensionCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -85,6 +86,7 @@ const CheckoutSessionSchema = new Schema<ICheckoutSession>(
     idempotencyKey: { type: String, required: true },
     paymentProvider: { type: String, enum: ['stripe', 'razorpay', 'cod'], default: null },
     paymentIntentId: { type: String, default: null },
+    paymentAttemptReceipt: { type: String, default: null },
     extensionCount: { type: Number, default: 0 },
   },
   {
@@ -94,8 +96,5 @@ const CheckoutSessionSchema = new Schema<ICheckoutSession>(
 
 // Indexes
 CheckoutSessionSchema.index({ userId: 1, status: 1 });
-
-// TTL Index to expire sessions automatically after 15 minutes (900 seconds)
-CheckoutSessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 900 });
 
 export const CheckoutSession = model<ICheckoutSession>('CheckoutSession', CheckoutSessionSchema);

@@ -188,9 +188,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    // ── Register session-expired event listener ──────────────────────────────
-    window.addEventListener('wollyway:session-expired', handleSessionExpired);
-
     // ── Attempt silent refresh ───────────────────────────────────────────────
     const initAuth = async () => {
       setAuthStatus('loading');
@@ -207,7 +204,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     initAuth();
+  }, []);
 
+  useEffect(() => {
+    // ── Register session-expired event listener ──────────────────────────────
+    window.addEventListener('wollyway:session-expired', handleSessionExpired);
     return () => {
       window.removeEventListener('wollyway:session-expired', handleSessionExpired);
     };

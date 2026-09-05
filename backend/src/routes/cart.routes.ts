@@ -6,6 +6,7 @@ import {
   removeItem,
   clearCart,
   moveFromWishlist,
+  syncCartPrices,
 } from '../controllers/cart.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
@@ -15,6 +16,7 @@ import {
   removeCartItemSchema,
   moveWishlistToCartSchema,
 } from '../validators/cart.validator.js';
+import { mongoProductIdParamSchema } from '../validators/common.validator.js';
 
 const router = Router();
 
@@ -106,7 +108,12 @@ router.post('/items', validate(cartItemSchema), addItem);
  *       409:
  *         description: Concurrency version conflict
  */
-router.patch('/items/:productId', validate(updateQuantitySchema), updateQuantity);
+router.patch(
+  '/items/:productId',
+  validate(mongoProductIdParamSchema),
+  validate(updateQuantitySchema),
+  updateQuantity
+);
 
 /**
  * @swagger
@@ -171,5 +178,21 @@ router.delete('/', clearCart);
  *         description: Transaction session rollback error
  */
 router.post('/items/move-from-wishlist', validate(moveWishlistToCartSchema), moveFromWishlist);
+
+/**
+ * @swagger
+ * /api/v1/cart/sync-prices:
+ *   post:
+ *     summary: Synchronize cart item price snapshots with live catalog
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart updated with live prices, returns updated CartDTO
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/sync-prices', syncCartPrices);
 
 export default router;

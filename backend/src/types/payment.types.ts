@@ -14,6 +14,7 @@ export interface CreatePaymentIntentInput {
     phone?: string;
   };
   notes?: Record<string, string>;
+  receipt?: string;
 }
 
 export interface PaymentIntentResult {
@@ -53,6 +54,7 @@ export interface WebhookProcessingResult {
 export interface IPaymentProvider {
   readonly providerName: PaymentProviderType;
   createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentIntentResult>;
+  findOrderByReceipt?(receipt: string): Promise<PaymentIntentResult | null>;
   verifyWebhookSignature(rawBody: string | Buffer, signature: string): boolean;
   normalizeWebhookEvent(
     rawBody: string | Buffer,

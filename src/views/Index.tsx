@@ -23,6 +23,7 @@ const Index: React.FC = () => {
   });
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [isMounted, setIsMounted] = React.useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,17 +35,20 @@ const Index: React.FC = () => {
   useEffect(() => {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
+    setIsMounted(true);
   }, []);
 
   return (
     <div className="min-h-screen gradient-bg">
       {/* Progress bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
-        style={{ scaleX }}
-      >
-        <div className="h-full bg-gradient-to-r from-wolly-magenta via-wolly-pink to-wolly-blush" />
-      </motion.div>
+      {isMounted && (
+        <motion.div
+          className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
+          style={{ scaleX }}
+        >
+          <div className="h-full bg-gradient-to-r from-wolly-magenta via-wolly-pink to-wolly-blush" />
+        </motion.div>
+      )}
 
       <Navbar />
       <Hero />

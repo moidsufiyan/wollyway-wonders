@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { orderService } from './order.service.js';
+import { checkoutService } from './checkout.service.js';
 import { checkoutRepository } from '../repositories/checkout.repository.js';
 import { paymentRepository } from '../repositories/payment.repository.js';
 import { PaymentProviderFactory } from '../adapters/payment/payment-provider.factory.js';
@@ -14,6 +15,7 @@ import {
   WebhookProcessingResult,
   PaymentConfirmationPayload,
 } from '../types/payment.types.js';
+import { calculateOrderTotals } from '../utils/pricing.util.js';
 
 export class PaymentService {
   /**
@@ -39,6 +41,21 @@ export class PaymentService {
       throw new AppError('Checkout session is not in a payable state', HTTP_STATUS.BAD_REQUEST);
     }
 
+    // LOOP-01 Guard: Strict address validation at payment-intent boundary
+    if (
+      !session.shippingAddressSnapshot ||
+      !session.shippingAddressSnapshot.street ||
+      !session.shippingAddressSnapshot.city ||
+      !session.shippingAddressSnapshot.state ||
+      !session.shippingAddressSnapshot.postalCode ||
+      !session.shippingAddressSnapshot.country
+    ) {
+      throw new AppError(
+        'Checkout session lacks verified shipping address. Please provide a valid shipping address before proceeding to payment.',
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+
     // Verify reservation has not expired
     if (session.reservationExpiresAt && session.reservationExpiresAt.getTime() < Date.now()) {
       throw new AppError(
@@ -52,11 +69,9 @@ export class PaymentService {
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const shippingFee = subtotal > 15000 ? 0 : 500;
-    const taxTotal = Math.round(subtotal * 0.08);
-    const orderTotal = subtotal + shippingFee + taxTotal;
+    const { orderTotal } = calculateOrderTotals(subtotal);
 
-    // Idempotency: Reuse existing active gateway intent if already created for this provider
+    // Fast return: Reuse existing active gateway intent if already created for this provider
     if (
       session.paymentProvider === provider &&
       session.paymentIntentId &&
@@ -80,34 +95,121 @@ export class PaymentService {
       };
     }
 
+    // Deterministic reconciliation identifier derived stably from checkout session
+    const receipt = session.paymentAttemptReceipt || `rcpt_${session._id.toString()}`;
+
+    const adapter = PaymentProviderFactory.getProvider(provider);
+
+    // If session is already PAYMENT_PENDING but has no paymentIntentId (e.g. previous unknown outcome / timeout)
+    if (session.status === 'PAYMENT_PENDING') {
+      if (adapter.findOrderByReceipt) {
+        const existingOrder = await adapter.findOrderByReceipt(receipt);
+        if (existingOrder) {
+          logger.info(
+            {
+              sessionId: session._id.toString(),
+              receipt,
+              gatewayOrderId: existingOrder.clientReference,
+            },
+            'Reconciled existing gateway order before creating new order'
+          );
+          await checkoutRepository.updateStatus(session._id as Types.ObjectId, 'PAYMENT_PENDING', {
+            paymentIntentId: existingOrder.clientReference,
+            paymentProvider: provider,
+          });
+          return existingOrder;
+        }
+      }
+    } else {
+      // LOOP-02: Atomic compare-and-set claim RESERVED -> PAYMENT_PENDING
+      const claimedSession = await checkoutRepository.claimForPayment(
+        session._id as Types.ObjectId,
+        provider,
+        receipt
+      );
+
+      if (!claimedSession) {
+        // Another concurrent request claimed this session.
+        // Wait briefly to reuse the winning request's paymentIntentId.
+        for (let i = 0; i < 6; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const reRead = await checkoutRepository.findById(session._id as Types.ObjectId);
+          if (reRead?.paymentIntentId && reRead.paymentProvider === provider) {
+            logger.info(
+              { sessionId: session._id.toString(), paymentIntentId: reRead.paymentIntentId },
+              'Concurrent payment request successfully reused winning payment intent'
+            );
+            return {
+              provider,
+              clientReference: reRead.paymentIntentId,
+              amount: orderTotal,
+              currency: 'INR',
+              keyId: provider === 'razorpay' ? env.RAZORPAY_KEY_ID : undefined,
+            };
+          }
+        }
+        throw new AppError(
+          'Payment intent creation in progress by another request. Please retry in a moment.',
+          HTTP_STATUS.CONFLICT
+        );
+      }
+    }
+
     const user = await User.findById(userObjectId);
     if (!user) {
       throw new AppError('User profile not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    const adapter = PaymentProviderFactory.getProvider(provider);
+    try {
+      const intentResult = await adapter.createPaymentIntent({
+        checkoutSessionId: session._id.toString(),
+        amount: orderTotal,
+        currency: 'INR',
+        receipt,
+        customer: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone || undefined,
+        },
+        notes: {
+          userId: user._id.toString(),
+        },
+      });
 
-    const intentResult = await adapter.createPaymentIntent({
-      checkoutSessionId: session._id.toString(),
-      amount: orderTotal,
-      currency: 'INR',
-      customer: {
-        name: user.name,
-        email: user.email,
-        phone: user.phone || undefined,
-      },
-      notes: {
-        userId: user._id.toString(),
-      },
-    });
+      // Record gateway order reference onto CheckoutSession
+      await checkoutRepository.updateStatus(session._id as Types.ObjectId, 'PAYMENT_PENDING', {
+        paymentProvider: provider,
+        paymentIntentId: intentResult.clientReference,
+      });
 
-    // Record gateway order reference onto CheckoutSession
-    await checkoutRepository.updateStatus(session._id as Types.ObjectId, 'PAYMENT_PENDING', {
-      paymentProvider: provider,
-      paymentIntentId: intentResult.clientReference,
-    });
+      return intentResult;
+    } catch (err: unknown) {
+      const isDefiniteRejection =
+        (err as Record<string, unknown> | null)?.details &&
+        typeof (err as Record<string, unknown>).details === 'object' &&
+        ((err as Record<string, unknown>).details as Record<string, unknown>)?.isDefiniteRejection;
 
-    return intentResult;
+      if (isDefiniteRejection) {
+        // Gateway definitely rejected request (no gateway order created). Safe to restore RESERVED.
+        await checkoutRepository.updateStatus(session._id as Types.ObjectId, 'RESERVED', {
+          paymentIntentId: null,
+          paymentProvider: null,
+        });
+        throw err;
+      }
+
+      // CRITICAL: Unknown gateway outcome (timeout, connection reset, 5xx)
+      // Do NOT restore RESERVED. Preserve PAYMENT_PENDING with deterministic reconciliation identifier.
+      logger.warn(
+        {
+          sessionId: session._id.toString(),
+          receipt,
+          err,
+        },
+        'CRITICAL: Gateway outcome is unknown. Preserving PAYMENT_PENDING state for reconciliation.'
+      );
+      throw err;
+    }
   }
 
   /**
@@ -172,6 +274,85 @@ export class PaymentService {
 
     // 4. Filter for payment capture events
     if (!normalized.isPaymentSuccess) {
+      if (normalized.eventType === 'payment.failed') {
+        logger.info(
+          { eventId: normalized.eventId, gatewayOrderId: normalized.gatewayOrderId },
+          'Payment failure webhook received; initiating safe failure recovery'
+        );
+
+        // Resolve CheckoutSession
+        let failSession = null;
+        if (
+          normalized.metadata.checkoutSessionId &&
+          Types.ObjectId.isValid(normalized.metadata.checkoutSessionId)
+        ) {
+          failSession = await checkoutRepository.findById(
+            new Types.ObjectId(normalized.metadata.checkoutSessionId)
+          );
+        }
+        if (!failSession && normalized.gatewayOrderId) {
+          failSession = await checkoutRepository.findByPaymentIntent(
+            provider,
+            normalized.gatewayOrderId
+          );
+        }
+
+        if (failSession) {
+          // If already COMPLETED, safely ignore late failure
+          if (failSession.status === 'COMPLETED') {
+            await paymentRepository.updateEventStatus(
+              normalized.eventId,
+              provider,
+              PAYMENT_WEBHOOK_STATUS.PROCESSED,
+              { processedAt: new Date() }
+            );
+            return {
+              status: 'PROCESSED',
+              statusCode: HTTP_STATUS.OK,
+              message: 'Session already completed; ignoring late failure webhook',
+            };
+          }
+
+          // If session is PAYMENT_PENDING, check if reservation slice is still valid
+          if (failSession.status === 'PAYMENT_PENDING') {
+            const isReservationExpired =
+              failSession.reservationExpiresAt &&
+              failSession.reservationExpiresAt.getTime() < Date.now();
+
+            if (isReservationExpired) {
+              await checkoutService.expireSession(failSession._id as Types.ObjectId);
+              logger.info(
+                { sessionId: failSession._id.toString() },
+                'Payment failed and reservation expired; session transitioned to EXPIRED'
+              );
+            } else {
+              // Transition PAYMENT_PENDING -> RESERVED so customer can retry
+              await checkoutRepository.updateStatus(failSession._id as Types.ObjectId, 'RESERVED', {
+                paymentIntentId: null,
+                paymentProvider: null,
+              });
+              logger.info(
+                { sessionId: failSession._id.toString() },
+                'Payment failed but reservation is active; transitioned session back to RESERVED for retry'
+              );
+            }
+          }
+
+          await paymentRepository.updateEventStatus(
+            normalized.eventId,
+            provider,
+            PAYMENT_WEBHOOK_STATUS.PROCESSED,
+            { processedAt: new Date() }
+          );
+
+          return {
+            status: 'PROCESSED',
+            statusCode: HTTP_STATUS.OK,
+            message: 'Payment failure recorded; session restored to RESERVED for retry',
+          };
+        }
+      }
+
       logger.info(
         { eventId: normalized.eventId, eventType: normalized.eventType },
         'Non-capture webhook event received; marking as IGNORED'
@@ -289,9 +470,7 @@ export class PaymentService {
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const shippingFee = subtotal > 15000 ? 0 : 500;
-    const taxTotal = Math.round(subtotal * 0.08);
-    const expectedOrderTotal = subtotal + shippingFee + taxTotal;
+    const { orderTotal: expectedOrderTotal } = calculateOrderTotals(subtotal);
 
     if (normalized.amount !== expectedOrderTotal) {
       logger.error(

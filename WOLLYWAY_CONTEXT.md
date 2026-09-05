@@ -404,6 +404,8 @@ POST   /api/v1/checkout/extend
 - Archive cascade: product cannot archive if unsettled orders exist
 - Inventory sold counter: read-only, only updated on payment success
 - Reservations: expire after `RESERVATION_TIMEOUT_MINUTES` (15 min)
+- **Pricing:** Fully server-authoritative and implemented entirely in integer/paise to avoid float precision issues.
+- **Totals Calculation:** `calculateOrderTotals` in `pricing.util.ts` is the single source of truth for all cart, checkout, payment, and order totals.
 
 ---
 

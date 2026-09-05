@@ -8,6 +8,7 @@ import { wishlistService } from '@/services/wishlist.service';
 import { ApiClientError } from '@/lib/api-client';
 import { useRouter, usePathname } from 'next/navigation';
 import { WishlistResponse } from '@/types/wishlist.types';
+import { useAuth } from './AuthContext';
 
 type WishlistContextType = {
   items: Product[];
@@ -16,6 +17,7 @@ type WishlistContextType = {
   toggleItem: (product: Product) => void;
   clearWishlist: () => void;
   isInWishlist: (productId: string) => boolean; // Legacy synchronous check, relies on main wishlist cache
+  isLoading: boolean;
 };
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
@@ -53,6 +55,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
   const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
+  const { authStatus } = useAuth();
 
   // Cleanup legacy localStorage on mount
   useEffect(() => {
@@ -87,10 +90,11 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
     });
   };
 
-  const { data: wishlistDTO } = useQuery({
+  const { data: wishlistDTO, isLoading } = useQuery({
     queryKey: ['wishlist', { page: 1 }],
     queryFn: () => wishlistService.getWishlist(1, 50),
     retry: false, // Don't retry on 401s
+    enabled: authStatus === 'authenticated',
   });
 
   const items: Product[] = (wishlistDTO?.products || []).map(mapWishlistCardToUI);
@@ -204,6 +208,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
         toggleItem,
         clearWishlist,
         isInWishlist,
+        isLoading,
       }}
     >
       {children}

@@ -19,6 +19,7 @@ import {
   AdminOrderFilterQuery,
   AdminStatusUpdatePayload,
 } from '../types/order.types.js';
+import { calculateOrderTotals } from '../utils/pricing.util.js';
 
 export class OrderService {
   /**
@@ -112,9 +113,7 @@ export class OrderService {
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const shippingFee = subtotal > 15000 ? 0 : 500;
-    const taxTotal = Math.round(subtotal * 0.08);
-    const orderTotal = subtotal + shippingFee + taxTotal;
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
     // 5. Execute Multi-Document ACID Transaction
     const mongoSession = await mongoose.startSession();
@@ -393,12 +392,16 @@ export class OrderService {
       );
     }
 
-    // Build fulfillment update fields
-    const fulfillmentUpdates: Partial<IOrder['fulfillment']> = { ...order.fulfillment };
-
-    if (payload.carrier !== undefined) fulfillmentUpdates.carrier = payload.carrier;
-    if (payload.trackingNumber !== undefined)
-      fulfillmentUpdates.trackingNumber = payload.trackingNumber;
+    // Build fulfillment update fields without spreading Mongoose subdocument
+    const fulfillmentUpdates: Partial<IOrder['fulfillment']> = {
+      carrier: payload.carrier !== undefined ? payload.carrier : order.fulfillment?.carrier,
+      trackingNumber:
+        payload.trackingNumber !== undefined
+          ? payload.trackingNumber
+          : order.fulfillment?.trackingNumber,
+      shippedAt: order.fulfillment?.shippedAt,
+      deliveredAt: order.fulfillment?.deliveredAt,
+    };
 
     if (targetStatus === 'SHIPPED' && !fulfillmentUpdates.shippedAt) {
       fulfillmentUpdates.shippedAt = new Date();

@@ -37,7 +37,8 @@ app.use(
     logger,
     genReqId: (req: IncomingMessage) => (req as IncomingMessage & { id?: string }).id || 'unknown',
     customSuccessMessage: (req, res) => `${req.method} ${req.url} - ${res.statusCode}`,
-    customErrorMessage: (req, res, err) => `${req.method} ${req.url} - ${res.statusCode} - ${err.message}`,
+    customErrorMessage: (req, res, err) =>
+      `${req.method} ${req.url} - ${res.statusCode} - ${err.message}`,
     serializers: {
       req: () => undefined,
       res: () => undefined,

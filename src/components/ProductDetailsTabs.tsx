@@ -185,7 +185,7 @@ const ProductDetailsTabs: React.FC<ProductDetailsTabsProps> = ({ product }) => {
                         {method.time}
                       </p>
                     </div>
-                    <p className="font-medium">₹{method.price.toFixed(2)}</p>
+                    <p className="font-medium">₹{(method.price / 100).toFixed(2)}</p>
                   </div>
                 ))}
               </div>

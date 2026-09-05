@@ -7,11 +7,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import type { Product } from '@/types/Product';
+import { formatMoney } from '@/utils/currency';
 
 // Make BundleProduct compatible with Product
 export type BundleProduct = {
   id: number;
   name: string;
+  slug?: string;
   price: number;
   image: string;
   category: string;
@@ -96,7 +98,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
                   />
                 </div>
                 <div className="ml-3 flex-1">
-                  <Link href={`/product/${product.id}`} className="font-medium hover:text-wolly-magenta text-sm">
+                  <Link href={`/product/${product.slug || product.id}`} className="font-medium hover:text-wolly-magenta text-sm">
                     {product.name}
                   </Link>
                   <p className="text-xs text-muted-foreground">
@@ -104,7 +106,7 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">₹{product.price.toFixed(2)}</p>
+                  <p className="text-sm font-semibold">₹{(product.price / 100).toFixed(2)}</p>
                 </div>
               </div>
             </React.Fragment>
@@ -114,15 +116,15 @@ const ProductBundle: React.FC<ProductBundleProps> = ({ bundle }) => {
         <div className="border-t border-border pt-4 mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-muted-foreground">Original Price:</span>
-            <span className="line-through">${originalTotal.toFixed(2)}</span>
+            <span className="line-through">{formatMoney(originalTotal)}</span>
           </div>
           <div className="flex justify-between items-center mb-2">
             <span className="text-muted-foreground">Bundle Discount:</span>
-            <span className="text-green-600">-${savings.toFixed(2)} ({bundle.discountPercentage}%)</span>
+            <span className="text-green-600">-{formatMoney(savings)} ({bundle.discountPercentage}%)</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-bold">Bundle Price:</span>
-            <span className="text-wolly-magenta font-bold text-xl">${discountedTotal.toFixed(2)}</span>
+            <span className="text-wolly-magenta font-bold text-xl">{formatMoney(discountedTotal)}</span>
           </div>
         </div>
         

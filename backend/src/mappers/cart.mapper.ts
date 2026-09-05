@@ -1,9 +1,10 @@
 import { Types } from 'mongoose';
 import { ICart } from '../models/cart.model.js';
 import { CartDTO, CartItemDTO } from '../types/cart.types.js';
+import { calculateOrderTotals } from '../utils/pricing.util.js';
 
 export class CartMapper {
-  private static MAX_SUBTOTAL_LIMIT = 200000; // ₹2,00,000 (stored in cents: 20000000)
+  private static MAX_SUBTOTAL_LIMIT = 20000000; // ₹2,00,000 (in paise: 20000000)
 
   /**
    * Transforms raw database details to a complete CartDTO.
@@ -29,6 +30,7 @@ export class CartMapper {
     }
 
     const exceedsMaxSubtotal = subtotal > this.MAX_SUBTOTAL_LIMIT;
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
     return {
       _id: (cart._id as Types.ObjectId).toString(),
@@ -36,6 +38,9 @@ export class CartMapper {
       items: itemDTOs,
       totals: {
         subtotal,
+        shippingFee,
+        taxTotal,
+        orderTotal,
         itemCount,
         priceChanged,
         hasInvalidItems,

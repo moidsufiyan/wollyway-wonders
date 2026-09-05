@@ -115,7 +115,7 @@ const CheckoutSuccess = () => {
                       </p>
                     </div>
                     <p className="font-medium">
-                      ₹{(item.price * item.quantity).toFixed(2)}
+                      ₹{((item.price * item.quantity) / 100).toFixed(2)}
                     </p>
                   </div>
                 ))}
@@ -126,20 +126,20 @@ const CheckoutSuccess = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>₹{order.financials.subtotal.toFixed(2)}</span>
+                  <span>₹{(order.financials.subtotal / 100).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>{order.financials.shippingFee === 0 ? 'Free' : `₹${order.financials.shippingFee.toFixed(2)}`}</span>
+                  <span>{order.financials.shippingFee === 0 ? 'Free' : `₹${(order.financials.shippingFee / 100).toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>₹{order.financials.taxTotal.toFixed(2)}</span>
+                  <span>₹{(order.financials.taxTotal / 100).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>₹{order.financials.orderTotal.toFixed(2)}</span>
+                  <span>₹{(order.financials.orderTotal / 100).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>

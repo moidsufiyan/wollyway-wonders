@@ -41,6 +41,10 @@ export type Product = {
   }>;
   numReviews?: number;
   isNew?: boolean; // We could derive this from createdAt if needed
+
+  // --- Cart Item Specific Fields ---
+  isValid?: boolean;
+  validationReason?: string;
 };
 
 // Adapter: Maps backend ProductCardDTO to frontend UI Product
@@ -120,6 +124,9 @@ export const mapCartItemToUI = (dto: CartItemDTO): Product => {
     stockStatus: dto.availability.status,
     stockCount: simulatedStockCount,
     
+    isValid: dto.isValid,
+    validationReason: dto.validationReason,
+
     colors: undefined,
     sizes: undefined,
     rating: undefined,

@@ -8,6 +8,12 @@ import { Menu, X, ShoppingCart, User } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import SearchBar from "./SearchBar";
 
 const NavLink = ({
@@ -112,32 +118,31 @@ const Navbar = () => {
 
             {/* Auth Links */}
             {isAuthenticated ? (
-              <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage
-                      src={
-                        user?.avatar ||
-                        "https://avatars.dicebear.com/api/open-peeps/example.svg"
-                      }
-                    />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </label>
-                <ul
-                  tabIndex={0}
-                  className="dropdown-content z-[1] menu shadow bg-base-100 rounded-box w-52"
-                >
-                  <li>
-                    <Link href="/profile">Profile</Link>
-                  </li>
-                  <li>
-                    <button onClick={logout}>Logout</button>
-                  </li>
-                </ul>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="relative h-8 w-8 rounded-full ring-0 outline-none hover:ring-2 hover:ring-wolly-magenta transition-all">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={
+                          user?.avatar ||
+                          "https://avatars.dicebear.com/api/open-peeps/example.svg"
+                        }
+                      />
+                      <AvatarFallback>
+                        {user?.name?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background border rounded-md shadow-md p-2">
+                  <DropdownMenuItem className="cursor-pointer p-2 hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors" asChild>
+                    <Link href="/profile" className="w-full block">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="text-red-500 cursor-pointer p-2 hover:bg-red-50 rounded-sm transition-colors mt-1">
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/login"
                 className="text-sm font-medium text-foreground hover:text-wolly-magenta transition-colors duration-300"

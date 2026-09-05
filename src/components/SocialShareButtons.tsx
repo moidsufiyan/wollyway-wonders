@@ -23,7 +23,7 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ product }) => {
 
   React.useEffect(() => {
     if (typeof window !== "undefined" && product) {
-      setShareableUrl(`${window.location.origin}/product/${product.id}`);
+      setShareableUrl(`${window.location.origin}/product/${product.slug || product.id}`);
     }
   }, [product]);
 

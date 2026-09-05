@@ -24,6 +24,12 @@ export const errorHandler = (
   } else if (err.name === 'MongoServerError' && (err as Error & { code?: number }).code === 11000) {
     statusCode = HTTP_STATUS.CONFLICT;
     message = 'Duplicate field value entered';
+  } else if (err.name === 'CastError' || err.name === 'BSONError') {
+    statusCode = HTTP_STATUS.BAD_REQUEST;
+    message = 'Invalid ID format';
+  } else if (err instanceof SyntaxError && 'body' in err) {
+    statusCode = HTTP_STATUS.BAD_REQUEST;
+    message = 'Invalid JSON payload format';
   }
 
   // Log error using Pino with correlation ID context
@@ -40,7 +46,7 @@ export const errorHandler = (
     message,
     errors,
     requestId: req.id,
-    ...(env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(env.NODE_ENV === 'development' && statusCode >= 500 && { stack: err.stack }),
   });
 };
 

@@ -123,3 +123,21 @@ export const moveFromWishlist = async (
     next(error);
   }
 };
+
+export const syncCartPrices = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const cart = await cartService.syncCartPrices(userId as unknown as Types.ObjectId);
+    res.status(HTTP_STATUS.OK).json(cart);
+  } catch (error) {
+    next(error);
+  }
+};

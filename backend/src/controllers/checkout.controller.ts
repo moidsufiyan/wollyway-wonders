@@ -117,6 +117,30 @@ export const cancelCheckout = async (
   }
 };
 
+export const cancelPaymentIntent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const summary = await checkoutService.recoverPaymentPending(
+      userId as unknown as Types.ObjectId
+    );
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      checkout: summary,
+      message: 'Payment intent cancelled; session returned to RESERVED state.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getCheckoutStatus = async (
   req: Request,
   res: Response,

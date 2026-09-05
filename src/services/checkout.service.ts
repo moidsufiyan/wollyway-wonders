@@ -56,6 +56,11 @@ export const checkoutService = {
     await apiClient.post('/checkout/cancel');
   },
 
+  cancelPaymentIntent: async (): Promise<CheckoutSummaryDTO> => {
+    const response = await apiClient.post<{ success: boolean; checkout: CheckoutSummaryDTO }>('/checkout/payment-cancel');
+    return response.checkout;
+  },
+
   getCheckoutStatus: async (sessionId: string): Promise<CheckoutStatusDTO> => {
     const response = await apiClient.get<{ success: boolean; data: CheckoutStatusDTO }>(`/checkout/${sessionId}/status`);
     return response.data;

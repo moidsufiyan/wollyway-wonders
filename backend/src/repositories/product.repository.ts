@@ -60,7 +60,11 @@ export class ProductRepository {
    * Used by the Discovery service before building the product filter.
    */
   async resolveCategorySlug(slug: string): Promise<Types.ObjectId | null> {
-    const category = await Category.findOne({ slug, status: 'active' }, { _id: 1 }).lean();
+    const normalizedSlug = slug.toLowerCase();
+    const category = await Category.findOne(
+      { slug: normalizedSlug, status: 'active' },
+      { _id: 1 }
+    ).lean();
     return category ? (category._id as Types.ObjectId) : null;
   }
 
@@ -69,7 +73,13 @@ export class ProductRepository {
   // ---------------------------------------------------------------------------
 
   async findBySlug(slug: string, isAdmin = false): Promise<IProduct | null> {
-    const query: FilterQuery<IProduct> = { slug };
+    const query: FilterQuery<IProduct> = {};
+    if (Types.ObjectId.isValid(slug)) {
+      query.$or = [{ slug }, { _id: slug }];
+    } else {
+      query.slug = slug;
+    }
+
     if (!isAdmin) {
       query.visibility = { $in: ['published', 'hidden'] };
     }

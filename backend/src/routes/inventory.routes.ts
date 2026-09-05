@@ -13,6 +13,7 @@ import {
   adjustInventorySchema,
   updateInventorySettingsSchema,
 } from '../validators/inventory.validator.js';
+import { mongoProductIdParamSchema } from '../validators/common.validator.js';
 
 const router = Router();
 
@@ -32,7 +33,7 @@ const router = Router();
  *       200:
  *         description: Masked stock state details.
  */
-router.get('/:productId', getInventoryByProductId);
+router.get('/:productId', validate(mongoProductIdParamSchema), getInventoryByProductId);
 
 /**
  * @openapi
@@ -52,7 +53,13 @@ router.get('/:productId', getInventoryByProductId);
  *       200:
  *         description: Exact stock details.
  */
-router.get('/admin/:productId', protect, restrictTo('admin'), getAdminInventoryByProductId);
+router.get(
+  '/admin/:productId',
+  protect,
+  restrictTo('admin'),
+  validate(mongoProductIdParamSchema),
+  getAdminInventoryByProductId
+);
 
 /**
  * @openapi
@@ -113,6 +120,7 @@ router.patch(
   '/:productId/settings',
   protect,
   restrictTo('admin'),
+  validate(mongoProductIdParamSchema),
   validate(updateInventorySettingsSchema),
   updateSettings
 );

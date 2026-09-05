@@ -193,6 +193,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   // Attach the current access token to the Authorization header if available
   const token = authToken.get();
+  const wasAuthenticated = !!token;
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...headers,
@@ -235,7 +236,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       authToken.clear();
 
       // Signal AuthContext to clear its state and redirect to login
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && wasAuthenticated) {
         window.dispatchEvent(new CustomEvent('wollyway:session-expired'));
       }
 

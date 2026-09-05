@@ -31,7 +31,7 @@ import { authService } from '@/services/auth.service';
 const Profile = () => {
   const router = useRouter();
   const { user, isAuthenticated, logout, updateProfile } = useAuth();
-  const { items, removeItem: removeWishlistItem } = useWishlist();
+  const { items, removeItem: removeWishlistItem, isLoading: isWishlistLoading } = useWishlist();
   const { toast } = useToast();
   
   const queryClient = useQueryClient();
@@ -396,7 +396,7 @@ const Profile = () => {
                   <div className="p-6">
                     <h2 className="text-xl font-bold mb-6">My Wishlist</h2>
                     
-                    {isOrdersLoading ? (
+                    {isWishlistLoading ? (
                       <div className="flex justify-center py-12">
                         <Loader2 className="animate-spin h-8 w-8 text-wolly-magenta" />
                       </div>

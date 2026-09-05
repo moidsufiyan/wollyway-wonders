@@ -12,21 +12,16 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatMoney } from '@/utils/currency';
 
 const Cart = () => {
-  const { items, removeItem, updateQuantity, clearCart, subtotal } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, subtotal, shippingFee, taxTotal, orderTotal } = useCart();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   
-  // Calculate shipping, total, etc.
-  const shipping = items.length > 0 ? (subtotal >= 50 ? 0 : 5.99) : 0;
-  const tax = subtotal * 0.08; // Assuming 8% tax rate
-  const total = subtotal + shipping + tax;
-  
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      // For demo, we could either redirect to login or just proceed
-      router.push('/checkout');
+      router.push(`/login?from=${encodeURIComponent('/checkout')}`);
     } else {
       router.push('/checkout');
     }
@@ -102,7 +97,7 @@ const Cart = () => {
                             <div className="flex flex-col sm:flex-row sm:justify-between">
                               <div>
                                 <h3 className="font-medium">
-                                  <Link href={`/product/${item.product.id}`}
+                                  <Link href={`/product/${item.product.slug || item.product.id}`}
                                     className="hover:text-wolly-magenta"
                                   >
                                     {item.product.name}
@@ -119,7 +114,7 @@ const Cart = () => {
                               </div>
                               <div className="sm:text-right">
                                 <span className="font-bold text-wolly-magenta">
-                                  ₹{item.product.price.toFixed(2)}
+                                  {formatMoney(item.product.price)}
                                 </span>
                               </div>
                             </div>
@@ -184,19 +179,19 @@ const Cart = () => {
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>₹{subtotal.toFixed(2)}</span>
+                      <span>{formatMoney(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Shipping</span>
-                      {shipping === 0 ? (
+                      {shippingFee === 0 && items.length > 0 ? (
                         <span className="text-green-600">Free</span>
                       ) : (
-                        <span>₹{shipping.toFixed(2)}</span>
+                        <span>{formatMoney(shippingFee)}</span>
                       )}
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax (18%)</span>
-                      <span>₹{tax.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Tax (8%)</span>
+                      <span>{formatMoney(taxTotal)}</span>
                     </div>
                     
                     <Separator />
@@ -204,7 +199,7 @@ const Cart = () => {
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
                       <span className="text-wolly-magenta text-xl">
-                        ₹{total.toFixed(2)}
+                        {formatMoney(orderTotal)}
                       </span>
                     </div>
                   </div>
@@ -227,7 +222,7 @@ const Cart = () => {
                   
                   <div className="mt-4 text-xs text-center text-muted-foreground">
                     <p>Secure checkout powered by Stripe</p>
-                    <p className="mt-1">Free shipping on orders over $50</p>
+                    <p className="mt-1">Free shipping on orders over ₹150</p>
                   </div>
                 </div>
               </div>

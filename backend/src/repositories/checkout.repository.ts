@@ -75,13 +75,65 @@ export class CheckoutRepository {
   }
 
   /**
+   * Compare-and-set claim of a checkout session for payment:
+   * Transitions RESERVED -> PAYMENT_PENDING atomically.
+   * Only one concurrent caller can succeed.
+   */
+  async claimForPayment(
+    sessionId: Types.ObjectId,
+    paymentProvider: string,
+    paymentAttemptReceipt: string
+  ): Promise<ICheckoutSession | null> {
+    return CheckoutSession.findOneAndUpdate(
+      { _id: sessionId, status: 'RESERVED' },
+      {
+        $set: {
+          status: 'PAYMENT_PENDING',
+          paymentProvider,
+          paymentAttemptReceipt,
+        },
+      },
+      { new: true }
+    );
+  }
+
+  /**
    * Finds all non-completed sessions that have expired reservations.
+   * Explicitly excludes PAYMENT_PENDING to protect in-flight or delayed webhook payments.
    */
   async findStaleExpiredSessions(): Promise<ICheckoutSession[]> {
     return CheckoutSession.find({
-      status: { $in: ['READY', 'PAYMENT_PENDING'] },
+      status: { $in: ['READY', 'RESERVED'] },
       reservationExpiresAt: { $lt: new Date() },
     });
+  }
+
+  /**
+   * Safely purges old terminal checkout sessions (COMPLETED, CANCELLED, EXPIRED, FAILED).
+   * Preserves non-terminal states and protects PAYMENT_PENDING sessions.
+   */
+  async deleteOldTerminalSessions(olderThanMs: number = 48 * 60 * 60 * 1000): Promise<number> {
+    const cutoff = new Date(Date.now() - olderThanMs);
+    const result = await CheckoutSession.deleteMany({
+      status: { $in: ['COMPLETED', 'CANCELLED', 'EXPIRED', 'FAILED'] },
+      updatedAt: { $lt: cutoff },
+    });
+    return result.deletedCount || 0;
+  }
+
+  /**
+   * Safely drops the legacy MongoDB createdAt_1 TTL index if present.
+   */
+  async dropLegacyTTLIndex(): Promise<void> {
+    try {
+      const indexes = await CheckoutSession.collection.indexes();
+      const ttlIndex = indexes.find((idx) => idx.name === 'createdAt_1');
+      if (ttlIndex) {
+        await CheckoutSession.collection.dropIndex('createdAt_1');
+      }
+    } catch {
+      // Ignore if index doesn't exist or collection hasn't been created yet
+    }
   }
 }
 

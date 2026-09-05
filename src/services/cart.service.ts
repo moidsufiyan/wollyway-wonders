@@ -49,6 +49,14 @@ export class CartService {
     const response = await apiClient.post<{ success: boolean; data: CartDTO }>('/cart/items/move-from-wishlist', { productId });
     return response.data;
   }
+
+  /**
+   * Synchronizes cart prices with the live catalog.
+   */
+  async syncPrices(): Promise<CartDTO> {
+    const response = await apiClient.post<{ success: boolean; data: CartDTO }>('/cart/sync-prices');
+    return response.data;
+  }
 }
 
 export const cartService = new CartService();

@@ -8,6 +8,7 @@ import { cartService } from '@/services/cart.service';
 import { ApiClientError } from '@/lib/api-client';
 import { useRouter, usePathname } from 'next/navigation';
 import { CartDTO } from '@/types/cart.types';
+import { useAuth } from './AuthContext';
 
 type CartItem = {
   product: Product;
@@ -22,6 +23,10 @@ type CartContextType = {
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  shippingFee: number;
+  taxTotal: number;
+  orderTotal: number;
+  hasInvalidItems: boolean;
   isLoading: boolean;
 };
 
@@ -40,6 +45,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
+  const { authStatus } = useAuth();
 
   // Cleanup legacy localStorage on mount
   useEffect(() => {
@@ -79,6 +85,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     queryKey: ['cart'],
     queryFn: () => cartService.getCart(),
     retry: false, // Don't aggressively retry on 401s, let it fail fast
+    enabled: authStatus === 'authenticated',
   });
 
   // If query returns 401, cart is simply unauthenticated. 
@@ -93,6 +100,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const itemCount = cartDTO?.totals?.itemCount || 0;
   const subtotal = cartDTO?.totals?.subtotal || 0;
+  const shippingFee = cartDTO?.totals?.shippingFee || 0;
+  const taxTotal = cartDTO?.totals?.taxTotal || 0;
+  const orderTotal = cartDTO?.totals?.orderTotal || 0;
+  const hasInvalidItems = cartDTO?.totals?.hasInvalidItems || false;
 
   const addMutation = useMutation({
     mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => 
@@ -173,6 +184,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         clearCart,
         itemCount: isUnauthenticated ? 0 : itemCount,
         subtotal: isUnauthenticated ? 0 : subtotal,
+        shippingFee: isUnauthenticated ? 0 : shippingFee,
+        taxTotal: isUnauthenticated ? 0 : taxTotal,
+        orderTotal: isUnauthenticated ? 0 : orderTotal,
+        hasInvalidItems: isUnauthenticated ? false : hasInvalidItems,
         isLoading,
       }}
     >

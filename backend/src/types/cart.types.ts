@@ -4,6 +4,9 @@ export type InvalidationReason = 'UNPUBLISHED' | 'ARCHIVED' | 'OUT_OF_STOCK' | '
 
 export interface CartTotalsDTO {
   subtotal: number;
+  shippingFee: number;
+  taxTotal: number;
+  orderTotal: number;
   itemCount: number;
   priceChanged: boolean;
   hasInvalidItems: boolean;

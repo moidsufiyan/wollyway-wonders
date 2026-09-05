@@ -112,10 +112,10 @@ const Shop = () => {
     }
     
     if (newFilters.priceRange !== undefined) {
-      if (newFilters.priceRange[0] > 0) updates.minPrice = newFilters.priceRange[0].toString();
+      if (newFilters.priceRange[0] > 0) updates.minPrice = (newFilters.priceRange[0] * 100).toString();
       else updates.minPrice = null;
       
-      if (newFilters.priceRange[1] < 5000) updates.maxPrice = newFilters.priceRange[1].toString();
+      if (newFilters.priceRange[1] < 5000) updates.maxPrice = (newFilters.priceRange[1] * 100).toString();
       else updates.maxPrice = null;
     }
 
@@ -135,7 +135,10 @@ const Shop = () => {
   // Convert DiscoveryQueryParams back to the shape ProductFilters component expects
   const currentFilterProps = {
     categories: queryFilters.categorySlug ? [queryFilters.categorySlug] : [],
-    priceRange: [queryFilters.minPrice || 0, queryFilters.maxPrice || 5000] as [number, number],
+    priceRange: [
+      queryFilters.minPrice ? Math.floor(queryFilters.minPrice / 100) : 0, 
+      queryFilters.maxPrice ? Math.floor(queryFilters.maxPrice / 100) : 5000
+    ] as [number, number],
     ratingRange: [1, 5] as [number, number], // Stubbed out for UI component compat
     inStock: queryFilters.availability === 'in_stock',
     sortBy: searchParams?.get('sortBy') || 'newest' // keep raw string for UI toggle group matching

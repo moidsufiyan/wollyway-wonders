@@ -103,7 +103,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       
       <CardFooter className="flex justify-between pt-3 border-t px-5 py-3">
         <div>
-          <p className="font-medium">₹{order.orderTotal.toFixed(2)}</p>
+          <p className="font-medium">₹{(order.orderTotal / 100).toFixed(2)}</p>
           <p className="text-xs text-muted-foreground">
             {order.itemCount} items
           </p>

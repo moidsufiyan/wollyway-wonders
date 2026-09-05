@@ -12,22 +12,68 @@ import { HTTP_STATUS } from '../constants/index.js';
 import { orderRepository } from '../repositories/order.repository.js';
 import {
   CheckoutSummaryDTO,
-  ValidationIssue,
   PaymentProvider,
   CheckoutItemSnapshot,
+  ValidationIssue,
 } from '../types/checkout.types.js';
+import { calculateOrderTotals } from '../utils/pricing.util.js';
 
 export class CheckoutService {
   private getRedisKey(sessionId: string): string {
     return `checkout:reservation:${sessionId}`;
   }
 
-  private getReservedCountKey(productId: string): string {
-    return `checkout:reserved-count:${productId}`;
+  private getSliceKey(sessionId: string, productId: string): string {
+    return `checkout:rsv:${sessionId}:${productId}`;
+  }
+
+  private getLockKey(productId: string): string {
+    return `checkout:lock:${productId}`;
   }
 
   /**
-   * Helper sleep for retries.
+   * Discovers all active reservation slices for a product and sums their quantities.
+   * Naturally excludes expired reservations since Redis automatically evicts expired keys.
+   */
+  public async getActiveReservedQuantity(
+    redis: ReturnType<typeof getRedisClient>,
+    productId: string
+  ): Promise<number> {
+    let cursor = '0';
+    const keys: string[] = [];
+    const matchPattern = `checkout:rsv:*:${productId}`;
+
+    do {
+      const [nextCursor, matchedKeys] = await redis.scan(
+        cursor,
+        'MATCH',
+        matchPattern,
+        'COUNT',
+        100
+      );
+      cursor = nextCursor;
+      if (matchedKeys.length > 0) {
+        keys.push(...matchedKeys);
+      }
+    } while (cursor !== '0');
+
+    if (keys.length === 0) {
+      return 0;
+    }
+
+    const values = await redis.mget(...keys);
+    let total = 0;
+    for (const val of values) {
+      if (val !== null) {
+        const qty = parseInt(val, 10);
+        if (!isNaN(qty)) {
+          total += qty;
+        }
+      }
+    }
+    return total;
+  }
+
   /**
    * Performs the validation pipeline on the cart, items, prices, and address.
    */
@@ -47,7 +93,7 @@ export class CheckoutService {
     );
     const productsMap = new Map(products.map((p) => [p._id.toString(), p]));
 
-    // Resolve stock levels dynamically (incorporating active Redis reservations)
+    // Resolve stock levels dynamically (incorporating active Redis reservation slices)
     const redis = getRedisClient();
     const stockMap = await inventoryRepository.getBatchStock(productIds);
 
@@ -77,14 +123,11 @@ export class CheckoutService {
         });
       }
 
-      // Check stock levels including current active reservations
+      // Check stock levels including current active reservation slices
       const rawStock = stockMap.get(idStr) ?? 0;
       let reservedCount = 0;
       try {
-        const val = await redis.get(this.getReservedCountKey(idStr));
-        if (val) {
-          reservedCount = parseInt(val, 10);
-        }
+        reservedCount = await this.getActiveReservedQuantity(redis, idStr);
       } catch {
         // Keep default 0
       }
@@ -117,7 +160,8 @@ export class CheckoutService {
   }
 
   /**
-   * Atomic stock reservation using a Lua script in Redis.
+   * Protected reservation operation using per-product advisory locks and per-session slices.
+   * Lock release uses an ownership-verified Lua script to avoid naive DEL.
    */
   private async executeRedisReservation(
     sessionId: string,
@@ -126,108 +170,104 @@ export class CheckoutService {
     stockLimits: Map<string, number>
   ): Promise<boolean> {
     const redis = getRedisClient();
-    const reservationKey = this.getRedisKey(sessionId);
 
-    // KEYS: [reservationKey, countKey1, countKey2, ...]
-    const keys = [reservationKey];
-    // ARGS: [sessionJsonData, stockLimit1, reqQty1, stockLimit2, reqQty2, ...]
-    const args: string[] = [];
+    // Canonical lexicographical order to prevent distributed deadlocks
+    const uniqueProductIds = Array.from(new Set(items.map((i) => i.productId.toString()))).sort();
+    const acquiredLocks: { key: string; token: string }[] = [];
 
-    const sessionPayload = JSON.stringify({
-      userId,
-      items: items.map((i) => ({
-        productId: i.productId.toString(),
-        quantity: i.quantity,
-      })),
-    });
-
-    args.push(sessionPayload);
-
-    for (const item of items) {
-      const idStr = item.productId.toString();
-      keys.push(this.getReservedCountKey(idStr));
-      const dbStock = stockLimits.get(idStr) ?? 0;
-      args.push(dbStock.toString(), item.quantity.toString());
-    }
-
-    const luaScript = `
-      local reservationKey = KEYS[1]
-      local sessionData = ARGS[1]
-      local numItems = (#KEYS - 1)
-
-      -- 1. Dry run validation assertions
-      for i = 1, numItems do
-        local countKey = KEYS[i + 1]
-        local dbStock = tonumber(ARGS[2 * i])
-        local reqQty = tonumber(ARGS[2 * i + 1])
-        
-        local currentReserved = tonumber(redis.call('get', countKey) or 0)
-        if (dbStock - currentReserved) < reqQty then
-          return 0 -- Insufficient stock
-        end
+    const RELEASE_LOCK_LUA = `
+      if redis.call("get", KEYS[1]) == ARGS[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
       end
-
-      -- 2. Commit allocations
-      for i = 1, numItems do
-        local countKey = KEYS[i + 1]
-        local reqQty = tonumber(ARGS[2 * i + 1])
-        redis.call('incrby', countKey, reqQty)
-        redis.call('expire', countKey, 900) -- 15 mins lock TTL
-      end
-
-      redis.call('setex', reservationKey, 900, sessionData)
-      return 1
     `;
 
     try {
-      const result = await redis.eval(luaScript, keys.length, ...keys, ...args);
-      return result === 1;
-    } catch {
-      // Fallback if Redis is down: skip Redis lock assertions and permit checkout
-      // (safeguarded via database level validations)
+      // 1. Acquire per-product advisory locks with backoff retry
+      for (const pid of uniqueProductIds) {
+        const lockKey = this.getLockKey(pid);
+        const token = crypto.randomUUID();
+        let acquired = false;
+
+        for (let attempt = 0; attempt < 10; attempt++) {
+          const res = await redis.set(lockKey, token, 'PX', 5000, 'NX');
+          if (res === 'OK') {
+            acquired = true;
+            acquiredLocks.push({ key: lockKey, token });
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+
+        if (!acquired) {
+          return false; // Lock acquisition timed out; fail reservation safely
+        }
+      }
+
+      // 2. Critical Section: Sum active slices and check against authoritative DB stock
+      for (const item of items) {
+        const idStr = item.productId.toString();
+        const dbStock = stockLimits.get(idStr) ?? 0;
+        const currentReserved = await this.getActiveReservedQuantity(redis, idStr);
+
+        if (dbStock - currentReserved < item.quantity) {
+          return false; // Insufficient stock
+        }
+      }
+
+      // 3. Commit per-session reservation slices with 15-minute TTL
+      const pipeline = redis.pipeline();
+      for (const item of items) {
+        const sliceKey = this.getSliceKey(sessionId, item.productId.toString());
+        pipeline.set(sliceKey, item.quantity.toString(), 'EX', 900);
+      }
+
+      // Metadata session key for diagnostic/traceability
+      pipeline.set(
+        this.getRedisKey(sessionId),
+        JSON.stringify({
+          userId,
+          sessionId,
+          items: items.map((i) => ({ productId: i.productId.toString(), quantity: i.quantity })),
+        }),
+        'EX',
+        900
+      );
+
+      await pipeline.exec();
       return true;
+    } catch {
+      return false;
+    } finally {
+      // 4. Safely release all acquired locks using ownership-verified Lua script
+      for (const lock of acquiredLocks) {
+        try {
+          await redis.eval(RELEASE_LOCK_LUA, 1, lock.key, lock.token);
+        } catch {
+          // Swallow lock release errors
+        }
+      }
     }
   }
 
   /**
-   * Atomically releases Redis reservation locks.
+   * Releases per-session Redis reservation slice keys.
+   * Ownership-safe: each session only deletes its own session slices.
    */
   private async executeRedisRelease(
     sessionId: string,
     items: CheckoutItemSnapshot[]
   ): Promise<void> {
     const redis = getRedisClient();
-    const reservationKey = this.getRedisKey(sessionId);
-
-    const keys = [reservationKey];
-    const args: string[] = [];
-
-    for (const item of items) {
-      keys.push(this.getReservedCountKey(item.productId.toString()));
-      args.push(item.quantity.toString());
-    }
-
-    const luaScript = `
-      local numItems = #KEYS - 1
-      for i = 1, numItems do
-        local countKey = KEYS[i + 1]
-        local qty = tonumber(ARGS[i])
-        local current = tonumber(redis.call('get', countKey) or 0)
-        if current > 0 then
-          local newCount = current - qty
-          if newCount <= 0 then
-            redis.call('del', countKey)
-          else
-            redis.call('decrby', countKey, qty)
-          end
-        end
-      end
-      redis.call('del', KEYS[1])
-      return 1
-    `;
-
     try {
-      await redis.eval(luaScript, keys.length, ...keys, ...args);
+      const pipeline = redis.pipeline();
+      for (const item of items) {
+        const sliceKey = this.getSliceKey(sessionId, item.productId.toString());
+        pipeline.del(sliceKey);
+      }
+      pipeline.del(this.getRedisKey(sessionId));
+      await pipeline.exec();
     } catch {
       // Gracefully swallow Redis errors on release sweeps
     }
@@ -250,6 +290,12 @@ export class CheckoutService {
     // 1. Check for existing active checkout sessions to clear/expire first
     const activeSession = await checkoutRepository.findActiveSession(userId);
     if (activeSession) {
+      if (activeSession.status === 'PAYMENT_PENDING') {
+        throw new AppError(
+          'Cannot start a new checkout session while payment is pending. Please complete or dismiss current payment attempt.',
+          HTTP_STATUS.CONFLICT
+        );
+      }
       await this.cancelCheckout(userId);
     }
 
@@ -260,7 +306,7 @@ export class CheckoutService {
     }
 
     const primaryAddress = (user.addresses?.find((addr) => addr.isDefault) ?? null) as unknown as {
-      street: string;
+      streetAddress: string;
       city: string;
       state: string;
       postalCode: string;
@@ -268,7 +314,7 @@ export class CheckoutService {
     } | null;
     const shippingAddressSnapshot = primaryAddress
       ? {
-          street: primaryAddress.street,
+          street: primaryAddress.streetAddress,
           city: primaryAddress.city,
           state: primaryAddress.state,
           postalCode: primaryAddress.postalCode,
@@ -293,9 +339,7 @@ export class CheckoutService {
     }
 
     const subtotal = snapshots.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const shippingFee = subtotal > 15000 ? 0 : 500; // Free shipping above ₹150
-    const taxTotal = Math.round(subtotal * 0.08); // 8% derived flat tax
-    const orderTotal = subtotal + shippingFee + taxTotal;
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
     const reservationExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const idempotencyKey = crypto.randomUUID();
@@ -348,19 +392,25 @@ export class CheckoutService {
       throw new AppError('No active checkout session found', HTTP_STATUS.NOT_FOUND);
     }
 
+    // Check if active session reservation has expired
+    if (session.reservationExpiresAt && session.reservationExpiresAt.getTime() < Date.now()) {
+      await this.expireSession(session._id as Types.ObjectId);
+      throw new AppError('Checkout session expired', HTTP_STATUS.NOT_FOUND);
+    }
+
     const subtotal = session.cartSnapshot.items.reduce(
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const shippingFee = subtotal > 15000 ? 0 : 500;
-    const taxTotal = Math.round(subtotal * 0.08);
-    const orderTotal = subtotal + shippingFee + taxTotal;
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
     return this.mapToDTO(session, subtotal, shippingFee, taxTotal, orderTotal);
   }
 
   /**
    * Extends the reservation time by 5 minutes (max 3 times).
+   * Verifies individual reservation slices still exist in Redis before extending.
+   * Updates Redis slice TTLs BEFORE MongoDB metadata so drift is prevented.
    */
   async extendCheckout(userId: Types.ObjectId): Promise<CheckoutSummaryDTO> {
     const session = await checkoutRepository.findActiveSession(userId);
@@ -372,22 +422,46 @@ export class CheckoutService {
       throw new AppError('Maximum checkout extension limit reached', HTTP_STATUS.BAD_REQUEST);
     }
 
+    if (session.reservationExpiresAt && session.reservationExpiresAt.getTime() < Date.now()) {
+      await this.expireSession(session._id as Types.ObjectId);
+      throw new AppError(
+        'Checkout reservation has already expired. Please restart checkout.',
+        HTTP_STATUS.CONFLICT
+      );
+    }
+
+    const redis = getRedisClient();
+
+    // Verify all reservation slice keys still exist in Redis
+    for (const item of session.cartSnapshot.items) {
+      const sliceKey = this.getSliceKey(session._id.toString(), item.productId.toString());
+      const ttl = await redis.ttl(sliceKey);
+      if (ttl <= 0) {
+        // Reservation slice has expired in Redis; fail safely and expire MongoDB session
+        await this.expireSession(session._id as Types.ObjectId);
+        throw new AppError(
+          'Checkout reservation has already expired in cache. Please restart checkout.',
+          HTTP_STATUS.CONFLICT
+        );
+      }
+    }
+
+    // Extend Redis slice keys and session metadata key by 300s (5 minutes)
+    const pipeline = redis.pipeline();
+    for (const item of session.cartSnapshot.items) {
+      const sliceKey = this.getSliceKey(session._id.toString(), item.productId.toString());
+      const ttl = await redis.ttl(sliceKey);
+      pipeline.expire(sliceKey, Math.max(ttl, 0) + 300);
+    }
+    const sessionKey = this.getRedisKey(session._id.toString());
+    const sessionTtl = await redis.ttl(sessionKey);
+    pipeline.expire(sessionKey, Math.max(sessionTtl, 0) + 300);
+    await pipeline.exec();
+
     const newExpiry = new Date(
       (session.reservationExpiresAt?.getTime() ?? Date.now()) + 5 * 60 * 1000
     );
     const newCount = session.extensionCount + 1;
-
-    // Extend Redis TTL lock
-    const redis = getRedisClient();
-    const redisKey = this.getRedisKey(session._id.toString());
-    try {
-      const ttl = await redis.ttl(redisKey);
-      if (ttl > 0) {
-        await redis.expire(redisKey, ttl + 300);
-      }
-    } catch {
-      // Swallowed
-    }
 
     const updated = await checkoutRepository.extendReservation(
       session._id as Types.ObjectId,
@@ -403,9 +477,7 @@ export class CheckoutService {
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const shippingFee = subtotal > 15000 ? 0 : 500;
-    const taxTotal = Math.round(subtotal * 0.08);
-    const orderTotal = subtotal + shippingFee + taxTotal;
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
     return this.mapToDTO(updated, subtotal, shippingFee, taxTotal, orderTotal);
   }
@@ -453,30 +525,99 @@ export class CheckoutService {
       (acc, item) => acc + item.price * item.quantity,
       0
     );
-    const shippingFee = subtotal > 15000 ? 0 : 500;
-    const taxTotal = Math.round(subtotal * 0.08);
-    const orderTotal = subtotal + shippingFee + taxTotal;
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
     return this.mapToDTO(updated, subtotal, shippingFee, taxTotal, orderTotal);
   }
 
   /**
    * Cancels checkout, releasing all stocks atomically.
+   * Explicitly forbidden when session is actively in PAYMENT_PENDING.
    */
   async cancelCheckout(userId: Types.ObjectId): Promise<void> {
     const session = await checkoutRepository.findActiveSession(userId);
     if (!session) return;
+
+    if (session.status === 'PAYMENT_PENDING') {
+      throw new AppError(
+        'Cannot cancel checkout while payment is pending. Please wait for payment resolution or cancel payment intent first.',
+        HTTP_STATUS.CONFLICT
+      );
+    }
 
     await this.executeRedisRelease(session._id.toString(), session.cartSnapshot.items);
     await checkoutRepository.updateStatus(session._id as Types.ObjectId, 'CANCELLED');
   }
 
   /**
+   * Client-initiated recovery from PAYMENT_PENDING back to RESERVED
+   * (e.g. when customer dismisses Razorpay checkout modal or payment fails on client).
+   */
+  async recoverPaymentPending(userId: Types.ObjectId): Promise<CheckoutSummaryDTO> {
+    const session = await checkoutRepository.findActiveSession(userId);
+    if (!session) {
+      throw new AppError('No active checkout session found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    if (session.status !== 'PAYMENT_PENDING') {
+      if (session.status === 'RESERVED') {
+        const subtotal = session.cartSnapshot.items.reduce(
+          (acc, item) => acc + item.price * item.quantity,
+          0
+        );
+        const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
+        return this.mapToDTO(session, subtotal, shippingFee, taxTotal, orderTotal);
+      }
+      throw new AppError(
+        `Session cannot be recovered from status: ${session.status}`,
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
+
+    // Verify reservation has not expired
+    if (session.reservationExpiresAt && session.reservationExpiresAt.getTime() < Date.now()) {
+      await this.expireSession(session._id as Types.ObjectId);
+      throw new AppError(
+        'Checkout reservation has expired. Please restart checkout.',
+        HTTP_STATUS.CONFLICT
+      );
+    }
+
+    const updated = await checkoutRepository.updateStatus(
+      session._id as Types.ObjectId,
+      'RESERVED',
+      {
+        paymentIntentId: null,
+        paymentProvider: null,
+      }
+    );
+
+    if (!updated) {
+      throw new AppError(
+        'Failed to recover checkout session state',
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
+
+    const subtotal = updated.cartSnapshot.items.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
+    const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
+
+    return this.mapToDTO(updated, subtotal, shippingFee, taxTotal, orderTotal);
+  }
+
+  /**
    * Triggers expiration transitions.
+   * PAYMENT_PENDING sessions are never expired here to protect pending transactions and webhooks.
    */
   async expireSession(sessionId: Types.ObjectId): Promise<void> {
     const session = await checkoutRepository.findById(sessionId);
-    if (!session || ['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(session.status)) {
+    if (
+      !session ||
+      ['COMPLETED', 'CANCELLED', 'EXPIRED', 'PAYMENT_PENDING'].includes(session.status)
+    ) {
       return;
     }
 
@@ -485,13 +626,20 @@ export class CheckoutService {
   }
 
   /**
-   * Server bootstrap sweep reconciling stale expired checkout locks.
+   * Server bootstrap sweep reconciling stale expired checkout locks and legacy TTL indexes.
    */
   async reconcileStaleSessions(): Promise<void> {
+    // 1. Drop unsafe legacy MongoDB TTL index if present
+    await checkoutRepository.dropLegacyTTLIndex();
+
+    // 2. Sweep expired READY/RESERVED sessions
     const stale = await checkoutRepository.findStaleExpiredSessions();
     for (const session of stale) {
       await this.expireSession(session._id as Types.ObjectId);
     }
+
+    // 3. Purge terminal sessions older than 48 hours
+    await checkoutRepository.deleteOldTerminalSessions();
   }
 
   /**
@@ -502,13 +650,13 @@ export class CheckoutService {
     sessionId: Types.ObjectId
   ): Promise<{ status: string; orderId?: string; orderNumber?: string }> {
     const session = await checkoutRepository.findById(sessionId);
-    
+
     if (!session) {
       throw new AppError('Checkout session not found', HTTP_STATUS.NOT_FOUND);
     }
-    
+
     if (session.userId.toString() !== userId.toString()) {
-      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError('Checkout session not found', HTTP_STATUS.NOT_FOUND);
     }
 
     if (session.status === 'COMPLETED') {

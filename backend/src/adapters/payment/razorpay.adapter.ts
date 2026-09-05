@@ -42,13 +42,62 @@ export class RazorpayAdapter implements IPaymentProvider {
   }
 
   /**
+   * Reconciles whether an order already exists at Razorpay with this deterministic receipt.
+   */
+  public async findOrderByReceipt(receipt: string): Promise<PaymentIntentResult | null> {
+    const razorpay = this.getClient();
+    try {
+      const response = (await razorpay.orders.all({ receipt })) as {
+        entity?: string;
+        count?: number;
+        items?: Array<{
+          id: string;
+          amount: number | string;
+          currency: string;
+          receipt?: string;
+          status: string;
+        }>;
+      };
+
+      if (response && response.items && response.items.length > 0) {
+        const order = response.items[0];
+        logger.info(
+          { gatewayOrderId: order.id, receipt, status: order.status },
+          'Reconciled existing Razorpay order by deterministic receipt'
+        );
+        return {
+          provider: this.providerName,
+          clientReference: order.id,
+          amount: typeof order.amount === 'string' ? parseInt(order.amount, 10) : order.amount,
+          currency: order.currency,
+          keyId: env.RAZORPAY_KEY_ID,
+          extra: {
+            receipt: order.receipt,
+          },
+        };
+      }
+      return null;
+    } catch (err: unknown) {
+      logger.error(
+        { err, receipt },
+        'Failed to query Razorpay orders by receipt for reconciliation'
+      );
+      throw new AppError(
+        'Unable to reconcile payment gateway state. Please retry in a moment.',
+        HTTP_STATUS.SERVICE_UNAVAILABLE,
+        { isUnknownOutcome: true }
+      );
+    }
+  }
+
+  /**
    * Generates a new Razorpay Order for customer checkout.
    */
   public async createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentIntentResult> {
     const razorpay = this.getClient();
 
-    // Razorpay receipt has a 40 character length limit
-    const receipt = `rcpt_${input.checkoutSessionId.slice(-12)}_${Date.now().toString().slice(-6)}`;
+    // Deterministic receipt derived stably from checkoutSessionId (max 40 chars)
+    const receipt = input.receipt || `rcpt_${input.checkoutSessionId}`;
 
     try {
       const order = await razorpay.orders.create({
@@ -91,9 +140,30 @@ export class RazorpayAdapter implements IPaymentProvider {
         },
         'Failed to create Razorpay Order'
       );
+
+      const anyErr = err as Record<string, unknown>;
+      const statusCode = (anyErr?.statusCode as number) || (anyErr?.status as number);
+      const isDefiniteRejection =
+        typeof statusCode === 'number' && statusCode >= 400 && statusCode < 500;
+
+      if (isDefiniteRejection) {
+        const errObj = anyErr?.error as Record<string, unknown> | undefined;
+        const desc =
+          (errObj?.description as string) ||
+          (anyErr?.message as string) ||
+          'Provider rejected payment intent creation';
+        throw new AppError(
+          `Payment initialization rejected by provider: ${desc}`,
+          HTTP_STATUS.BAD_REQUEST,
+          { isDefiniteRejection: true }
+        );
+      }
+
+      // Network errors, timeouts, connection resets, 5xx responses represent unknown gateway outcomes
       throw new AppError(
-        'Failed to initialize payment with Razorpay',
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
+        'Payment gateway response timed out or is uncertain. Please retry in a moment.',
+        HTTP_STATUS.SERVICE_UNAVAILABLE,
+        { isUnknownOutcome: true }
       );
     }
   }

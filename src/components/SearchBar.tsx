@@ -115,7 +115,7 @@ const SearchBar = () => {
                   key={product.id}
                   className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-muted"
                   onClick={() => {
-                    router.push(`/product/${product.id}`);
+                    router.push(`/product/${product.slug || product.id}`);
                     setIsOpen(false);
                   }}
                 >

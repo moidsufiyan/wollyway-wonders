@@ -83,7 +83,7 @@ const Wishlist = () => {
                         transition={{ duration: 0.4 }}
                         className="border border-border rounded-lg overflow-hidden"
                       >
-                        <Link href={`/product/${product.id}`}
+                        <Link href={`/product/${product.slug || product.id}`}
                           className="block aspect-square relative overflow-hidden"
                         >
                           <img
@@ -93,14 +93,14 @@ const Wishlist = () => {
                           />
                         </Link>
                         <div className="p-4">
-                          <Link href={`/product/${product.id}`}
+                          <Link href={`/product/${product.slug || product.id}`}
                             className="block hover:text-wolly-magenta"
                           >
                             <h3 className="font-medium mb-1 truncate">{product.name}</h3>
                           </Link>
                           <p className="text-muted-foreground text-sm mb-2">{product.category}</p>
                           <div className="flex justify-between items-center">
-                            <span className="font-bold text-wolly-magenta">₹{product.price.toFixed(2)}</span>
+                            <span className="font-bold text-wolly-magenta">₹{(product.price / 100).toFixed(2)}</span>
                             <div className="flex space-x-2">
                               <Button
                                 variant="ghost"

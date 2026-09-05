@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { formatMoney } from '@/utils/currency';
 
 interface OrderItem {
   name: string;
@@ -50,7 +51,7 @@ const OrderDetailsCard: React.FC<OrderDetailsCardProps> = ({
               </p>
               <p className="text-sm">Qty: {item.quantity}</p>
             </div>
-                            <div className="font-semibold">₹{item.price.toFixed(2)}</div>
+                            <div className="font-semibold">₹{(item.price / 100).toFixed(2)}</div>
           </div>
         ))}
         
@@ -59,7 +60,7 @@ const OrderDetailsCard: React.FC<OrderDetailsCardProps> = ({
         <div className="space-y-2">
           <div className="flex justify-between">
             <p className="text-muted-foreground">Subtotal</p>
-            <p>${subtotal.toFixed(2)}</p>
+            <p>{formatMoney(subtotal)}</p>
           </div>
           <div className="flex justify-between">
             <p className="text-muted-foreground">Shipping</p>
@@ -67,11 +68,11 @@ const OrderDetailsCard: React.FC<OrderDetailsCardProps> = ({
           </div>
           <div className="flex justify-between">
             <p className="text-muted-foreground">Tax</p>
-            <p>${tax.toFixed(2)}</p>
+            <p>{formatMoney(tax)}</p>
           </div>
           <div className="flex justify-between font-bold">
             <p>Total</p>
-            <p>${total.toFixed(2)}</p>
+            <p>{formatMoney(total)}</p>
           </div>
         </div>
       </div>

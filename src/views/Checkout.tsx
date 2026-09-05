@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ import Footer from '@/components/Footer';
 import { authService } from '@/services/auth.service';
 import { checkoutService, CheckoutSummaryDTO } from '@/services/checkout.service';
 import { paymentService } from '@/services/payment.service';
+import { formatMoney } from '@/utils/currency';
 
 type CheckoutState = 
   | 'INITIALIZING' 
@@ -29,6 +31,7 @@ type CheckoutState =
 export default function Checkout() {
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const [checkoutState, setCheckoutState] = useState<CheckoutState>('INITIALIZING');
   const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummaryDTO | null>(null);
@@ -87,6 +90,10 @@ export default function Checkout() {
       setDefaultAddress(defaultAddr);
       await loadCheckoutSession();
     } catch (error: any) {
+      if (error?.status === 401 || error?.message?.toLowerCase().includes('unauthorized')) {
+        router.push(`/login?from=${encodeURIComponent('/checkout')}`);
+        return;
+      }
       toast({ title: 'Error initializing checkout', description: error.message, variant: 'destructive' });
       setCheckoutState('FAILURE');
     }
@@ -107,6 +114,10 @@ export default function Checkout() {
       setCheckoutSummary(summary);
       setCheckoutState('READY');
     } catch (error: any) {
+      if (error?.status === 401 || error?.message?.toLowerCase().includes('unauthorized')) {
+        router.push(`/login?from=${encodeURIComponent('/checkout')}`);
+        return;
+      }
       if (error.message?.includes('empty cart')) {
         toast({ title: 'Cart empty', description: 'Your cart is empty', variant: 'destructive' });
         router.push('/cart');
@@ -146,7 +157,7 @@ export default function Checkout() {
       
       const options = {
         key: intent.keyId,
-        amount: intent.amount * 100, // Razorpay expects paise
+        amount: intent.amount, // Amount from backend is already in paise
         currency: intent.currency,
         name: 'WollyWay',
         description: 'Order Payment',
@@ -164,15 +175,25 @@ export default function Checkout() {
           color: '#000000'
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: async function() {
+            try {
+              await checkoutService.cancelPaymentIntent();
+            } catch {
+              // Swallowed if already restored or expired
+            }
             setCheckoutState('READY');
           }
         }
       };
 
       const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
-        toast({ title: 'Payment Failed', description: response.error.description, variant: 'destructive' });
+      rzp.on('payment.failed', async function (response: any) {
+        toast({ title: 'Payment Failed', description: response.error?.description || 'Payment failed', variant: 'destructive' });
+        try {
+          await checkoutService.cancelPaymentIntent();
+        } catch {
+          // Swallowed if already restored or expired
+        }
         setCheckoutState('READY');
       });
       
@@ -197,9 +218,9 @@ export default function Checkout() {
         if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
         toast({ 
           title: 'Confirmation Delayed', 
-          description: 'Payment received, but order confirmation is delayed. Please check your order history in a few minutes.' 
+          description: 'Payment received, but order confirmation is delayed. Please check your order history in your profile in a few minutes.' 
         });
-        router.push('/orders');
+        router.push('/profile');
         return;
       }
       
@@ -210,6 +231,7 @@ export default function Checkout() {
         
         if (statusData.status === 'COMPLETED' && statusData.orderId) {
           if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+          queryClient.invalidateQueries({ queryKey: ['cart'] });
           router.push(`/checkout-success?orderId=${statusData.orderId}`);
         } else if (statusData.status === 'EXPIRED') {
           if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
@@ -358,7 +380,7 @@ export default function Checkout() {
                           <h3 className="font-medium">{item.name}</h3>
                           <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
-                        <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-medium">{formatMoney(item.price * item.quantity)}</p>
                       </div>
                     ))}
                   </div>
@@ -368,20 +390,20 @@ export default function Checkout() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>₹{checkoutSummary.totals.subtotal.toFixed(2)}</span>
+                      <span>{formatMoney(checkoutSummary.totals.subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Shipping</span>
-                      <span>{checkoutSummary.totals.shippingFee === 0 ? 'Free' : `₹${checkoutSummary.totals.shippingFee.toFixed(2)}`}</span>
+                      <span>{checkoutSummary.totals.shippingFee === 0 ? 'Free' : formatMoney(checkoutSummary.totals.shippingFee)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Tax (8%)</span>
-                      <span>₹{checkoutSummary.totals.taxTotal.toFixed(2)}</span>
+                      <span>{formatMoney(checkoutSummary.totals.taxTotal)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>₹{checkoutSummary.totals.orderTotal.toFixed(2)}</span>
+                      <span>{formatMoney(checkoutSummary.totals.orderTotal)}</span>
                     </div>
                   </div>
 

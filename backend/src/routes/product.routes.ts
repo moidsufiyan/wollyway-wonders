@@ -18,6 +18,7 @@ import {
   uploadRateLimiter,
 } from '../middlewares/upload.middleware.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.validator.js';
+import { mongoIdParamSchema } from '../validators/common.validator.js';
 
 const router = Router();
 
@@ -169,7 +170,7 @@ router.post('/', validate(createProductSchema), createProduct);
  *       200:
  *         description: Updated product
  */
-router.patch('/:id', validate(updateProductSchema), updateProduct);
+router.patch('/:id', validate(mongoIdParamSchema), validate(updateProductSchema), updateProduct);
 
 /**
  * @swagger
@@ -189,7 +190,7 @@ router.patch('/:id', validate(updateProductSchema), updateProduct);
  *       200:
  *         description: Product archived
  */
-router.delete('/:id', archiveProduct);
+router.delete('/:id', validate(mongoIdParamSchema), archiveProduct);
 
 /**
  * @swagger
@@ -224,6 +225,7 @@ router.delete('/:id', archiveProduct);
 router.post(
   '/:id/images',
   uploadRateLimiter,
+  validate(mongoIdParamSchema),
   upload.array('images', 10),
   validateMagicNumbers,
   uploadProductImages
@@ -265,6 +267,7 @@ router.post(
 router.put(
   '/:id/images/:publicId(*)',
   uploadRateLimiter,
+  validate(mongoIdParamSchema),
   upload.single('image'),
   validateMagicNumbers,
   replaceProductImage
@@ -293,6 +296,6 @@ router.put(
  *       200:
  *         description: Image deleted successfully
  */
-router.delete('/:id/images/:publicId(*)', deleteProductImage);
+router.delete('/:id/images/:publicId(*)', validate(mongoIdParamSchema), deleteProductImage);
 
 export default router;

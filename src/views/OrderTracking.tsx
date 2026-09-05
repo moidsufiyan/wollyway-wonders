@@ -13,6 +13,7 @@ import OrderSummary from '@/components/order/OrderSummary';
 import ShippingUpdateBanner from '@/components/order/ShippingUpdateBanner';
 import OrderDetailsCard from '@/components/order/OrderDetailsCard';
 import { useOrder } from '@/hooks/useOrders';
+import { formatMoney } from '@/utils/currency';
 
 const OrderTracking = () => {
   const searchParams = useSearchParams();
@@ -27,7 +28,7 @@ const OrderTracking = () => {
     }
   }, [orderId, router]);
 
-  if (isLoading || !order) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
@@ -42,7 +43,7 @@ const OrderTracking = () => {
     );
   }
 
-  if (error) {
+  if (error || !order) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
@@ -91,7 +92,7 @@ const OrderTracking = () => {
   }));
   
   const subtotal = order.financials.subtotal;
-  const shipping = order.financials.shippingFee === 0 ? 'Free' : `₹${order.financials.shippingFee.toFixed(2)}`;
+  const shipping = order.financials.shippingFee === 0 ? 'Free' : formatMoney(order.financials.shippingFee);
   const tax = order.financials.taxTotal;
   const total = order.financials.orderTotal;
 
