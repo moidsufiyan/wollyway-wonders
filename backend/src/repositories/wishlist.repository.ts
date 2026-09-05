@@ -14,15 +14,23 @@ export class WishlistRepository {
    * Returns the updated Wishlist document.
    */
   async addItem(userId: Types.ObjectId, productId: Types.ObjectId): Promise<IWishlist> {
-    return Wishlist.findOneAndUpdate(
-      { userId },
+    await Wishlist.updateOne({ userId }, { $setOnInsert: { items: [] } }, { upsert: true });
+
+    const updated = await Wishlist.findOneAndUpdate(
+      { userId, 'items.productId': { $ne: productId } },
       {
-        $addToSet: {
+        $push: {
           items: { productId, addedAt: new Date() },
         },
       },
-      { new: true, upsert: true }
+      { new: true }
     );
+
+    if (updated) {
+      return updated;
+    }
+
+    return (await Wishlist.findOne({ userId })) as IWishlist;
   }
 
   /**

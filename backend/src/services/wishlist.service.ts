@@ -27,12 +27,29 @@ export class WishlistService {
       };
     }
 
-    const totalItems = wishlist.items.length;
+    const allProductIds = wishlist.items.map((item) => item.productId);
+
+    // Identify which wishlisted products are still valid and published
+    const validProducts = await productRepository.findWithDiscovery(
+      { _id: { $in: allProductIds }, visibility: 'published' },
+      { _id: 1 },
+      {},
+      0,
+      200
+    );
+    const validProductIds = new Set(validProducts.map((p) => p._id.toString()));
+
+    // Filter to retain only valid items, preserving original addedAt sort order
+    const validItems = wishlist.items.filter((item) =>
+      validProductIds.has(item.productId.toString())
+    );
+
+    const totalItems = validItems.length;
     const totalPages = Math.ceil(totalItems / limit);
 
-    // Apply offset pagination on the array in memory for v1
+    // Apply offset pagination on the validated array
     const skip = (page - 1) * limit;
-    const paginatedItems = wishlist.items.slice(skip, skip + limit);
+    const paginatedItems = validItems.slice(skip, skip + limit);
 
     if (paginatedItems.length === 0) {
       return {
@@ -88,7 +105,7 @@ export class WishlistService {
         page,
         limit,
         totalPages,
-        totalItems: cardDTOs.length, // Adjust count to reflect active/published items only
+        totalItems,
       },
       products: cardDTOs,
     };
