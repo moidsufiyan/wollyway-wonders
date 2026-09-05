@@ -183,6 +183,9 @@ export class ProductService {
     if (!categoryExists) {
       throw new AppError('Referenced Category does not exist', HTTP_STATUS.NOT_FOUND);
     }
+    if (categoryExists.status === 'archived') {
+      throw new AppError('Cannot assign product to an archived category', HTTP_STATUS.BAD_REQUEST);
+    }
 
     // 2. Normalize and check constraints
     data.tags = this.normalizeTags(data.tags);
@@ -227,8 +230,15 @@ export class ProductService {
     // Category Validation
     if (data.categoryId && data.categoryId.toString() !== product.categoryId.toString()) {
       const categoryExists = await Category.findById(data.categoryId);
-      if (!categoryExists)
+      if (!categoryExists) {
         throw new AppError('Referenced Category does not exist', HTTP_STATUS.NOT_FOUND);
+      }
+      if (categoryExists.status === 'archived') {
+        throw new AppError(
+          'Cannot assign product to an archived category',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
     }
 
     // Slug Immutability

@@ -78,6 +78,21 @@ export class CartRepository {
   }
 
   /**
+   * Removes specific items from the cart (supports atomic transactional session).
+   */
+  async removeItems(
+    userId: Types.ObjectId,
+    productIds: Types.ObjectId[],
+    session?: ClientSession
+  ): Promise<ICart | null> {
+    return Cart.findOneAndUpdate(
+      { userId },
+      { $pull: { items: { productId: { $in: productIds } } } },
+      { new: true, session }
+    );
+  }
+
+  /**
    * Wipes all items in the cart (supports atomic transactional session).
    */
   async clear(userId: Types.ObjectId, session?: ClientSession): Promise<ICart | null> {

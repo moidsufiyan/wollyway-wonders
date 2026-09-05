@@ -194,8 +194,11 @@ export class OrderService {
           mongoSession
         );
 
-        // 5d. Clear user's shopping cart
-        await cartRepository.clear(session.userId, mongoSession);
+        // 5d. Remove checked-out items from user's shopping cart
+        const productIdsToRemove = session.cartSnapshot.items.map((i) => i.productId);
+        if (productIdsToRemove.length > 0) {
+          await cartRepository.removeItems(session.userId, productIdsToRemove, mongoSession);
+        }
       });
     } catch (err: unknown) {
       // 6. Handle race-condition duplicate key errors gracefully (E11000)
