@@ -40,7 +40,7 @@ Unlike the short-lived `checkoutsessions` collection, `orders` documents are imm
 | `paymentInfo.transactionId` | `String` | Yes | Yes | Gateway charge/payment ID. Unique sparse index. |
 | `paymentInfo.status` | `String` | Yes | Conditional| Payment state (`'paid' \| 'refunded'`). |
 | `paymentInfo.paidAt` | `Date` | Yes | Yes | Timestamp of verified payment capture. |
-| `status` | `String` | Yes | Controlled | Fulfillment state (`CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`, `REFUNDED`). |
+| `status` | `String` | Yes | Controlled | Fulfillment state (`CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`). |
 | `fulfillment.carrier` | `String` | No | Controlled | Shipping carrier partner. |
 | `fulfillment.trackingNumber` | `String` | No | Controlled | Shipment tracking code. |
 | `fulfillment.shippedAt` | `Date` | No | Controlled | Dispatch timestamp. |

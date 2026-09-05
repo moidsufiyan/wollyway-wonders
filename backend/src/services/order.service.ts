@@ -365,7 +365,7 @@ export class OrderService {
     const targetStatus = payload.status;
 
     // Reject transitions from terminal states
-    if (['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(currentStatus)) {
+    if (['DELIVERED', 'CANCELLED'].includes(currentStatus)) {
       throw new AppError(
         `Cannot modify an order that is already in a terminal state (${currentStatus}).`,
         HTTP_STATUS.CONFLICT
@@ -373,7 +373,7 @@ export class OrderService {
     }
 
     // Redirect cancellation/refund requests to dedicated cancellation handler
-    if (targetStatus === 'CANCELLED' || targetStatus === 'REFUNDED') {
+    if (targetStatus === 'CANCELLED') {
       throw new AppError(
         `Use the dedicated cancellation endpoint to transition orders to ${targetStatus} and handle restocking.`,
         HTTP_STATUS.BAD_REQUEST

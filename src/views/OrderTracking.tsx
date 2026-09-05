@@ -69,7 +69,6 @@ const OrderTracking = () => {
       case 'SHIPPED': return 'shipped';
       case 'DELIVERED': return 'delivered';
       case 'CANCELLED': return 'cancelled';
-      case 'REFUNDED': return 'refunded';
       default: return 'processing';
     }
   };
@@ -104,7 +103,6 @@ const OrderTracking = () => {
       case 'SHIPPED': return 'Your package has left our warehouse and is on its way to you!';
       case 'DELIVERED': return 'Your package has been delivered. Enjoy your WollyWay products!';
       case 'CANCELLED': return 'This order has been cancelled.';
-      case 'REFUNDED': return 'This order has been refunded.';
       default: return 'We are processing your order.';
     }
   };

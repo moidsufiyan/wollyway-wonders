@@ -28,7 +28,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       case 'DELIVERED':
         return <CheckCircle size={18} className="text-green-500" />;
       case 'CANCELLED':
-      case 'REFUNDED':
         return <AlertCircle size={18} className="text-red-500" />;
       default:
         return <Package size={18} className="text-gray-500" />;
@@ -43,7 +42,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
       SHIPPED: 'bg-purple-100 text-purple-800',
       DELIVERED: 'bg-green-100 text-green-800',
       CANCELLED: 'bg-red-100 text-red-800',
-      REFUNDED: 'bg-red-100 text-red-800',
     };
 
     return (

@@ -138,7 +138,7 @@ Paginated search and review of all store orders.
 
 * **Headers:** `Authorization: Bearer <admin-token>`
 * **Query Parameters:**
-  - `status` (`CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`, `REFUNDED`)
+  - `status` (`CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`)
   - `orderNumber` (Partial or exact search)
   - `startDate` (ISO 8601 string)
   - `endDate` (ISO 8601 string)

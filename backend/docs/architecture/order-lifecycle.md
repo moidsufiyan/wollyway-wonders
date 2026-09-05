@@ -18,11 +18,8 @@ stateDiagram-v2
     
     SHIPPED --> DELIVERED : Delivery Confirmed (Admin / Courier Webhook)
     
-    DELIVERED --> REFUNDED : Returned & Refunded (Admin - Phase 4.5)
-    
-    CANCELLED --> [*] : Idempotent Restock (reason: return)
     DELIVERED --> [*]
-    REFUNDED --> [*] : Idempotent Restock (reason: return)
+    CANCELLED --> [*] : Idempotent Restock
 ```
 
 ---

@@ -98,7 +98,7 @@ export class OrderRepository {
   /**
    * Verifies whether a product is associated with active, unsettled orders.
    * Active states: CONFIRMED, PROCESSING, SHIPPED.
-   * Terminal states (DELIVERED, CANCELLED, REFUNDED) do NOT block archival.
+   * Terminal states (DELIVERED, CANCELLED) do NOT block archival.
    */
   async hasActiveOrdersForProduct(productId: Types.ObjectId): Promise<boolean> {
     const count = await Order.countDocuments({

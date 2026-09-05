@@ -137,7 +137,7 @@ router.post('/:id/cancel', validate(customerCancelOrderSchema), cancelMyOrder);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED]
+ *           enum: [CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED]
  *       - in: query
  *         name: orderNumber
  *         schema:

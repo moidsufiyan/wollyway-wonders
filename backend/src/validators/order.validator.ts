@@ -18,9 +18,7 @@ export const customerCancelOrderSchema = z.object({
 
 export const adminOrderQuerySchema = z.object({
   query: z.object({
-    status: z
-      .enum(['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'])
-      .optional(),
+    status: z.enum(['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
     orderNumber: z.string().optional(),
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
