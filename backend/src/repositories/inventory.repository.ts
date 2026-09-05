@@ -20,7 +20,10 @@ export class InventoryRepository {
    */
   async getProductIdsInStock(): Promise<Types.ObjectId[]> {
     const records = await Inventory.find(
-      { available: { $gt: 0 }, isDiscontinued: false },
+      {
+        $or: [{ available: { $gt: 0 } }, { trackInventory: false }],
+        isDiscontinued: false,
+      },
       { productId: 1, _id: 0 }
     ).lean();
 

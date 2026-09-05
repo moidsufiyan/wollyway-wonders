@@ -193,7 +193,7 @@ export const deleteCategory = async (
     const activeProductsCount =
       (await mongoose.connection.db?.collection('products')?.countDocuments({
         categoryId: new Types.ObjectId(id as string),
-        status: { $ne: 'archived' },
+        visibility: { $ne: 'archived' },
       })) || 0;
 
     if (activeProductsCount > 0) {
