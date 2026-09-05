@@ -176,7 +176,7 @@ export class CheckoutService {
     const acquiredLocks: { key: string; token: string }[] = [];
 
     const RELEASE_LOCK_LUA = `
-      if redis.call("get", KEYS[1]) == ARGS[1] then
+      if redis.call("get", KEYS[1]) == ARGV[1] then
         return redis.call("del", KEYS[1])
       else
         return 0

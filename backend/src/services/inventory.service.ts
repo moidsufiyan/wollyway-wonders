@@ -3,6 +3,8 @@ import { Inventory, IInventory } from '../models/inventory.model.js';
 import { InventoryTransaction } from '../models/inventory-transaction.model.js';
 import { AppError } from '../utils/AppError.js';
 import { HTTP_STATUS } from '../constants/index.js';
+import { checkoutService } from './checkout.service.js';
+import { getRedisClient } from '../config/redis.config.js';
 
 export class InventoryService {
   // Retrieve public masked inventory status for product display page
@@ -86,6 +88,20 @@ export class InventoryService {
         `Insufficient stock. Available stock cannot drop below zero (requested change: ${change}, current stock: ${before}).`,
         HTTP_STATUS.BAD_REQUEST
       );
+    }
+
+    if (change < 0) {
+      const redis = getRedisClient();
+      const activeReservedQuantity = await checkoutService.getActiveReservedQuantity(
+        redis,
+        productId
+      );
+      if (after < activeReservedQuantity) {
+        throw new AppError(
+          `Cannot reduce available stock to ${after} because there are ${activeReservedQuantity} active reservations.`,
+          HTTP_STATUS.CONFLICT
+        );
+      }
     }
 
     // 5. Update and save inventory
