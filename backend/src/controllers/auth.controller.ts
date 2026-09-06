@@ -105,14 +105,25 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const { email, password } = req.body;
     const normalizedEmail = email.toLowerCase();
 
-    const redis = getRedisClient();
-    const lockoutKey = `wollyway:auth:lockout:${normalizedEmail}`;
-    const attemptsKey = `wollyway:auth:attempts:${normalizedEmail}`;
+    // Normalize the client IP — falls back to socket address when
+    // trust proxy is not configured (single-instance deployment).
+    const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown';
 
-    // 1. Check if the user is currently locked out
+    const redis = getRedisClient();
+
+    const ipAttemptsKey = REDIS_KEYS.LOGIN_IP_ATTEMPTS(clientIp);
+    const ipEmailAttemptsKey = REDIS_KEYS.LOGIN_IP_EMAIL_ATTEMPTS(clientIp, normalizedEmail);
+    const ipEmailLockoutKey = REDIS_KEYS.LOGIN_IP_EMAIL_LOCKOUT(clientIp, normalizedEmail);
+
+    const AUTH_LOCKOUT_TTL_SECS = 15 * 60; // 15 minutes
+    const IP_EMAIL_FAILURE_THRESHOLD = 5; // Layer 2: per-IP+account
+    const IP_FAILURE_THRESHOLD = 15; // Layer 1: per-IP across all accounts
+
+    // ── Layer 2 check: is this IP already locked out for this account? ──
     try {
-      const isLocked = await redis.get(lockoutKey);
-      if (isLocked) {
+      const isIpEmailLocked = await redis.get(ipEmailLockoutKey);
+      if (isIpEmailLocked) {
+        // Same generic message — never reveal whether account exists.
         return next(
           new AppError(
             'Too many failed login attempts. Please try again after 15 minutes.',
@@ -121,12 +132,60 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
         );
       }
     } catch (redisError) {
-      req.log?.error(redisError, 'Redis lockout check failure');
+      req.log?.error(redisError, 'Redis IP+email lockout check failure');
     }
+
+    // ── Layer 1 check: is this IP throttled across all accounts? ──
+    try {
+      const ipAttempts = await redis.get(ipAttemptsKey);
+      if (ipAttempts !== null && parseInt(ipAttempts, 10) >= IP_FAILURE_THRESHOLD) {
+        return next(
+          new AppError(
+            'Too many failed login attempts. Please try again after 15 minutes.',
+            HTTP_STATUS.TOO_MANY_REQUESTS
+          )
+        );
+      }
+    } catch (redisError) {
+      req.log?.error(redisError, 'Redis IP-wide attempts check failure');
+    }
+
+    // Helper to increment failure counters for both Layer 1 and Layer 2
+    // and trigger lockout if the threshold is reached.
+    // Handles both non-existent users and incorrect passwords identically
+    // to prevent user enumeration through response status or error messages.
+    const handleLoginFailure = async (): Promise<boolean> => {
+      try {
+        // Layer 1: IP-wide
+        const ipCount = await redis.incr(ipAttemptsKey);
+        if (ipCount === 1) await redis.expire(ipAttemptsKey, AUTH_LOCKOUT_TTL_SECS);
+
+        // Layer 2: IP + email
+        const ipEmailCount = await redis.incr(ipEmailAttemptsKey);
+        if (ipEmailCount === 1) await redis.expire(ipEmailAttemptsKey, AUTH_LOCKOUT_TTL_SECS);
+        if (ipEmailCount >= IP_EMAIL_FAILURE_THRESHOLD) {
+          await redis.setex(ipEmailLockoutKey, AUTH_LOCKOUT_TTL_SECS, '1');
+          await redis.del(ipEmailAttemptsKey);
+          return true;
+        }
+      } catch (redisError) {
+        req.log?.error(redisError, 'Failed to update failed login attempts');
+      }
+      return false;
+    };
 
     // 2. Query User (explicitly include password for verification)
     const user = await User.findOne({ email: normalizedEmail }).select('+password');
     if (!user) {
+      const isLockedOut = await handleLoginFailure();
+      if (isLockedOut) {
+        return next(
+          new AppError(
+            'Too many failed login attempts. Please try again after 15 minutes.',
+            HTTP_STATUS.TOO_MANY_REQUESTS
+          )
+        );
+      }
       return next(new AppError('Invalid email or password.', HTTP_STATUS.UNAUTHORIZED));
     }
 
@@ -142,35 +201,29 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     // 4. Verify password
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
-      // Increment attempt count and trigger lockout if limit reached
-      try {
-        const attempts = await redis.incr(attemptsKey);
-        if (attempts === 1) {
-          await redis.expire(attemptsKey, 15 * 60); // 15 mins expiry
-        }
-        if (attempts >= 5) {
-          await redis.setex(lockoutKey, 15 * 60, 'true');
-          await redis.del(attemptsKey);
-          return next(
-            new AppError(
-              'Too many failed login attempts. Account locked for 15 minutes.',
-              HTTP_STATUS.TOO_MANY_REQUESTS
-            )
-          );
-        }
-      } catch (redisError) {
-        req.log?.error(redisError, 'Failed to update failed login attempts');
+      const isLockedOut = await handleLoginFailure();
+      if (isLockedOut) {
+        return next(
+          new AppError(
+            'Too many failed login attempts. Please try again after 15 minutes.',
+            HTTP_STATUS.TOO_MANY_REQUESTS
+          )
+        );
       }
-
       return next(new AppError('Invalid email or password.', HTTP_STATUS.UNAUTHORIZED));
     }
 
-    // 5. Successful login: Clear attempts trackers
+    // 5. Successful login: clear THIS IP's state for this account.
+    //    Do NOT delete other IPs' counters — an attacker rotating IPs
+    //    should not have their own throttle lifted by the victim logging in.
     try {
-      await redis.del(attemptsKey);
-      await redis.del(lockoutKey);
+      await redis.del(ipEmailAttemptsKey);
+      await redis.del(ipEmailLockoutKey);
+      // Layer 1 IP-wide counter is intentionally NOT cleared on success:
+      // it decays naturally via TTL so that the attacker's IP remains
+      // throttled if they were also attacking other accounts.
     } catch (redisError) {
-      req.log?.error(redisError, 'Failed to clear login attempts trackers');
+      req.log?.error(redisError, 'Failed to clear login attempt trackers');
     }
 
     // 6. Update lastLoginAt

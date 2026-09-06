@@ -28,6 +28,11 @@ import { API } from './constants/index.js';
 
 const app = express();
 
+// Trust the first reverse proxy hop (Render load balancer) so that req.ip
+// reflects the genuine client IP from X-Forwarded-For rather than the
+// internal load balancer IP, preventing shared-proxy rate limiting collisions.
+app.set('trust proxy', 1);
+
 // Set up correlation request ID before logging/routing
 app.use(requestId);
 

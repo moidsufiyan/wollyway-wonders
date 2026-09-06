@@ -31,6 +31,23 @@ export const REDIS_KEYS = {
   ACTIVE_REFRESH_TOKEN: (userId: string) => `wollyway:auth:${userId}:rt`,
   CATALOG_CACHE: 'wollyway:catalog',
   INVENTORY_RESERVATION: (productId: string) => `wollyway:inventory:${productId}:reserve`,
+  /**
+   * Layer 1 — IP-wide brute-force counter.
+   * Tracks total failed login attempts across ALL accounts from one IP.
+   * Throttles sustained multi-account attacks from a single source.
+   * TTL: 15 minutes.  Threshold: 15 failures.
+   */
+  LOGIN_IP_ATTEMPTS: (ip: string) => `wollyway:auth:ip:${ip}:attempts`,
+  /**
+   * Layer 2 — Per-IP + normalized-email counter / lockout.
+   * Tracks failures from a specific IP against a specific account.
+   * An attacker from IP A cannot lock the account for IP B.
+   * TTL: 15 minutes.  Threshold: 5 failures (same as the old design).
+   */
+  LOGIN_IP_EMAIL_ATTEMPTS: (ip: string, email: string) =>
+    `wollyway:auth:ip:${ip}:email:${email}:attempts`,
+  LOGIN_IP_EMAIL_LOCKOUT: (ip: string, email: string) =>
+    `wollyway:auth:ip:${ip}:email:${email}:lockout`,
 } as const;
 
 export const MESSAGES = {
