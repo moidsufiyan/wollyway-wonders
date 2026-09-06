@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { register, login, logout, refresh } from '../controllers/auth.controller.js';
 import { validate } from '../middlewares/validate.js';
+import { requireTrustedOrigin } from '../middlewares/originValidation.middleware.js';
 import { registerSchema, loginSchema } from '../validators/auth.validator.js';
 
 const router = Router();
@@ -76,7 +77,7 @@ router.post('/login', validate(loginSchema), login);
  *       200:
  *         description: Logged out successfully.
  */
-router.post('/logout', logout);
+router.post('/logout', requireTrustedOrigin, logout);
 
 /**
  * @openapi
@@ -92,6 +93,6 @@ router.post('/logout', logout);
  *       403:
  *         description: Security breach / reuse detected.
  */
-router.post('/refresh', refresh);
+router.post('/refresh', requireTrustedOrigin, refresh);
 
 export default router;
