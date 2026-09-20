@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import { env } from './env.config.js';
+import { logger } from '../utils/logger.js';
 
 let redis: Redis | null = null;
 
@@ -17,15 +18,15 @@ export const initRedis = (): Redis => {
   });
 
   redis.on('connect', () => {
-    console.log('💚 Connected to Redis successfully.');
+    logger.info('Redis connected');
   });
 
   redis.on('error', (err) => {
-    console.error(`❌ Redis connection error: ${err.message}`);
+    logger.error({ err }, 'Redis connection error');
   });
 
   redis.on('close', () => {
-    console.warn('⚠️ Redis connection closed.');
+    logger.warn('Redis connection closed');
   });
 
   return redis;
@@ -42,6 +43,6 @@ export const closeRedis = async (): Promise<void> => {
   if (redis) {
     await redis.quit();
     redis = null;
-    console.log('💤 Redis connection closed successfully.');
+    logger.info('Redis connection closed gracefully');
   }
 };

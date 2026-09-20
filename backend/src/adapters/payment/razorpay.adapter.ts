@@ -10,6 +10,8 @@ import {
   CreatePaymentIntentInput,
   PaymentIntentResult,
   NormalizedWebhookEvent,
+  RefundPaymentInput,
+  RefundResult,
 } from '../../types/payment.types.js';
 
 export class RazorpayAdapter implements IPaymentProvider {
@@ -100,6 +102,28 @@ export class RazorpayAdapter implements IPaymentProvider {
     const receipt = input.receipt || `rcpt_${input.checkoutSessionId}`;
 
     try {
+      if (env.RAZORPAY_KEY_ID === 'mock_razorpay_key_id') {
+        logger.info(
+          {
+            provider: this.providerName,
+            checkoutSessionId: input.checkoutSessionId,
+            amount: input.amount,
+          },
+          'Mocking Razorpay payment intent creation for development'
+        );
+
+        return {
+          provider: this.providerName,
+          clientReference: `mock_order_${crypto.randomBytes(8).toString('hex')}`,
+          amount: input.amount as number,
+          currency: 'INR',
+          keyId: env.RAZORPAY_KEY_ID,
+          extra: {
+            receipt,
+          },
+        };
+      }
+
       const order = await razorpay.orders.create({
         amount: input.amount, // Integer paisa (e.g. 249900 = ₹2,499.00)
         currency: 'INR',
@@ -173,6 +197,11 @@ export class RazorpayAdapter implements IPaymentProvider {
    * Defends against side-channel timing attacks and malformed/truncated signatures.
    */
   public verifyWebhookSignature(rawBody: string | Buffer, signature: string): boolean {
+    if (env.RAZORPAY_WEBHOOK_SECRET === 'mock_razorpay_webhook_secret') {
+      logger.info('Mocking Razorpay webhook signature verification for development');
+      return true;
+    }
+
     if (!signature || typeof signature !== 'string' || !env.RAZORPAY_WEBHOOK_SECRET) {
       return false;
     }
@@ -269,6 +298,166 @@ export class RazorpayAdapter implements IPaymentProvider {
       },
       rawPayload: payload,
     };
+  }
+
+  /**
+   * Reconciles an existing refund for a transaction matching receipt, amount, and processed status.
+   *
+   * Uses `razorpay.payments.fetchMultipleRefund(paymentId)` — the correct Razorpay SDK v2.x API
+   * for listing all refunds associated with a specific payment.
+   *
+   * @see https://razorpay.com/docs/api/refunds/#fetch-multiple-refunds-for-a-payment
+   */
+  public async findRefundByReceipt(
+    receipt: string,
+    transactionId: string,
+    expectedAmount?: number
+  ): Promise<RefundResult | null> {
+    const razorpay = this.getClient();
+    try {
+      // SDK v2.x: razorpay.payments.fetchMultipleRefund(paymentId, paginationParams?)
+      // Returns { entity, count, items: RazorpayRefund[] }
+      const response = await razorpay.payments.fetchMultipleRefund(transactionId);
+
+      if (response && response.items && response.items.length > 0) {
+        const matched = response.items.find((item) => {
+          const matchReceipt = !receipt || item.receipt === receipt;
+          const matchTx = !transactionId || item.payment_id === transactionId;
+          const numAmount =
+            typeof item.amount === 'string' ? parseInt(item.amount as string, 10) : item.amount;
+          const matchAmount = expectedAmount === undefined || numAmount === expectedAmount;
+          const isProcessed = item.status === 'processed';
+
+          return matchReceipt && matchTx && matchAmount && isProcessed;
+        });
+
+        if (matched) {
+          const numAmount =
+            typeof matched.amount === 'string'
+              ? parseInt(matched.amount as string, 10)
+              : (matched.amount as number);
+          logger.info(
+            { refundId: matched.id, transactionId, receipt, amount: numAmount },
+            'Reconciled existing processed refund from Razorpay'
+          );
+          return {
+            refundId: matched.id,
+            amount: numAmount,
+            currency: matched.currency,
+            status: 'processed',
+          };
+        }
+      }
+      return null;
+    } catch (err: unknown) {
+      logger.error(
+        { err, transactionId, receipt },
+        'Failed to query Razorpay payment refunds for reconciliation'
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Initiates an external refund with Razorpay.
+   */
+  public async refundPayment(input: RefundPaymentInput): Promise<RefundResult> {
+    const razorpay = this.getClient();
+
+    try {
+      const refund = (await razorpay.payments.refund(input.transactionId, {
+        amount: input.amount, // in paisa
+        receipt: input.receipt,
+        notes: input.notes,
+      })) as {
+        id: string;
+        amount: number;
+        currency: string;
+        status: string;
+      };
+
+      logger.info(
+        {
+          provider: this.providerName,
+          refundId: refund.id,
+          paymentId: input.transactionId,
+          amount: input.amount,
+          status: refund.status,
+        },
+        'Razorpay refund issued successfully'
+      );
+
+      return {
+        refundId: refund.id,
+        amount: refund.amount,
+        currency: refund.currency,
+        status: refund.status === 'processed' ? 'processed' : 'pending',
+        rawResponse: refund as unknown as Record<string, unknown>,
+      };
+    } catch (err: unknown) {
+      logger.error(
+        {
+          err,
+          paymentId: input.transactionId,
+          amount: input.amount,
+        },
+        'Failed to issue Razorpay refund'
+      );
+
+      const anyErr = err as Record<string, unknown>;
+      const statusCode = (anyErr?.statusCode as number) || (anyErr?.status as number);
+      const isDefiniteRejection =
+        typeof statusCode === 'number' && statusCode >= 400 && statusCode < 500;
+
+      if (isDefiniteRejection) {
+        const errObj = anyErr?.error as Record<string, unknown> | undefined;
+        const desc =
+          (errObj?.description as string) ||
+          (anyErr?.message as string) ||
+          'Provider rejected refund request';
+
+        // Check if the payment was already refunded on Razorpay
+        if (
+          desc.toLowerCase().includes('already been refunded') ||
+          desc.toLowerCase().includes('fully refunded')
+        ) {
+          logger.warn(
+            { paymentId: input.transactionId, desc },
+            'Payment already marked refunded on Razorpay; reconciling'
+          );
+
+          // Try to locate the existing refund by receipt and payment ID
+          const existing = await this.findRefundByReceipt(
+            input.receipt,
+            input.transactionId,
+            input.amount
+          );
+          if (existing) {
+            return existing;
+          }
+
+          return {
+            refundId: `rfnd_reconciled_${input.transactionId}`,
+            amount: input.amount,
+            currency: input.currency,
+            status: 'processed',
+          };
+        }
+
+        throw new AppError(
+          `Payment refund rejected by provider: ${desc}`,
+          HTTP_STATUS.BAD_REQUEST,
+          { isDefiniteRejection: true }
+        );
+      }
+
+      // Network errors, timeouts, connection resets, 5xx responses represent unknown gateway outcomes
+      throw new AppError(
+        'Payment gateway response timed out or is uncertain. Please retry in a moment.',
+        HTTP_STATUS.SERVICE_UNAVAILABLE,
+        { isUnknownOutcome: true }
+      );
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from './env.config.js';
+import { logger } from '../utils/logger.js';
 
 export const configureCloudinary = (): void => {
   cloudinary.config({
@@ -9,7 +10,7 @@ export const configureCloudinary = (): void => {
     secure: true,
   });
 
-  console.log('💚 Cloudinary configuration initialized.');
+  logger.info('Cloudinary configured');
 };
 
 export const getCloudinary = () => {
