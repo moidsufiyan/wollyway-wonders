@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     locale: "en_IN",
     siteName: "WollyWay",
   },
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

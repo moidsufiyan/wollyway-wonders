@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useFeaturedProducts } from "@/hooks/useProducts";
 import { mapProductDetailToUI, type Product } from "@/types/Product";
 import { formatMoney } from "@/utils/currency";
+import { getProductUrl } from "@/utils/product";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const container = {
@@ -47,7 +48,7 @@ const ProductCard = ({
           />
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <div className="space-y-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-              <Link href={`/product/${product.slug || product.id}`}>
+              <Link href={getProductUrl(product)}>
                 <Button className="bg-white hover:bg-white/90 text-wolly-magenta rounded-full shadow-md button-hover">
                   View Product
                 </Button>

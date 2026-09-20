@@ -99,8 +99,6 @@ const Navbar = () => {
             <NavLink to="/">Home</NavLink>
             <NavLink to="/shop">Shop</NavLink>
             <NavLink to="/bundles">Bundles</NavLink>
-
-
             <NavLink to="/contact">Contact</NavLink>
           </nav>
 
@@ -194,8 +192,6 @@ const Navbar = () => {
                   <Link href="/bundles" onClick={closeMenu}>
                     Bundles
                   </Link>
-
-
                   <Link href="/contact" onClick={closeMenu}>
                     Contact
                   </Link>

@@ -1,17 +1,49 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useFeaturedProducts } from "@/hooks/useProducts";
+import { formatMoney } from "@/utils/currency";
 
 const Hero = () => {
+  const { data: featuredDTOs } = useFeaturedProducts();
+
+  const bandProduct = featuredDTOs?.find(
+    (p) => p.slug.includes("band") || p.name.toLowerCase().includes("band")
+  ) || {
+    name: "Knotted Wrist Band",
+    slug: "wollyway-wrist-band-premium",
+    price: 14900,
+    images: [{ url: "/uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png", isPrimary: true }],
+  };
+
+  const keychainProduct = featuredDTOs?.find(
+    (p) => p.slug.includes("keychain") || p.name.toLowerCase().includes("keychain")
+  ) || {
+    name: "Handcrafted Keychain",
+    slug: "wollyway-handcrafted-keychain",
+    price: 59900,
+    images: [{ url: "/uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png", isPrimary: true }],
+  };
+
+  const bandImage =
+    bandProduct.images?.find((img) => img.isPrimary)?.url ||
+    bandProduct.images?.[0]?.url ||
+    "/uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png";
+
+  const keychainImage =
+    keychainProduct.images?.find((img) => img.isPrimary)?.url ||
+    keychainProduct.images?.[0]?.url ||
+    "/uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png";
+
   return (
     <section className="relative min-h-screen flex items-center pt-16 overflow-hidden hero-background">
       {/* Dynamic Background decoration */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        {/* Large floating orbs - removed top-left orb */}
+        {/* Large floating orbs */}
         <div
           className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full bg-gradient-to-br from-wolly-mint/30 via-wolly-pink/40 to-transparent filter blur-3xl animate-float"
           style={{ animationDelay: "1s" }}
@@ -24,7 +56,7 @@ const Hero = () => {
           style={{ animationDelay: "0.5s" }}
         ></div>
 
-        {/* Additional floating elements - moved to bottom right */}
+        {/* Additional floating elements */}
         <div
           className="absolute bottom-32 right-32 w-32 h-32 rounded-full bg-gradient-to-r from-wolly-magenta/40 to-wolly-pink/60 filter blur-2xl animate-float"
           style={{ animationDelay: "2s" }}
@@ -91,9 +123,7 @@ const Hero = () => {
               of handmade knotted bands, keychains, and accessories that blend
               craftsmanship with{" "}
               <span className="text-wolly-magenta font-bold">
-                pop culture inspiration
-              </span>
-              . 🌟
+                pop culture inspiration</span>. 🌟
             </motion.p>
 
             <motion.div
@@ -110,59 +140,76 @@ const Hero = () => {
             </motion.div>
           </motion.div>
 
-          {/* Hero Image */}
+          {/* Hero Image & Hanging Feature Containers */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 1, ease: "easeOut" }}
             className="relative"
           >
-            <div className="relative w-full h-[30rem] rounded-2xl overflow-hidden shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="Handcrafted accessories"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-wolly-magenta/30 to-transparent"></div>
+            <div className="relative w-full h-[30rem] rounded-2xl overflow-visible shadow-2xl">
+              <div className="w-full h-full rounded-2xl overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                  alt="Handcrafted accessories"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-wolly-magenta/30 to-transparent"></div>
+              </div>
 
-              {/* Floating product highlights */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.8 }}
-                className="absolute top-10 -right-6 glass-card p-4 shadow-lg animate-float"
-              >
-                <div className="w-28 h-28 rounded-lg overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
-                    alt="Hand band"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="mt-2">
-                  <p className="font-medium text-sm">Knotted Band</p>
-                  <p className="text-wolly-magenta font-bold text-sm">$24.99</p>
-                </div>
-              </motion.div>
+              {/* Floating product highlights: Container 1 (Hanging Top-Right) */}
+              <Link href={`/product/${bandProduct.slug}`} className="block group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ delay: 1, duration: 0.8 }}
+                  className="absolute top-10 -right-6 glass-card p-4 shadow-xl animate-float cursor-pointer border-2 border-white/60 hover:border-wolly-magenta/60 transition-all z-20 backdrop-blur-md rounded-2xl"
+                >
+                  <div className="w-28 h-28 rounded-xl overflow-hidden bg-white/80 p-1 shadow-inner">
+                    <img
+                      src={bandImage}
+                      alt={bandProduct.name}
+                      className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="mt-2.5">
+                    <p className="font-bold text-xs text-foreground truncate max-w-[7.5rem] group-hover:text-wolly-magenta transition-colors">
+                      {bandProduct.name}
+                    </p>
+                    <p className="text-wolly-magenta font-black text-sm mt-0.5">
+                      {formatMoney(bandProduct.price)}
+                    </p>
+                  </div>
+                </motion.div>
+              </Link>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.8 }}
-                className="absolute bottom-16 -left-6 glass-card p-4 shadow-lg animate-float animation-delay-500"
-              >
-                <div className="w-28 h-28 rounded-lg overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1611010344445-5f28a5a7414d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
-                    alt="Keychain"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="mt-2">
-                  <p className="font-medium text-sm">Pop Keychain</p>
-                  <p className="text-wolly-magenta font-bold text-sm">$19.99</p>
-                </div>
-              </motion.div>
+              {/* Floating product highlights: Container 2 (Hanging Bottom-Left) */}
+              <Link href={`/product/${keychainProduct.slug}`} className="block group">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ delay: 1.2, duration: 0.8 }}
+                  className="absolute bottom-16 -left-6 glass-card p-4 shadow-xl animate-float animation-delay-500 cursor-pointer border-2 border-white/60 hover:border-wolly-magenta/60 transition-all z-20 backdrop-blur-md rounded-2xl"
+                >
+                  <div className="w-28 h-28 rounded-xl overflow-hidden bg-white/80 p-1 shadow-inner">
+                    <img
+                      src={keychainImage}
+                      alt={keychainProduct.name}
+                      className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="mt-2.5">
+                    <p className="font-bold text-xs text-foreground truncate max-w-[7.5rem] group-hover:text-wolly-magenta transition-colors">
+                      {keychainProduct.name}
+                    </p>
+                    <p className="text-wolly-magenta font-black text-sm mt-0.5">
+                      {formatMoney(keychainProduct.price)}
+                    </p>
+                  </div>
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
         </div>
