@@ -9,6 +9,7 @@ import { type Product } from '@/types/Product';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist, useWishlistCheck } from '@/contexts/WishlistContext';
 import Link from 'next/link';
+import { getProductUrl } from '@/utils/product';
 
 interface ProductQuickViewProps {
   product: Product | null;
@@ -37,7 +38,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
   if (!product) return null;
 
   const incrementQuantity = () => {
-    if (product && quantity < (product.stockCount || 10)) {
+    if (product && quantity < 10) {
       setQuantity(prev => prev + 1);
     }
   };
@@ -63,9 +64,8 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
 
   // Determine stock status
   const getStockStatus = () => {
-    if (!product.stockCount) return 'In Stock';
-    if (product.stockCount <= 0) return 'Out of Stock';
-    if (product.stockCount < 5) return 'Low Stock';
+    if (product.stockStatus === 'OUT_OF_STOCK') return 'Out of Stock';
+    if (product.stockStatus === 'LOW_STOCK') return 'Low Stock';
     return 'In Stock';
   };
 
@@ -171,7 +171,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                   variant="ghost" 
                   size="icon" 
                   onClick={incrementQuantity}
-                  disabled={product.stockCount !== undefined && quantity >= product.stockCount}
+                  disabled={quantity >= 10}
                   className="h-8 w-8"
                 >
                   <Plus size={16} />
@@ -201,7 +201,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
             
             <div className="mt-4 text-center">
               <Button variant="link" asChild className="text-sm">
-                <Link href={`/product/${product.slug || product.id}`}>View Full Details</Link>
+                <Link href={getProductUrl(product)}>View Full Details</Link>
               </Button>
             </div>
           </div>

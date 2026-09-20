@@ -142,7 +142,11 @@ export default function Checkout() {
     e.preventDefault();
     try {
       setCheckoutState('INITIALIZING');
-      await authService.addAddress(form);
+      let formattedPhone = form.phone.trim();
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = `+1${formattedPhone.replace(/\D/g, '')}`;
+      }
+      await authService.addAddress({ ...form, phone: formattedPhone });
       // Re-initialize flow to pick up the new address
       await initCheckoutFlow();
     } catch (error: any) {
@@ -160,6 +164,37 @@ export default function Checkout() {
       
       setCheckoutState('OPENING_GATEWAY');
       
+      if (intent.keyId === 'mock_razorpay_key_id') {
+        // MOCK ENVIRONMENT: Simulate a successful Razorpay flow
+        console.log("Mocking Razorpay success for order:", intent.clientReference);
+        
+        // Let's call the real webhook endpoint to simulate Razorpay calling the webhook (since signature check is mocked)
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/payments/webhook/razorpay`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-razorpay-signature': 'mock_signature'
+          },
+          body: JSON.stringify({
+            event: 'payment.captured',
+            payload: {
+              payment: {
+                entity: {
+                  id: `mock_txn_${Math.random().toString(36).substring(7)}`,
+                  order_id: intent.clientReference,
+                  amount: intent.amount,
+                  currency: intent.currency,
+                  status: 'captured'
+                }
+              }
+            }
+          })
+        });
+        
+        startPollingReconciliation();
+        return;
+      }
+
       const options = {
         key: intent.keyId,
         amount: intent.amount, // Amount from backend is already in paise

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Star } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const reviewsData = [
   {
@@ -62,15 +63,19 @@ const reviewsData = [
   },
 ];
 
+const getInitials = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+};
+
 const ReviewCard = ({ review }: { review: (typeof reviewsData)[0] }) => {
   return (
     <div className="flex-shrink-0 w-80 mx-4 bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-wolly-pink/20 hover:shadow-xl transition-all duration-300">
       <div className="flex items-center mb-4">
-        <img
-          src={review.avatar}
-          alt={review.name}
-          className="w-12 h-12 rounded-full object-cover mr-4"
-        />
+        <Avatar className="w-12 h-12 mr-4 border border-wolly-pink/20">
+          <AvatarFallback className="bg-wolly-pink/20 text-wolly-magenta font-semibold">
+            {getInitials(review.name)}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex-1">
           <h4 className="font-semibold text-gray-800">{review.name}</h4>
           <div className="flex mt-1">

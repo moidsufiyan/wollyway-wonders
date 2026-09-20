@@ -183,11 +183,7 @@ const Shop = () => {
 
               {activeCategory && (
                 <div className="mb-6">
-                  {/* Dummy product passed just to satisfy component props for category path display */}
-                  <ProductBreadcrumb
-                    categoryPath={activeCategory}
-                    product={{ category: activeCategory } as any}
-                  />
+                  <ProductBreadcrumb categoryPath={activeCategory} />
                 </div>
               )}
 

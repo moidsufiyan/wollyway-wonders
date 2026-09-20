@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import mongoose, { FilterQuery, Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import { orderRepository } from '../repositories/order.repository.js';
 import { checkoutRepository } from '../repositories/checkout.repository.js';
 import { checkoutService } from './checkout.service.js';
@@ -124,7 +124,7 @@ export class OrderService {
     );
     const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
-    let createdOrder: IOrder | null = null;
+    let createdOrder: IOrder | undefined;
 
     try {
       // Bypassing transaction for local development without Replica Sets
@@ -667,67 +667,60 @@ export class OrderService {
     }
 
     // Step 3: Atomic Local MongoDB ACID Transaction
-    let finalOrder: IOrder | null = null;
+    // Re-read order
+    const currentOrder = await Order.findById(order._id);
+    if (!currentOrder) {
+      throw new AppError('Order not found during transaction', HTTP_STATUS.NOT_FOUND);
+    }
 
-    try {
-      // Re-read order
-      const currentOrder = await Order.findById(order._id);
-      if (!currentOrder) {
-        throw new AppError('Order not found during transaction', HTTP_STATUS.NOT_FOUND);
-      }
+    const updateSet: Record<string, unknown> = {};
+    const updatePush: Record<string, unknown> = {};
 
-      const updateSet: Record<string, unknown> = {};
-      const updatePush: Record<string, unknown> = {};
+    // Only transition status and push history if not already CANCELLED
+    if (currentOrder.status !== 'CANCELLED') {
+      updateSet.status = 'CANCELLED';
+      updateSet.cancellation = {
+        reason: reason || 'Customer/Admin cancellation',
+        cancelledAt: new Date(),
+        cancelledBy: userId ? new Types.ObjectId(userId) : undefined,
+      };
+      updatePush.history = {
+        previousStatus: currentOrder.status,
+        newStatus: 'CANCELLED',
+        changedAt: new Date(),
+        changedBy: userId ? new Types.ObjectId(userId) : new Types.ObjectId(),
+      };
+    }
 
-      // Only transition status and push history if not already CANCELLED
-      if (currentOrder.status !== 'CANCELLED') {
-        updateSet.status = 'CANCELLED';
-        updateSet.cancellation = {
-          reason: reason || 'Customer/Admin cancellation',
-          cancelledAt: new Date(),
-          cancelledBy: userId ? new Types.ObjectId(userId) : undefined,
-        };
-        updatePush.history = {
-          previousStatus: currentOrder.status,
-          newStatus: 'CANCELLED',
-          changedAt: new Date(),
-          changedBy: userId ? new Types.ObjectId(userId) : new Types.ObjectId(),
-        };
-      }
+    // Finalize payment state
+    if (isPaid || refundId) {
+      updateSet['paymentInfo.status'] = 'refunded';
+      updateSet['paymentInfo.refundStatus'] = 'completed';
+      if (refundId) updateSet['paymentInfo.refundId'] = refundId;
+      updateSet['paymentInfo.refundedAt'] = currentOrder.paymentInfo.refundedAt || new Date();
+      if (refundAmount) updateSet['paymentInfo.refundAmount'] = refundAmount;
+    }
 
-      // Finalize payment state
-      if (isPaid || refundId) {
-        updateSet['paymentInfo.status'] = 'refunded';
-        updateSet['paymentInfo.refundStatus'] = 'completed';
-        if (refundId) updateSet['paymentInfo.refundId'] = refundId;
-        updateSet['paymentInfo.refundedAt'] = currentOrder.paymentInfo.refundedAt || new Date();
-        if (refundAmount) updateSet['paymentInfo.refundAmount'] = refundAmount;
-      }
+    const updateDoc: Record<string, unknown> = { $set: updateSet };
+    if (Object.keys(updatePush).length > 0) {
+      updateDoc.$push = updatePush;
+    }
 
-      const updateDoc: Record<string, unknown> = { $set: updateSet };
-      if (Object.keys(updatePush).length > 0) {
-        updateDoc.$push = updatePush;
-      }
+    const finalOrder = await Order.findByIdAndUpdate(order._id, updateDoc, {
+      new: true,
+    });
 
-      finalOrder = await Order.findByIdAndUpdate(order._id, updateDoc, {
-        new: true,
-      });
-
-      // Restock inventory line items
-      // decrementSold is true only if order was verified-paid and inventory was actually consumed
-      const shouldDecrementSold = isPaid;
-      for (const item of currentOrder.items) {
-        await inventoryRepository.restockProduct(
-          item.productId,
-          item.quantity,
-          currentOrder._id,
-          undefined,
-          shouldDecrementSold
-        );
-      }
-    } catch (err) {
-      // Handle error if needed
-      throw err;
+    // Restock inventory line items
+    // decrementSold is true only if order was verified-paid and inventory was actually consumed
+    const shouldDecrementSold = isPaid;
+    for (const item of currentOrder.items) {
+      await inventoryRepository.restockProduct(
+        item.productId,
+        item.quantity,
+        currentOrder._id,
+        undefined,
+        shouldDecrementSold
+      );
     }
 
     if (!finalOrder) {

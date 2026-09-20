@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
+import { getProductUrl } from '@/utils/product';
 
 const Wishlist = () => {
   const { items, removeItem, clearWishlist } = useWishlist();
@@ -83,7 +84,7 @@ const Wishlist = () => {
                         transition={{ duration: 0.4 }}
                         className="border border-border rounded-lg overflow-hidden"
                       >
-                        <Link href={`/product/${product.slug || product.id}`}
+                        <Link href={getProductUrl(product)}
                           className="block aspect-square relative overflow-hidden"
                         >
                           <img
@@ -93,7 +94,7 @@ const Wishlist = () => {
                           />
                         </Link>
                         <div className="p-4">
-                          <Link href={`/product/${product.slug || product.id}`}
+                          <Link href={getProductUrl(product)}
                             className="block hover:text-wolly-magenta"
                           >
                             <h3 className="font-medium mb-1 truncate">{product.name}</h3>

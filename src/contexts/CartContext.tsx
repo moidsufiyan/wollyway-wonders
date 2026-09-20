@@ -47,11 +47,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const { authStatus } = useAuth();
 
-  // Cleanup legacy localStorage on mount
+  // Remove legacy localStorage cart data from pre-backend migration
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('cart')) {
       localStorage.removeItem('cart');
-      console.log('Cleaned up legacy localStorage cart');
     }
   }, []);
 

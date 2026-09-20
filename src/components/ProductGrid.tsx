@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import SizeGuide from '@/components/SizeGuide';
 import { useCart } from '@/contexts/CartContext';
 import { formatMoney } from '@/utils/currency';
+import { getProductUrl } from '@/utils/product';
 
 
 export type ProductGridProps = {
@@ -116,19 +117,10 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
     } else if (product.stockStatus === 'IN_STOCK') {
       return <Badge variant="outline" className="absolute top-2 right-2 bg-green-50 text-green-600 border-green-200">In Stock</Badge>;
     }
-    // Fallback for legacy items without stockStatus
-    if (!product.stockCount && product.stockCount !== 0) return null;
-    
-    if (product.stockCount === 0) {
-      return <Badge variant="destructive" className="absolute top-2 right-2">Out of Stock</Badge>;
-    } else if (product.stockCount < 5) {
-      return <Badge variant="outline" className="absolute top-2 right-2 bg-amber-50 text-amber-600 border-amber-200">Low Stock</Badge>;
-    } else {
-      return <Badge variant="outline" className="absolute top-2 right-2 bg-green-50 text-green-600 border-green-200">In Stock</Badge>;
-    }
+    return null;
   };
 
-  const isOutOfStock = (product: Product) => product.stockStatus === 'OUT_OF_STOCK' || product.stockCount === 0;
+  const isOutOfStock = (product: Product) => product.stockStatus === 'OUT_OF_STOCK';
 
   return (
     <>
@@ -155,7 +147,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
               )}
             </div>
             
-            <Link href={`/product/${product.slug || product.id}`} className="block relative">
+            <Link href={getProductUrl(product)} className="block relative">
               <div className="aspect-square overflow-hidden">
                 <img 
                   src={product.image} 
@@ -228,7 +220,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 )}
               </div>
               
-              <Link href={`/product/${product.slug || product.id}`}
+              <Link href={getProductUrl(product)}
                 className="block font-medium text-sm line-clamp-1 hover:text-wolly-magenta transition-colors mb-1"
               >
                 {product.name}
@@ -421,7 +413,7 @@ const ProductGrid = ({ products, onAddToCart, onSaveForLater, onRemoveFromWishli
                 <div className="text-xs text-muted-foreground mt-4">
                   {isOutOfStock(quickViewProduct) ? (
                     <span className="text-red-500">Out of stock</span>
-                  ) : quickViewProduct.stockStatus === 'LOW_STOCK' || (quickViewProduct.stockCount && quickViewProduct.stockCount < 5) ? (
+                  ) : quickViewProduct.stockStatus === 'LOW_STOCK' ? (
                     <span className="text-amber-600">Low stock available</span>
                   ) : (
                     <span className="text-green-600">In stock</span>

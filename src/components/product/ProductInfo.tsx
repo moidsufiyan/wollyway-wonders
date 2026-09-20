@@ -10,7 +10,7 @@ import { useWishlist, useWishlistCheck } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import SocialShareButtons from '@/components/SocialShareButtons';
-import LoyaltyPoints from '@/components/LoyaltyPoints';
+
 import { formatMoney } from '@/utils/currency';
 
 interface ProductInfoProps {
@@ -93,7 +93,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
       
       <span className="text-2xl font-bold text-wolly-magenta mb-4">{formatMoney(product.price)}</span>
       
-      <LoyaltyPoints product={product} quantity={quantity} />
+
       
       <p className="text-muted-foreground mb-6">
         {product.description || product.shortDescription}
@@ -182,14 +182,30 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product, onOpenReferral }) =>
           <span className="text-muted-foreground w-20">SKU:</span>
           <span>WW-{product.id?.toString().substring(0, 6).toUpperCase()}</span>
         </div>
-        {product.category && (
-          <div className="flex items-center text-sm mb-2">
-            <span className="text-muted-foreground w-20">Category:</span>
-            <Link href={`/shop?category=${product.category?.toLowerCase()}`} className="hover:text-wolly-magenta">
-              {product.category}
-            </Link>
-          </div>
-        )}
+        {(() => {
+          const catName =
+            typeof product.category === 'object' && product.category !== null
+              ? ((product.category as any).name || (product.category as any).slug || '')
+              : typeof product.category === 'string'
+              ? product.category
+              : '';
+          const catSlug =
+            typeof product.category === 'object' && product.category !== null
+              ? ((product.category as any).slug || (product.category as any).name || '')
+              : catName;
+          if (!catName) return null;
+          return (
+            <div className="flex items-center text-sm mb-2">
+              <span className="text-muted-foreground w-20">Category:</span>
+              <Link
+                href={`/shop?category=${encodeURIComponent(catSlug.toLowerCase())}`}
+                className="hover:text-wolly-magenta"
+              >
+                {catName}
+              </Link>
+            </div>
+          );
+        })()}
         {product.tags && product.tags.length > 0 && (
           <div className="flex items-center text-sm">
             <span className="text-muted-foreground w-20">Tags:</span>

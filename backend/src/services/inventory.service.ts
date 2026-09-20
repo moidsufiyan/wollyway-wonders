@@ -320,56 +320,56 @@ export class InventoryService {
 
     try {
       // 2. Start Mongo transaction
-        // 3. Re-read stock and check active reservations under lock
-        const inventory = await Inventory.findOne({
-          productId: new Types.ObjectId(productId),
-        });
-        if (!inventory) {
-          throw new AppError('Inventory record not found.', HTTP_STATUS.NOT_FOUND);
-        }
+      // 3. Re-read stock and check active reservations under lock
+      const inventory = await Inventory.findOne({
+        productId: new Types.ObjectId(productId),
+      });
+      if (!inventory) {
+        throw new AppError('Inventory record not found.', HTTP_STATUS.NOT_FOUND);
+      }
 
-        if (inventory.isDiscontinued) {
+      if (inventory.isDiscontinued) {
+        throw new AppError(
+          'Discontinued products cannot receive stock adjustments.',
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+
+      if (inventory.trackInventory) {
+        const before = inventory.available;
+        const after = before + change;
+
+        if (after < 0) {
           throw new AppError(
-            'Discontinued products cannot receive stock adjustments.',
+            `Insufficient stock. Available stock cannot drop below zero.`,
             HTTP_STATUS.BAD_REQUEST
           );
         }
 
-        if (inventory.trackInventory) {
-          const before = inventory.available;
-          const after = before + change;
-
-          if (after < 0) {
+        if (change < 0) {
+          const activeReservedQuantity = await checkoutService.getActiveReservedQuantity(
+            redis,
+            productId
+          );
+          if (after < activeReservedQuantity) {
             throw new AppError(
-              `Insufficient stock. Available stock cannot drop below zero.`,
-              HTTP_STATUS.BAD_REQUEST
+              `Cannot reduce available stock to ${after} because there are ${activeReservedQuantity} active reservations.`,
+              HTTP_STATUS.CONFLICT
             );
-          }
-
-          if (change < 0) {
-            const activeReservedQuantity = await checkoutService.getActiveReservedQuantity(
-              redis,
-              productId
-            );
-            if (after < activeReservedQuantity) {
-              throw new AppError(
-                `Cannot reduce available stock to ${after} because there are ${activeReservedQuantity} active reservations.`,
-                HTTP_STATUS.CONFLICT
-              );
-            }
           }
         }
+      }
 
-        // 4. Update and log via repository
-        const updatedInventory = await inventoryRepository.adjustStock(
-          new Types.ObjectId(productId),
-          change,
-          reason,
-          notes || null,
-          adminUserId ? new Types.ObjectId(adminUserId) : null
-        );
+      // 4. Update and log via repository
+      const updatedInventory = await inventoryRepository.adjustStock(
+        new Types.ObjectId(productId),
+        change,
+        reason,
+        notes || null,
+        adminUserId ? new Types.ObjectId(adminUserId) : null
+      );
 
-        return updatedInventory;
+      return updatedInventory;
     } finally {
       // 5. Safely release lock
       try {

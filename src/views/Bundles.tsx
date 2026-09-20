@@ -15,7 +15,7 @@ const sampleBundles: Bundle[] = [
     description: 'Perfect gift for superhero enthusiasts! Get our most popular superhero-themed items at a special bundle price.',
     products: [
       {
-        id: 1,
+        id: "64a1b2c3d4e5f6a7b8c9d0e3",
         name: "Super Hero Keychain",
         price: 1999,
         image: "/uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",
@@ -27,7 +27,7 @@ const sampleBundles: Bundle[] = [
         description: "Handcrafted superhero themed keychain made with premium materials. Comes with metal clasp.",
       },
       {
-        id: 3,
+        id: "64a1b2c3d4e5f6a7b8c9d0e2",
         name: "Batman Inspired Band",
         price: 2299,
         image: "/uploads/3f97e89a-56b1-43a3-a5ca-a3c402262b9f.png",
@@ -47,7 +47,7 @@ const sampleBundles: Bundle[] = [
     description: 'Show your friends you care with this special bundle of friendship bands and accessories.',
     products: [
       {
-        id: 2,
+        id: "64a1b2c3d4e5f6a7b8c9d0e1",
         name: "Friendship Bracelets Set",
         price: 2499,
         image: "/uploads/0ebd024d-195a-4c96-aa94-bbdecc95fbb0.png",
@@ -58,7 +58,7 @@ const sampleBundles: Bundle[] = [
         description: "Set of handwoven friendship bands with custom designs. Perfect gift for friends.",
       },
       {
-        id: 1,
+        id: "64a1b2c3d4e5f6a7b8c9d0e3",
         name: "Super Hero Keychain",
         price: 1999,
         image: "/uploads/9b7faa7c-2370-41a7-8fe8-74ec795bcaa4.png",

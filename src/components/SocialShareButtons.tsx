@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Product } from '@/types/Product';
 import { useToast } from '@/hooks/use-toast';
+import { getProductUrl } from '@/utils/product';
 
 interface SocialShareButtonsProps {
   product: Product | null;
@@ -23,7 +24,7 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({ product }) => {
 
   React.useEffect(() => {
     if (typeof window !== "undefined" && product) {
-      setShareableUrl(`${window.location.origin}/product/${product.slug || product.id}`);
+      setShareableUrl(`${window.location.origin}${getProductUrl(product)}`);
     }
   }, [product]);
 

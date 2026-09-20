@@ -24,7 +24,6 @@ export type Product = {
 
   // Availability / Stock info (mapped from backend AvailabilityInfo)
   stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
-  stockCount?: number; // legacy UI compat, backend does not expose exact count yet (treat 0 as out of stock, >0 as in stock)
 
   // --- UI Compatibility Fields (Legacy / Future Features) ---
   // These fields do not exist on the current backend contract and will be undefined.
@@ -49,10 +48,6 @@ export type Product = {
 
 // Adapter: Maps backend ProductCardDTO to frontend UI Product
 export const mapProductCardToUI = (dto: ProductCardDTO): Product => {
-  // Derive legacy stock count to keep UI badges working smoothly if they rely on it
-  let simulatedStockCount = 10;
-  if (dto.availability.status === 'OUT_OF_STOCK') simulatedStockCount = 0;
-  else if (dto.availability.status === 'LOW_STOCK') simulatedStockCount = 3;
 
   return {
     id: dto._id,
@@ -65,7 +60,6 @@ export const mapProductCardToUI = (dto: ProductCardDTO): Product => {
     tags: [], // ProductCardDTO doesn't return tags by default, kept for UI type safety
     featured: dto.featured,
     stockStatus: dto.availability.status,
-    stockCount: simulatedStockCount,
     
     // UI fields explicitly undefined
     colors: undefined,
@@ -84,9 +78,9 @@ export const mapProductDetailToUI = (dto: ProductDetailDTO): Product => {
     price: dto.price,
     salePrice: dto.salePrice,
     image: dto.images.find(img => img.isPrimary)?.url || dto.images[0]?.url || '/images/placeholder.jpg',
-    images: dto.images.sort((a, b) => a.displayOrder - b.displayOrder).map(img => img.url),
-    category: dto.categoryId, // Note: The detail endpoint returns categoryId, not populated category object.
-    tags: dto.tags,
+    category: dto.category?.name || 'Uncategorized',
+    images: (dto.images ?? []).slice().sort((a, b) => a.displayOrder - b.displayOrder).map(img => img.url),
+    tags: dto.tags ?? [],
     featured: dto.featured,
     description: dto.description,
     shortDescription: dto.shortDescription,
@@ -96,7 +90,6 @@ export const mapProductDetailToUI = (dto: ProductDetailDTO): Product => {
     // Since detail API doesn't run through the discovery query builder, it lacks availability info.
     // We assume IN_STOCK unless we know otherwise, or we rely on a separate inventory check (future).
     stockStatus: 'IN_STOCK',
-    stockCount: 10,
     
     // UI fields explicitly undefined
     colors: undefined,
@@ -108,9 +101,6 @@ export const mapProductDetailToUI = (dto: ProductDetailDTO): Product => {
 
 // Adapter: Maps backend CartItemDTO to frontend UI Product
 export const mapCartItemToUI = (dto: CartItemDTO): Product => {
-  let simulatedStockCount = 10;
-  if (dto.availability.status === 'OUT_OF_STOCK') simulatedStockCount = 0;
-  else if (dto.availability.status === 'LOW_STOCK') simulatedStockCount = 3;
 
   return {
     id: dto.productId, // Map productId to standard id
@@ -122,7 +112,6 @@ export const mapCartItemToUI = (dto: CartItemDTO): Product => {
     tags: [],
     featured: false, // Not returned in CartItemDTO
     stockStatus: dto.availability.status,
-    stockCount: simulatedStockCount,
     
     isValid: dto.isValid,
     validationReason: dto.validationReason,
@@ -136,9 +125,6 @@ export const mapCartItemToUI = (dto: CartItemDTO): Product => {
 
 // Adapter: Maps backend WishlistCardDTO to frontend UI Product
 export const mapWishlistCardToUI = (dto: WishlistCardDTO): Product => {
-  let simulatedStockCount = 10;
-  if (dto.availability.status === 'OUT_OF_STOCK') simulatedStockCount = 0;
-  else if (dto.availability.status === 'LOW_STOCK') simulatedStockCount = 3;
 
   return {
     id: dto.productId, // Map productId to standard id
@@ -151,23 +137,10 @@ export const mapWishlistCardToUI = (dto: WishlistCardDTO): Product => {
     tags: [],
     featured: false,
     stockStatus: dto.availability.status,
-    stockCount: simulatedStockCount,
     
     colors: undefined,
     sizes: undefined,
     rating: undefined,
     numReviews: undefined,
-  };
-};
-
-// Legacy compatibility for any remaining mock data that still uses the old format directly
-export const normalizeProduct = (product: any): Product => {
-  return {
-    ...product,
-    id: product.id ?? product._id ?? String(product.id || product._id),
-    stockCount: product.countInStock || product.stockCount || product.stock || 0,
-    featured: product.featured || product.isFeatured || false,
-    numReviews: product.numReviews || (Array.isArray(product.reviews) ? product.reviews.length : product.reviews) || 0,
-    price: typeof product.price === 'number' && product.price < 1000 ? product.price * 100 : product.price // Convert old mock prices to paisa if they were in rupees
   };
 };

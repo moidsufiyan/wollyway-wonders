@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Review } from '@/types/review';
 import ProductReviewCard from './ProductReviewCard';
-import ProductReviewForm from './ProductReviewForm';
+
 import StarRating from './StarRating';
 import { Progress } from '@/components/ui/progress';
 import { PlusCircle, FilterX } from 'lucide-react';
@@ -40,7 +40,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [filter, setFilter] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>('newest');
-  const [showReviewForm, setShowReviewForm] = useState<boolean>(false);
+
 
   // Filter and sort reviews
   const filteredAndSortedReviews = React.useMemo(() => {
@@ -84,9 +84,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
     ));
   };
   
-  const handleAddReview = () => {
-    setShowReviewForm(true);
-  };
+
 
   const getStarPercentage = (stars: number) => {
     if (totalReviews === 0) return 0;
@@ -129,16 +127,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
             ))}
           </div>
           
-          <div className="mt-6">
-            <Button 
-              variant="outline" 
-              onClick={handleAddReview}
-              className="w-full"
-            >
-              <PlusCircle size={16} className="mr-2" />
-              Write a Review
-            </Button>
-          </div>
+
         </div>
         
         {/* Reviews list */}
@@ -174,13 +163,7 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
             )}
           </div>
           
-          {/* Review Form */}
-          {showReviewForm && (
-            <ProductReviewForm 
-              productId={productId} 
-              onSubmitSuccess={() => setShowReviewForm(false)} 
-            />
-          )}
+
           
           {/* Reviews List */}
           {filteredAndSortedReviews.length > 0 ? (
@@ -202,19 +185,12 @@ const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
                   : "Be the first to review this product!"}
               </p>
               
-              {filter !== null ? (
+              {filter !== null && (
                 <Button 
                   variant="outline" 
                   onClick={() => handleFilterChange(null)}
                 >
                   View All Reviews
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleAddReview}
-                  className="bg-wolly-magenta hover:bg-wolly-magenta/90"
-                >
-                  Write a Review
                 </Button>
               )}
             </div>

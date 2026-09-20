@@ -57,11 +57,10 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
   const pathname = usePathname();
   const { authStatus } = useAuth();
 
-  // Cleanup legacy localStorage on mount
+  // Remove legacy localStorage wishlist data from pre-backend migration
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('wishlist')) {
       localStorage.removeItem('wishlist');
-      console.log('Cleaned up legacy localStorage wishlist');
     }
   }, []);
 

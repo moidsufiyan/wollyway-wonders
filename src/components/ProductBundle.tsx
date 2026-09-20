@@ -9,9 +9,8 @@ import { useCart } from '@/contexts/CartContext';
 import type { Product } from '@/types/Product';
 import { formatMoney } from '@/utils/currency';
 
-// Make BundleProduct compatible with Product
 export type BundleProduct = {
-  id: number;
+  id: string | number;
   name: string;
   slug?: string;
   price: number;

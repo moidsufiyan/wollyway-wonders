@@ -114,6 +114,10 @@ export interface ProductDetailDTO {
   tags: string[];
   featured: boolean;
   categoryId: string;
-  // Note: Detail endpoint returns the raw product, so it might not have populated category or availability.
-  // We'll adapt it in the frontend mapper.
+  // When populated by the backend, categoryId is replaced with a full category object.
+  category?: {
+    _id: string;
+    name: string;
+    slug: string;
+  } | null;
 }

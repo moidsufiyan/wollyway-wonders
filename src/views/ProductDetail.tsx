@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -8,37 +8,22 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { mapProductDetailToUI, Product } from '@/types/Product';
+import { mapProductDetailToUI } from '@/types/Product';
 import ProductDetailsTabs from '@/components/ProductDetailsTabs';
 import ProductQA from '@/components/ProductQA';
-import ReferralProgram from '@/components/ReferralProgram';
 import ProductGallery from '@/components/product/ProductGallery';
 import ProductInfo from '@/components/product/ProductInfo';
 import FeatureCards from '@/components/product/FeatureCards';
-import RelatedProducts from '@/components/product/RelatedProducts';
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb';
 import PromoBanner from '@/components/product/PromoBanner';
 import { useProductDetails } from '@/hooks/useProducts';
 
-// TODO: Replace with real related products fetching later
-import ProductDataService from '@/services/ProductDataService';
-
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>(); // 'id' from route param is actually the slug 
   const { data: productDetailDTO, isLoading: loading, error } = useProductDetails(id);
-  
-  const [showReferral, setShowReferral] = useState(false);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   // Map to UI model
   const product = productDetailDTO ? mapProductDetailToUI(productDetailDTO) : null;
-  
-  useEffect(() => {
-    // Keep mock related products temporarily until Phase 5.3 or whenever related products are supported
-    if (product) {
-      setRelatedProducts(ProductDataService.getRelatedProducts(product.id));
-    }
-  }, [product]);
   
   if (loading) {
     return (
@@ -92,7 +77,7 @@ const ProductDetail = () => {
           <ProductGallery product={product} />
           <ProductInfo 
             product={product} 
-            onOpenReferral={() => setShowReferral(true)} 
+            onOpenReferral={() => {}} 
           />
         </div>
         
@@ -101,11 +86,7 @@ const ProductDetail = () => {
         <ProductQA productId={product.id} />
         
         <FeatureCards />
-        
-        <RelatedProducts products={relatedProducts} />
       </div>
-      
-      <ReferralProgram open={showReferral} onOpenChange={setShowReferral} />
       
       <Footer />
     </div>
@@ -113,3 +94,4 @@ const ProductDetail = () => {
 };
 
 export default ProductDetail;
+

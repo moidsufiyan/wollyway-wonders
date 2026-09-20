@@ -1,65 +1,8 @@
 /**
  * WollyWay — Centralized API Client
- *
- * ─── WHY A CENTRALIZED API CLIENT? ───────────────────────────────────────────
- *
- * Without a central client, every feature module would need to:
- *   - Know and hardcode the base URL
- *   - Attach Authorization headers manually on every call
- *   - Handle 401 → refresh → retry independently (causing refresh races)
- *   - Normalize backend error shapes differently in every file
- *
- * A single api-client handles all of this transparently. Every caller simply:
- *   apiClient.get('/products')
- *   apiClient.post('/cart/items', { productId, qty })
- * — the auth plumbing is invisible.
- *
- * ─── REFRESH RACE CONDITION PREVENTION ───────────────────────────────────────
- *
- * Problem: If 3 concurrent requests all receive 401 (expired access token),
- * a naïve implementation issues 3 separate /auth/refresh calls. The backend
- * uses refresh token ROTATION — each refresh invalidates the previous cookie
- * and issues a new one. So calls #2 and #3 would fail because call #1 already
- * rotated the token family, making their cookie stale.
- *
- * Solution: A module-level `refreshPromise` acts as a single-operation lock.
- * The first 401 starts the refresh and stores the Promise in `refreshPromise`.
- * All subsequent 401s in the same tick await THAT SAME Promise instead of
- * issuing new requests. When the Promise resolves, all waiters get the new
- * token simultaneously and retry their original requests exactly once.
- *
- *   Request A ──401──┐
- *   Request B ──401──┼──► ONE refreshPromise (single /auth/refresh call)
- *   Request C ──401──┘
- *                         ↓ new access token
- *              retry A ──► response A
- *              retry B ──► response B
- *              retry C ──► response C
- *
- * ─── RETRY LIMIT (NO INFINITE LOOPS) ─────────────────────────────────────────
- *
- * Each original request is retried AT MOST ONCE after a successful refresh.
- * This is enforced by the `_retried` flag passed through the request options.
- *
- *   /api/foo ──401──► refresh ──► retry /api/foo  ← at most once
- *
- * If the retried request returns 401 again (e.g. the user was suspended
- * between the refresh and the retry), we clear auth state and redirect
- * to login — we do NOT loop again.
- *
- * If the /auth/refresh call itself returns 401/403 (expired or reused cookie),
- * we clear auth state and dispatch an event for AuthContext to react to.
- *
- * ─── CORS + CREDENTIALS ──────────────────────────────────────────────────────
- *
- * All requests use `credentials: 'include'` so that:
- *   - The HTTP-only refresh cookie is sent to the backend on every request
- *   - The backend can set/clear the refresh cookie via Set-Cookie headers
- *
- * This requires the backend to have `credentials: true` in CORS config and
- * an explicit `Access-Control-Allow-Origin` (not *).
- *
- * See docs/frontend/backend-integration.md for production CORS requirements.
+ * 
+ * Handles base URLs, standard headers, auth injection, and normalized error throwing.
+ * Implements a single-operation lock for refresh token race condition prevention.
  */
 
 import { authToken } from './auth-token';
@@ -194,10 +137,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   // Attach the current access token to the Authorization header if available
   const token = authToken.get();
   const wasAuthenticated = !!token;
+
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...headers,
   };
+
+  if (!isFormData) {
+    requestHeaders['Content-Type'] = requestHeaders['Content-Type'] || 'application/json';
+  }
+
   if (token) {
     requestHeaders['Authorization'] = `Bearer ${token}`;
   }
@@ -210,7 +160,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       method,
       headers: requestHeaders,
       credentials: 'include', // Required: sends refresh cookie for logout/refresh routes
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      ...(body !== undefined ? { body: isFormData ? (body as FormData) : JSON.stringify(body) } : {}),
     });
   } catch {
     // fetch() itself throws on network failure, CORS errors, or DNS failure

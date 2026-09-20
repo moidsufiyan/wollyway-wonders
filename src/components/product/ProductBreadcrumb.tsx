@@ -6,11 +6,22 @@ import { ChevronRight, Home } from 'lucide-react';
 import { Product } from '@/types/Product';
 
 interface ProductBreadcrumbProps {
-  product: Product;
+  product?: Partial<Product>;
   categoryPath?: string;
 }
 
 const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ product, categoryPath }) => {
+  const categoryName =
+    typeof product?.category === 'object' && product?.category !== null
+      ? ((product.category as any).name || (product.category as any).slug || '')
+      : typeof product?.category === 'string'
+      ? product.category
+      : '';
+  const displayCategory = categoryPath || categoryName;
+  const categoryLink = displayCategory
+    ? `/shop?category=${encodeURIComponent(displayCategory.toLowerCase())}`
+    : '/shop';
+
   return (
     <div className="mb-6">
       <nav className="flex items-center text-sm text-muted-foreground flex-wrap">
@@ -23,13 +34,11 @@ const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ product, category
           Shop
         </Link>
         
-        {(product?.category || categoryPath) && (
+        {displayCategory && (
           <>
             <ChevronRight size={14} className="mx-2" />
-            <Link href={`/shop?category=${encodeURIComponent((categoryPath || product?.category || '').toLowerCase())}`} 
-              className="hover:text-wolly-magenta"
-            >
-              {categoryPath || product?.category}
+            <Link href={categoryLink} className="hover:text-wolly-magenta">
+              {displayCategory}
             </Link>
           </>
         )}

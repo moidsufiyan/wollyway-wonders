@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatMoney } from '@/utils/currency';
+import { getProductUrl } from '@/utils/product';
 
 const Cart = () => {
   const { items, removeItem, updateQuantity, clearCart, subtotal, shippingFee, taxTotal, orderTotal } = useCart();
@@ -97,7 +98,7 @@ const Cart = () => {
                             <div className="flex flex-col sm:flex-row sm:justify-between">
                               <div>
                                 <h3 className="font-medium">
-                                  <Link href={`/product/${item.product.slug || item.product.id}`}
+                                  <Link href={getProductUrl(item.product)}
                                     className="hover:text-wolly-magenta"
                                   >
                                     {item.product.name}
@@ -135,7 +136,7 @@ const Cart = () => {
                                   size="icon"
                                   className="h-8 w-8"
                                   onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                                  disabled={item.quantity >= (item.product.stockCount || 10)}
+                                  disabled={item.quantity >= 10}
                                 >
                                   <Plus size={14} />
                                 </Button>
