@@ -83,7 +83,7 @@ export class ProductRepository {
     if (!isAdmin) {
       query.visibility = { $in: ['published', 'hidden'] };
     }
-    return Product.findOne(query);
+    return Product.findOne(query).populate('categoryId', '_id name slug');
   }
 
   async findFeatured(): Promise<IProduct[]> {

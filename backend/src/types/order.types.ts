@@ -36,11 +36,17 @@ export interface OrderFinancials {
   currency: string;
 }
 
+export type OrderRefundStatus = 'not_started' | 'pending' | 'completed' | 'unknown';
+
 export interface OrderPaymentInfo {
   provider: OrderPaymentProvider;
   transactionId: string;
   status: 'paid' | 'refunded';
   paidAt: Date;
+  refundStatus?: OrderRefundStatus;
+  refundId?: string;
+  refundedAt?: Date;
+  refundAmount?: number;
 }
 
 export interface OrderFulfillmentInfo {
@@ -54,6 +60,13 @@ export interface OrderCancellationInfo {
   reason?: string;
   cancelledAt?: Date;
   cancelledBy?: Types.ObjectId;
+}
+
+export interface OrderHistoryEntry {
+  previousStatus: OrderStatus;
+  newStatus: OrderStatus;
+  changedAt: Date;
+  changedBy: Types.ObjectId;
 }
 
 export interface PaymentConfirmationPayload {
@@ -109,19 +122,7 @@ export interface OrderDetailDTO {
   createdAt: Date;
 }
 
-export interface AdminOrderDetailDTO extends OrderDetailDTO {
-  userId: string;
-  customer: CustomerSnapshot;
-  checkoutSessionId: string;
-  paymentTransactionId: string;
-  cancellation?: {
-    reason?: string;
-    cancelledAt?: Date;
-    cancelledBy?: string;
-  };
-  updatedAt: Date;
-}
-
+// Added PaginatedOrdersDTO back
 export interface PaginatedOrdersDTO {
   orders: OrderSummaryDTO[];
   pagination: {
@@ -131,17 +132,6 @@ export interface PaginatedOrdersDTO {
     pages: number;
   };
 }
-
-export interface PaginatedAdminOrdersDTO {
-  orders: AdminOrderDetailDTO[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
 // --------------------------------------------------------------------------
 // Query & Payload Interfaces
 // --------------------------------------------------------------------------

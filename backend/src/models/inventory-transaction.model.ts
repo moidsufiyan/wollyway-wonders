@@ -68,6 +68,18 @@ const CategoryInventoryTransactionSchema = new Schema<IInventoryTransaction>(
   }
 );
 
+// Enforces exactly-once inventory restoration per order and inventory item
+CategoryInventoryTransactionSchema.index(
+  { orderId: 1, inventoryId: 1, reason: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      orderId: { $type: 'objectId' },
+      reason: 'return',
+    },
+  }
+);
+
 export const InventoryTransaction = model<IInventoryTransaction>(
   'InventoryTransaction',
   CategoryInventoryTransactionSchema

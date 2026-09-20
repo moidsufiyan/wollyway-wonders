@@ -156,12 +156,21 @@ export const adminUpdateOrderStatus = async (
     const id = req.params.id as string;
     const { status, carrier, trackingNumber, notes } = req.body;
 
-    const order = await orderService.updateOrderStatus(id, {
-      status,
-      carrier,
-      trackingNumber,
-      notes,
-    });
+    const adminUserId = req.user?._id?.toString();
+    if (!adminUserId) {
+      throw new AppError('Unauthorized access', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const order = await orderService.updateOrderStatus(
+      id,
+      {
+        status,
+        carrier,
+        trackingNumber,
+        notes,
+      },
+      adminUserId
+    );
 
     res.status(HTTP_STATUS.OK).json({
       success: true,

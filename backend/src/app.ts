@@ -22,6 +22,11 @@ import cartRoutes from './routes/cart.routes.js';
 import checkoutRoutes from './routes/checkout.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
+import adminProductRoutes from './routes/admin-product.routes.js';
+import adminInventoryRoutes from './routes/admin-inventory.routes.js';
+import adminOrderRoutes from './routes/admin-order.routes.js';
+import { adminCustomerRoutes } from './routes/admin-customer.routes.js';
 import { setupSwagger } from './config/swagger.config.js';
 
 import { API } from './constants/index.js';
@@ -125,6 +130,11 @@ app.use(`${API.PREFIX}/${API.VERSION}/cart`, cartRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/checkout`, checkoutRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/orders`, orderRoutes);
 app.use(`${API.PREFIX}/${API.VERSION}/payments`, paymentRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/admin/dashboard`, dashboardRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/admin/products`, adminProductRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/admin/inventory`, adminInventoryRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/admin/orders`, adminOrderRoutes);
+app.use(`${API.PREFIX}/${API.VERSION}/admin/customers`, adminCustomerRoutes);
 
 // Unhandled route triggers
 app.use(notFoundHandler);

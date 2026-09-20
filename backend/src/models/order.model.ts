@@ -8,6 +8,7 @@ import {
   OrderPaymentInfo,
   OrderFulfillmentInfo,
   OrderCancellationInfo,
+  OrderHistoryEntry,
 } from '../types/order.types.js';
 
 export interface IOrder extends Document {
@@ -23,6 +24,7 @@ export interface IOrder extends Document {
   status: OrderStatus;
   fulfillment?: OrderFulfillmentInfo;
   cancellation?: OrderCancellationInfo;
+  history: OrderHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -112,6 +114,20 @@ const OrderPaymentInfoSchema = new Schema<OrderPaymentInfo>(
       type: Date,
       required: true,
     },
+    refundStatus: {
+      type: String,
+      enum: ['not_started', 'pending', 'completed', 'unknown'],
+      default: 'not_started',
+    },
+    refundId: {
+      type: String,
+    },
+    refundedAt: {
+      type: Date,
+    },
+    refundAmount: {
+      type: Number,
+    },
   },
   { _id: false }
 );
@@ -131,6 +147,24 @@ const OrderCancellationSchema = new Schema<OrderCancellationInfo>(
     reason: { type: String },
     cancelledAt: { type: Date },
     cancelledBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  },
+  { _id: false }
+);
+
+const OrderHistorySchema = new Schema<OrderHistoryEntry>(
+  {
+    previousStatus: {
+      type: String,
+      enum: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'],
+      required: true,
+    },
+    newStatus: {
+      type: String,
+      enum: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'],
+      required: true,
+    },
+    changedAt: { type: Date, required: true },
+    changedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { _id: false }
 );
@@ -194,6 +228,10 @@ const OrderSchema = new Schema<IOrder>(
     cancellation: {
       type: OrderCancellationSchema,
       default: null,
+    },
+    history: {
+      type: [OrderHistorySchema],
+      default: [],
     },
   },
   {

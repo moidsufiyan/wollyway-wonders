@@ -269,4 +269,12 @@ UserSchema.methods.comparePassword = async function (candidatePassword: string):
   return bcrypt.compare(candidatePassword, this.password as string);
 };
 
+// --------------------------------------------------------------------------
+// Compound & Specialized Indexes
+// --------------------------------------------------------------------------
+
+// Support admin customer listing and sorting
+UserSchema.index({ role: 1, createdAt: -1 });
+UserSchema.index({ role: 1, status: 1, createdAt: -1 });
+
 export const User = model<IUser>('User', UserSchema);

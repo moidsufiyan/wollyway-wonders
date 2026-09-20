@@ -51,6 +51,25 @@ export interface WebhookProcessingResult {
   orderNumber?: string;
 }
 
+export interface RefundPaymentInput {
+  transactionId: string;
+  amount: number; // in currency sub-units (e.g. paisa)
+  currency: string;
+  receipt: string;
+  notes?: Record<string, string>;
+}
+
+export interface RefundResult {
+  refundId: string;
+  amount: number; // in currency sub-units (e.g. paisa)
+  currency: string;
+  status: 'processed' | 'pending' | 'failed';
+  /**
+   * Internal adapter raw response. Never exposed in API DTOs.
+   */
+  rawResponse?: Record<string, unknown>;
+}
+
 export interface IPaymentProvider {
   readonly providerName: PaymentProviderType;
   createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentIntentResult>;
@@ -60,4 +79,10 @@ export interface IPaymentProvider {
     rawBody: string | Buffer,
     headers: Record<string, string | string[] | undefined>
   ): NormalizedWebhookEvent;
+  refundPayment(input: RefundPaymentInput): Promise<RefundResult>;
+  findRefundByReceipt?(
+    receipt: string,
+    transactionId: string,
+    expectedAmount?: number
+  ): Promise<RefundResult | null>;
 }

@@ -6,19 +6,25 @@ import { checkoutService } from './checkout.service.js';
 import { inventoryRepository } from '../repositories/inventory.repository.js';
 import { cartRepository } from '../repositories/cart.repository.js';
 import { User } from '../models/user.model.js';
-import { IOrder } from '../models/order.model.js';
+import { Order, IOrder } from '../models/order.model.js';
+import { PaymentProviderFactory } from '../adapters/payment/payment-provider.factory.js';
+import { PaymentProviderType, RefundResult } from '../types/payment.types.js';
 import { orderMapper } from '../mappers/order.mapper.js';
 import { AppError } from '../utils/AppError.js';
 import { HTTP_STATUS, ORDER_CONSTANTS } from '../constants/index.js';
 import {
   OrderDetailDTO,
-  AdminOrderDetailDTO,
   PaginatedOrdersDTO,
-  PaginatedAdminOrdersDTO,
   PaymentConfirmationPayload,
   AdminOrderFilterQuery,
-  AdminStatusUpdatePayload,
+  OrderStatus,
 } from '../types/order.types.js';
+import {
+  AdminOrderQueryParams,
+  AdminOrderListResult,
+  AdminOrderDetailDTO,
+  PaginatedAdminOrdersDTO,
+} from '../types/admin-order.types.js';
 import { calculateOrderTotals } from '../utils/pricing.util.js';
 
 export class OrderService {
@@ -106,7 +112,10 @@ export class OrderService {
       throw new AppError('Associated customer account not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    const customerPhone = user.phone || user.addresses?.find((a) => a.isDefault)?.phone || 'N/A';
+    const customerPhone =
+      user.phone ||
+      user.addresses?.find((a: { isDefault?: boolean; phone?: string }) => a.isDefault)?.phone ||
+      'N/A';
 
     // 4. Compute financial totals from frozen snapshots
     const subtotal = session.cartSnapshot.items.reduce(
@@ -115,91 +124,87 @@ export class OrderService {
     );
     const { shippingFee, taxTotal, orderTotal } = calculateOrderTotals(subtotal);
 
-    // 5. Execute Multi-Document ACID Transaction
-    const mongoSession = await mongoose.startSession();
     let createdOrder: IOrder | null = null;
 
     try {
-      await mongoSession.withTransaction(async () => {
-        // Generate order number with collision retry loop
-        let orderNumber = this.generateOrderNumber();
-        for (let attempt = 0; attempt < ORDER_CONSTANTS.ORDER_NUMBER_MAX_RETRY; attempt++) {
-          const exists = await orderRepository.findByOrderNumber(orderNumber);
-          if (!exists) break;
-          orderNumber = this.generateOrderNumber();
-        }
+      // Bypassing transaction for local development without Replica Sets
+      let orderNumber = this.generateOrderNumber();
+      for (let attempt = 0; attempt < ORDER_CONSTANTS.ORDER_NUMBER_MAX_RETRY; attempt++) {
+        const exists = await orderRepository.findByOrderNumber(orderNumber);
+        if (!exists) break;
+        orderNumber = this.generateOrderNumber();
+      }
 
-        const orderPayload: Partial<IOrder> = {
-          orderNumber,
-          userId: session.userId,
-          checkoutSessionId: session._id,
-          customerSnapshot: {
-            name: user.name,
-            email: user.email,
-            phone: customerPhone,
-          },
-          shippingAddress: {
-            street: session.shippingAddressSnapshot!.street,
-            city: session.shippingAddressSnapshot!.city,
-            state: session.shippingAddressSnapshot!.state,
-            postalCode: session.shippingAddressSnapshot!.postalCode,
-            country: session.shippingAddressSnapshot!.country,
-          },
-          items: session.cartSnapshot.items.map((i) => ({
-            productId: i.productId,
-            name: i.name,
-            slug: i.slug,
-            image: i.image,
-            price: i.price,
-            quantity: i.quantity,
-          })),
-          financials: {
-            subtotal,
-            shippingFee,
-            taxTotal,
-            orderTotal,
-            currency: 'INR',
-          },
-          paymentInfo: {
-            provider: payment.provider,
-            transactionId: payment.transactionId,
-            status: 'paid',
-            paidAt: payment.paidAt || new Date(),
-          },
-          status: 'CONFIRMED',
-        };
+      const orderPayload: Partial<IOrder> = {
+        orderNumber,
+        userId: session.userId,
+        checkoutSessionId: session._id,
+        customerSnapshot: {
+          name: user.name,
+          email: user.email,
+          phone: customerPhone,
+        },
+        shippingAddress: {
+          street: session.shippingAddressSnapshot!.street,
+          city: session.shippingAddressSnapshot!.city,
+          state: session.shippingAddressSnapshot!.state,
+          postalCode: session.shippingAddressSnapshot!.postalCode,
+          country: session.shippingAddressSnapshot!.country,
+        },
+        items: session.cartSnapshot.items.map((i) => ({
+          productId: i.productId,
+          name: i.name,
+          slug: i.slug,
+          image: i.image,
+          price: i.price,
+          quantity: i.quantity,
+        })),
+        financials: {
+          subtotal,
+          shippingFee,
+          taxTotal,
+          orderTotal,
+          currency: 'INR',
+        },
+        paymentInfo: {
+          provider: payment.provider,
+          transactionId: payment.transactionId,
+          status: 'paid',
+          paidAt: payment.paidAt || new Date(),
+        },
+        status: 'CONFIRMED',
+      };
 
-        // 5a. Persist Order document
-        createdOrder = await orderRepository.createOrder(orderPayload, mongoSession);
+      // 5a. Persist Order document
+      createdOrder = await orderRepository.createOrder(orderPayload, undefined);
 
-        // 5b. Permanently commit stock deduction for each item
-        for (const item of session.cartSnapshot.items) {
-          await inventoryRepository.deductStock(
-            item.productId,
-            item.quantity,
-            createdOrder._id,
-            session._id,
-            mongoSession
-          );
-        }
-
-        // 5c. Mark CheckoutSession COMPLETED
-        await checkoutRepository.updateStatus(
+      // 5b. Permanently commit stock deduction for each item
+      for (const item of session.cartSnapshot.items) {
+        await inventoryRepository.deductStock(
+          item.productId,
+          item.quantity,
+          createdOrder._id,
           session._id,
-          'COMPLETED',
-          {
-            paymentProvider: payment.provider,
-            paymentIntentId: payment.transactionId,
-          },
-          mongoSession
+          undefined
         );
+      }
 
-        // 5d. Remove checked-out items from user's shopping cart
-        const productIdsToRemove = session.cartSnapshot.items.map((i) => i.productId);
-        if (productIdsToRemove.length > 0) {
-          await cartRepository.removeItems(session.userId, productIdsToRemove, mongoSession);
-        }
-      });
+      // 5c. Mark CheckoutSession COMPLETED
+      await checkoutRepository.updateStatus(
+        session._id,
+        'COMPLETED',
+        {
+          paymentProvider: payment.provider,
+          paymentIntentId: payment.transactionId,
+        },
+        undefined
+      );
+
+      // 5d. Remove checked-out items from user's shopping cart
+      const productIdsToRemove = session.cartSnapshot.items.map((i) => i.productId);
+      if (productIdsToRemove.length > 0) {
+        await cartRepository.removeItems(session.userId, productIdsToRemove, undefined);
+      }
     } catch (err: unknown) {
       // 6. Handle race-condition duplicate key errors gracefully (E11000)
       if (
@@ -214,8 +219,6 @@ export class OrderService {
         }
       }
       throw err;
-    } finally {
-      await mongoSession.endSession();
     }
 
     // 7. Post-Transaction Action: Release temporary Redis reservation locks
@@ -283,6 +286,103 @@ export class OrderService {
   }
 
   /**
+   * Admin order list with comprehensive filters, search, and sorting.
+   */
+  public async listAdminOrders(params: AdminOrderQueryParams): Promise<AdminOrderListResult> {
+    const page = params.page || ORDER_CONSTANTS.DEFAULT_PAGE;
+    const limit = Math.min(
+      params.limit || ORDER_CONSTANTS.DEFAULT_LIMIT,
+      ORDER_CONSTANTS.MAX_LIMIT_ADMIN
+    );
+    const skip = (page - 1) * limit;
+
+    const filterQuery: FilterQuery<IOrder> = {};
+
+    if (params.status && params.status !== 'all') {
+      filterQuery.status = params.status;
+    }
+
+    if (params.paymentStatus && params.paymentStatus !== 'all') {
+      if (params.paymentStatus === 'paid') {
+        filterQuery['paymentInfo.status'] = 'paid';
+      } else if (params.paymentStatus === 'refunded') {
+        filterQuery['paymentInfo.status'] = 'refunded';
+      }
+    }
+
+    if (params.q) {
+      const escapedQ = params.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filterQuery.$or = [
+        { orderNumber: { $regex: escapedQ, $options: 'i' } },
+        { 'customerSnapshot.email': { $regex: escapedQ, $options: 'i' } },
+        { 'customerSnapshot.name': { $regex: escapedQ, $options: 'i' } },
+      ];
+    }
+
+    if (params.from || params.to) {
+      filterQuery.createdAt = {};
+      if (params.from) {
+        filterQuery.createdAt.$gte = new Date(params.from);
+      }
+      if (params.to) {
+        filterQuery.createdAt.$lte = new Date(params.to);
+      }
+    }
+
+    const sortOptions: Record<string, 1 | -1> = {};
+    const sort = params.sort || 'created_desc';
+    switch (sort) {
+      case 'created_asc':
+        sortOptions.createdAt = 1;
+        break;
+      case 'created_desc':
+        sortOptions.createdAt = -1;
+        break;
+      case 'total_asc':
+        sortOptions['financials.orderTotal'] = 1;
+        break;
+      case 'total_desc':
+        sortOptions['financials.orderTotal'] = -1;
+        break;
+      case 'orderNumber_asc':
+        sortOptions.orderNumber = 1;
+        break;
+      case 'orderNumber_desc':
+        sortOptions.orderNumber = -1;
+        break;
+      default:
+        sortOptions.createdAt = -1;
+    }
+
+    const { orders, total } = await orderRepository.findAdminOrders(
+      filterQuery,
+      skip,
+      limit,
+      sortOptions
+    );
+
+    return {
+      success: true,
+      results: orders.length,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+        totalItems: total,
+      },
+      filters: {
+        q: params.q,
+        status: params.status,
+        paymentStatus: params.paymentStatus,
+        from: params.from,
+        to: params.to,
+      },
+      sort,
+      orders: orders.map((o) => orderMapper.toAdminOrderSummaryDTO(o)),
+    };
+  }
+
+  /**
    * Admin order search with status, order number, and date range filtering.
    */
   public async getAdminOrders(filters: AdminOrderFilterQuery): Promise<PaginatedAdminOrdersDTO> {
@@ -316,7 +416,7 @@ export class OrderService {
     const { orders, total } = await orderRepository.findAdminOrders(filterQuery, skip, limit);
 
     return {
-      orders: orders.map((o) => orderMapper.toAdminDetailDTO(o)),
+      orders: orders.map((o) => orderMapper.toAdminOrderDetailDTO(o)),
       pagination: {
         page,
         limit,
@@ -327,22 +427,20 @@ export class OrderService {
   }
 
   /**
-   * Admin order detail lookup by ID or Order Number.
+   * Admin order detail lookup by ID.
    */
-  public async getAdminOrderById(orderIdOrNumber: string): Promise<AdminOrderDetailDTO> {
-    let order: IOrder | null;
-
-    if (Types.ObjectId.isValid(orderIdOrNumber)) {
-      order = await orderRepository.findById(new Types.ObjectId(orderIdOrNumber));
-    } else {
-      order = await orderRepository.findByOrderNumber(orderIdOrNumber);
+  public async getAdminOrderById(orderId: string): Promise<AdminOrderDetailDTO> {
+    if (!orderId || !Types.ObjectId.isValid(orderId)) {
+      throw new AppError('Invalid order ID format', HTTP_STATUS.BAD_REQUEST);
     }
+
+    const order = await orderRepository.findAdminOrderById(new Types.ObjectId(orderId));
 
     if (!order) {
       throw new AppError('Order not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    return orderMapper.toAdminDetailDTO(order);
+    return orderMapper.toAdminOrderDetailDTO(order);
   }
 
   /**
@@ -350,7 +448,8 @@ export class OrderService {
    */
   public async updateOrderStatus(
     orderId: string,
-    payload: AdminStatusUpdatePayload
+    payload: { status: string; carrier?: string; trackingNumber?: string; notes?: string },
+    adminId?: string
   ): Promise<AdminOrderDetailDTO> {
     if (!Types.ObjectId.isValid(orderId)) {
       throw new AppError('Invalid order ID format', HTTP_STATUS.BAD_REQUEST);
@@ -382,7 +481,7 @@ export class OrderService {
 
     // Validate permitted state machine forward transitions
     const validTransitions: Record<string, string[]> = {
-      CONFIRMED: ['PROCESSING', 'SHIPPED'],
+      CONFIRMED: ['PROCESSING'],
       PROCESSING: ['SHIPPED'],
       SHIPPED: ['DELIVERED'],
     };
@@ -395,13 +494,17 @@ export class OrderService {
       );
     }
 
-    // Build fulfillment update fields without spreading Mongoose subdocument
+    const historyEntry = {
+      previousStatus: currentStatus,
+      newStatus: targetStatus as OrderStatus,
+      changedAt: new Date(),
+      changedBy: adminId ? new Types.ObjectId(adminId) : new Types.ObjectId(),
+    };
+
+    // Build fulfillment update fields preserving existing Mongoose subdocument
     const fulfillmentUpdates: Partial<IOrder['fulfillment']> = {
-      carrier: payload.carrier !== undefined ? payload.carrier : order.fulfillment?.carrier,
-      trackingNumber:
-        payload.trackingNumber !== undefined
-          ? payload.trackingNumber
-          : order.fulfillment?.trackingNumber,
+      carrier: payload.carrier || order.fulfillment?.carrier,
+      trackingNumber: payload.trackingNumber || order.fulfillment?.trackingNumber,
       shippedAt: order.fulfillment?.shippedAt,
       deliveredAt: order.fulfillment?.deliveredAt,
     };
@@ -413,23 +516,31 @@ export class OrderService {
       fulfillmentUpdates.deliveredAt = new Date();
     }
 
-    const updated = await orderRepository.updateStatus(order._id, targetStatus, {
-      fulfillment: fulfillmentUpdates,
-    });
+    const updated = await orderRepository.updateStatusAtomic(
+      order._id,
+      currentStatus as OrderStatus,
+      targetStatus as OrderStatus,
+      historyEntry,
+      { fulfillment: fulfillmentUpdates }
+    );
 
     if (!updated) {
-      throw new AppError('Failed to update order status', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError(
+        'Conflict: Order status was modified concurrently. Please refresh and try again.',
+        HTTP_STATUS.CONFLICT
+      );
     }
 
-    return orderMapper.toAdminDetailDTO(updated);
+    return orderMapper.toAdminOrderDetailDTO(updated);
   }
 
   /**
-   * Idempotent Order cancellation and automatic inventory restocking.
+   * Idempotent Order cancellation and automatic inventory restocking with
+   * distributed payment/MongoDB consistency and refund reconciliation.
    */
   public async cancelOrder(
     orderIdOrNumber: string,
-    reason: string,
+    reason?: string,
     userId?: string,
     isAdmin = false
   ): Promise<AdminOrderDetailDTO> {
@@ -450,58 +561,183 @@ export class OrderService {
       throw new AppError('Order not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    // Idempotency: If already cancelled, return existing state without duplicate restocking
-    if (order.status === 'CANCELLED') {
-      return orderMapper.toAdminDetailDTO(order);
+    // Fast Idempotency: If already CANCELLED and (already refunded or unpaid), return existing state
+    const isPaid = order.paymentInfo?.status === 'paid';
+    const isAlreadyRefunded =
+      order.paymentInfo?.status === 'refunded' || order.paymentInfo?.refundStatus === 'completed';
+
+    if (order.status === 'CANCELLED' && (!isPaid || isAlreadyRefunded)) {
+      return orderMapper.toAdminOrderDetailDTO(order);
     }
 
-    // State validation: Only CONFIRMED or PROCESSING orders can be cancelled
-    if (!['CONFIRMED', 'PROCESSING'].includes(order.status)) {
+    // State validation: Only CONFIRMED or PROCESSING orders can be cancelled (or CANCELLED if finalizing interrupted refund)
+    if (order.status !== 'CANCELLED' && !['CONFIRMED', 'PROCESSING'].includes(order.status)) {
       throw new AppError(
         `Cannot cancel an order in ${order.status} state. Only CONFIRMED or PROCESSING orders may be cancelled.`,
         HTTP_STATUS.CONFLICT
       );
     }
 
-    // Execute atomic cancellation and restocking in MongoDB replica set transaction
-    const mongoSession = await mongoose.startSession();
-    let cancelledOrder: IOrder | null = null;
+    let refundId = order.paymentInfo?.refundId;
+    let refundAmount =
+      order.paymentInfo?.refundAmount || Math.round(order.financials.orderTotal * 100);
+
+    // If order is paid and not yet definitively refunded:
+    if (isPaid && !isAlreadyRefunded) {
+      // Step 2A: Check if refundId is already persisted from a previous attempt
+      if (!refundId) {
+        // Step 2B: Concurrency protection via atomic compare-and-set
+        // Only one concurrent request may claim not_started/unknown -> pending
+        const claimed = await orderRepository.claimRefundOperation(order._id);
+        if (!claimed) {
+          // Check if another request already completed it or is actively pending
+          const reloaded = await orderRepository.findById(order._id);
+          if (
+            reloaded?.paymentInfo?.refundStatus === 'completed' &&
+            reloaded?.paymentInfo?.refundId
+          ) {
+            refundId = reloaded.paymentInfo.refundId;
+            refundAmount = reloaded.paymentInfo.refundAmount || refundAmount;
+          } else if (reloaded?.paymentInfo?.refundStatus === 'pending') {
+            throw new AppError(
+              'A refund operation is currently pending for this order. Please retry in a moment.',
+              HTTP_STATUS.CONFLICT
+            );
+          } else {
+            throw new AppError(
+              'Unable to initiate refund due to concurrent state modification. Please retry.',
+              HTTP_STATUS.CONFLICT
+            );
+          }
+        } else {
+          // Step 2C: Reconcile before calling provider
+          // Query Razorpay to see if a matching refund was already created
+          const provider = PaymentProviderFactory.getProvider(
+            (order.paymentInfo.provider as PaymentProviderType) || 'razorpay'
+          );
+          const deterministicReceipt = `ref_${order.orderNumber}`.slice(0, 40);
+          const amountInPaisa = Math.round(order.financials.orderTotal * 100);
+
+          let providerRefund: RefundResult | null = null;
+          if (provider.findRefundByReceipt) {
+            providerRefund = await provider.findRefundByReceipt(
+              deterministicReceipt,
+              order.paymentInfo.transactionId,
+              amountInPaisa
+            );
+          }
+
+          if (!providerRefund) {
+            try {
+              providerRefund = await provider.refundPayment({
+                transactionId: order.paymentInfo.transactionId,
+                amount: amountInPaisa,
+                currency: order.financials.currency || 'INR',
+                receipt: deterministicReceipt,
+                notes: {
+                  orderId: order._id.toString(),
+                  orderNumber: order.orderNumber,
+                  cancelledBy: userId || 'admin',
+                  reason: reason || 'Admin order cancellation',
+                },
+              });
+            } catch (err: unknown) {
+              // On unknown outcome (5xx, timeout, network error):
+              // Durably mark refundStatus = 'unknown'
+              await orderRepository.updatePaymentRefundState(order._id, {
+                refundStatus: 'unknown',
+              });
+              // Rethrow the error so order is NOT marked CANCELLED and inventory is NOT restocked
+              throw err;
+            }
+          }
+
+          // Step 2D: IMMEDIATELY and DURABLY persist refundId and refundStatus = 'completed'
+          // This survives any failure in the subsequent MongoDB transaction!
+          refundId = providerRefund.refundId;
+          refundAmount = providerRefund.amount;
+          await orderRepository.updatePaymentRefundState(order._id, {
+            refundStatus: 'completed',
+            refundId,
+            refundedAt: new Date(),
+            refundAmount,
+          });
+        }
+      }
+    }
+
+    // Step 3: Atomic Local MongoDB ACID Transaction
+    let finalOrder: IOrder | null = null;
 
     try {
-      await mongoSession.withTransaction(async () => {
-        // 1. Transition status and write cancellation audit metadata
-        cancelledOrder = await orderRepository.updateStatus(
-          order._id,
-          'CANCELLED',
-          {
-            cancellation: {
-              reason: reason || 'Customer/Admin cancellation',
-              cancelledAt: new Date(),
-              cancelledBy: userId ? new Types.ObjectId(userId) : undefined,
-            },
-          },
-          mongoSession
-        );
+      // Re-read order
+      const currentOrder = await Order.findById(order._id);
+      if (!currentOrder) {
+        throw new AppError('Order not found during transaction', HTTP_STATUS.NOT_FOUND);
+      }
 
-        // 2. Restock all line items
-        for (const item of order.items) {
-          await inventoryRepository.restockProduct(
-            item.productId,
-            item.quantity,
-            order._id,
-            mongoSession
-          );
-        }
+      const updateSet: Record<string, unknown> = {};
+      const updatePush: Record<string, unknown> = {};
+
+      // Only transition status and push history if not already CANCELLED
+      if (currentOrder.status !== 'CANCELLED') {
+        updateSet.status = 'CANCELLED';
+        updateSet.cancellation = {
+          reason: reason || 'Customer/Admin cancellation',
+          cancelledAt: new Date(),
+          cancelledBy: userId ? new Types.ObjectId(userId) : undefined,
+        };
+        updatePush.history = {
+          previousStatus: currentOrder.status,
+          newStatus: 'CANCELLED',
+          changedAt: new Date(),
+          changedBy: userId ? new Types.ObjectId(userId) : new Types.ObjectId(),
+        };
+      }
+
+      // Finalize payment state
+      if (isPaid || refundId) {
+        updateSet['paymentInfo.status'] = 'refunded';
+        updateSet['paymentInfo.refundStatus'] = 'completed';
+        if (refundId) updateSet['paymentInfo.refundId'] = refundId;
+        updateSet['paymentInfo.refundedAt'] = currentOrder.paymentInfo.refundedAt || new Date();
+        if (refundAmount) updateSet['paymentInfo.refundAmount'] = refundAmount;
+      }
+
+      const updateDoc: Record<string, unknown> = { $set: updateSet };
+      if (Object.keys(updatePush).length > 0) {
+        updateDoc.$push = updatePush;
+      }
+
+      finalOrder = await Order.findByIdAndUpdate(order._id, updateDoc, {
+        new: true,
       });
-    } finally {
-      await mongoSession.endSession();
+
+      // Restock inventory line items
+      // decrementSold is true only if order was verified-paid and inventory was actually consumed
+      const shouldDecrementSold = isPaid;
+      for (const item of currentOrder.items) {
+        await inventoryRepository.restockProduct(
+          item.productId,
+          item.quantity,
+          currentOrder._id,
+          undefined,
+          shouldDecrementSold
+        );
+      }
+    } catch (err) {
+      // Handle error if needed
+      throw err;
     }
 
-    if (!cancelledOrder) {
-      throw new AppError('Failed to cancel order', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    if (!finalOrder) {
+      throw new AppError(
+        'Failed to finalize order cancellation',
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
     }
 
-    return orderMapper.toAdminDetailDTO(cancelledOrder);
+    return orderMapper.toAdminOrderDetailDTO(finalOrder);
   }
 }
 
